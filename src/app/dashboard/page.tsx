@@ -196,7 +196,7 @@ export default function HomePage() {
       {/* ── Quick Actions ── */}
       <div className="animate-fade-in-up animate-delay-100">
         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 px-1">Quick Actions</p>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {quickActions.map((action) => (
             <Link
               key={action.label}
