@@ -2,13 +2,13 @@
 
 // Real-time balance integration for Morphic Privacy Platform
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccount, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
 import {
   Shield, Send, Unlock, Eye, EyeOff, ArrowUpRight,
-  ArrowDownRight, TrendingUp, Lock, Zap, ChevronRight, History
+  ArrowDownRight, TrendingUp, Lock, Zap, ChevronRight, History, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -51,50 +51,61 @@ const quickActions = [
   },
 ];
 
-const recentActivity = [
-  {
-    type: 'shield',
-    label: 'Shielded USDC',
-    amount: '+500.00',
-    time: '2 min ago',
-    positive: true,
+const typeConfig = {
+  shield: {
     icon: Shield,
     color: 'text-violet-400',
     bg: 'bg-violet-500/10',
+    label: 'Shielded USDC',
   },
-  {
-    type: 'send',
-    label: 'Sent to alice.arc',
-    amount: '-120.00',
-    time: '1 hr ago',
-    positive: false,
+  send: {
     icon: Send,
     color: 'text-blue-400',
     bg: 'bg-blue-500/10',
+    label: 'Private Send',
   },
-  {
-    type: 'unshield',
-    label: 'Unshielded USDC',
-    amount: '-200.00',
-    time: '3 hr ago',
-    positive: false,
+  unshield: {
     icon: Unlock,
     color: 'text-emerald-400',
     bg: 'bg-emerald-500/10',
+    label: 'Unshielded USDC',
   },
-];
+};
 
 export default function HomePage() {
   const { address, isConnected } = useAccount();
   const [showBalance, setShowBalance] = useState(true);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [isActivityLoading, setIsActivityLoading] = useState(true);
 
   // Fetch Public Balance
   const { data: balanceData, isLoading: isBalanceLoading } = useBalance({
     address: address,
   });
 
+  // Fetch Recent Activity
+  useEffect(() => {
+    const fetchRecent = async () => {
+      if (!address) {
+        setIsActivityLoading(false);
+        return;
+      }
+      try {
+        const response = await fetch(`/api/transactions/history?address=${address}`);
+        const data = await response.json();
+        if (data.success) {
+          setActivities(data.history.slice(0, 3)); // Only show last 3
+        }
+      } catch (e) {
+        console.error("Failed to fetch recent activity", e);
+      } finally {
+        setIsActivityLoading(false);
+      }
+    };
+    fetchRecent();
+  }, [address]);
+
   // For Demo: Shielded Balance is 0.00 unless we have a specific contract call
-  // In a real app, you would fetch this from the MorphicVault contract
   const shieldedBalance = '0.00';
   const publicBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
   const totalValue = (parseFloat(publicBalance) + parseFloat(shieldedBalance)).toFixed(2);
@@ -222,32 +233,54 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="glass-panel overflow-hidden" style={{ borderRadius: '20px' }}>
-          {recentActivity.map((tx, i) => (
-            <div
-              key={i}
-              className={cn(
-                "flex items-center gap-4 px-4 py-3.5 hover:bg-white/3 transition-colors",
-                i < recentActivity.length - 1 && "border-b border-white/5"
-              )}
-            >
-              <div className={cn("w-9 h-9 rounded-2xl flex items-center justify-center shrink-0", tx.bg)}>
-                <tx.icon className={cn("w-4 h-4", tx.color)} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{tx.label}</p>
-                <p className="text-xs text-gray-500">{tx.time}</p>
-              </div>
-              <div className="text-right shrink-0">
-                <p className={cn("text-sm font-bold", tx.positive ? "text-emerald-400" : "text-gray-300")}>
-                  {showBalance ? tx.amount : '••••'} <span className="text-xs font-normal text-gray-500">USDC</span>
-                </p>
-                <div className={cn("flex items-center justify-end gap-0.5 text-xs", tx.positive ? "text-emerald-500" : "text-gray-500")}>
-                  {tx.positive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                  {tx.positive ? 'Received' : 'Sent'}
-                </div>
-              </div>
+          {isActivityLoading ? (
+            <div className="p-10 flex flex-col items-center gap-2">
+              <Loader2 className="w-6 h-6 text-violet-400 animate-spin" />
+              <p className="text-xs text-gray-500">Loading activity...</p>
             </div>
-          ))}
+          ) : !isConnected ? (
+            <div className="p-8 text-center">
+              <p className="text-xs text-gray-600">Connect wallet to see activity</p>
+            </div>
+          ) : activities.length === 0 ? (
+            <div className="p-8 text-center">
+              <p className="text-xs text-gray-600">No recent activity</p>
+            </div>
+          ) : (
+            activities.map((tx, i) => {
+              const type = tx.type.toLowerCase() as keyof typeof typeConfig;
+              const cfg = typeConfig[type];
+              const Icon = cfg.icon;
+              const isPositive = tx.type === 'SHIELD';
+
+              return (
+                <div
+                  key={tx.id}
+                  className={cn(
+                    "flex items-center gap-4 px-4 py-3.5 hover:bg-white/3 transition-colors",
+                    i < activities.length - 1 && "border-b border-white/5"
+                  )}
+                >
+                  <div className={cn("w-9 h-9 rounded-2xl flex items-center justify-center shrink-0", cfg.bg)}>
+                    <Icon className={cn("w-4 h-4", cfg.color)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{cfg.label}</p>
+                    <p className="text-xs text-gray-500">{new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={cn("text-sm font-bold", isPositive ? "text-emerald-400" : "text-gray-300")}>
+                      {showBalance ? (isPositive ? `+${tx.amount}` : `-${tx.amount}`) : '••••'} <span className="text-xs font-normal text-gray-500">{tx.token}</span>
+                    </p>
+                    <div className={cn("flex items-center justify-end gap-0.5 text-xs", isPositive ? "text-emerald-500" : "text-gray-500")}>
+                      {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                      {isPositive ? 'Received' : tx.type === 'SEND' ? 'Sent' : 'Withdrawn'}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
