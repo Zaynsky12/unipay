@@ -13,25 +13,8 @@ export default function PrivateSendPage() {
   const { isConnected } = useAccount();
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
-  const [isResolving, setIsResolving] = useState(false);
-  const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (recipient.endsWith('.arc') && recipient.length > 4) {
-      setIsResolving(true);
-      setResolvedAddress(null);
-      const timer = setTimeout(() => {
-        setIsResolving(false);
-        setResolvedAddress('0x71C...9A23');
-      }, 900);
-      return () => clearTimeout(timer);
-    } else {
-      setResolvedAddress(null);
-      setIsResolving(false);
-    }
-  }, [recipient]);
 
   const handleSend = async () => {
     if (!recipient || !amount || status !== 'idle' || !isConnected) return;
@@ -45,7 +28,7 @@ export default function PrivateSendPage() {
       });
       const kit = new AppKit();
 
-      const finalRecipient = resolvedAddress || recipient;
+      const finalRecipient = recipient;
 
       // Ensure amount has correct precision formatting (AppKit expects a string representing the value, e.g. "1.00")
       const result = await kit.send({
@@ -70,7 +53,6 @@ export default function PrivateSendPage() {
     setStatus('idle');
     setAmount('');
     setRecipient('');
-    setResolvedAddress(null);
     setTxHash(null);
   };
 
@@ -128,18 +110,10 @@ export default function PrivateSendPage() {
             type="text"
             value={recipient}
             onChange={(e) => setRecipient(e.target.value)}
-            placeholder="alice.arc or 0x..."
+            placeholder="0x..."
             disabled={status === 'sending'}
             className="w-full bg-transparent text-xl font-bold text-white placeholder-gray-700 focus:outline-none px-1"
           />
-          <div className="absolute right-0 top-1/2 -translate-y-1/2">
-            {isResolving && <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />}
-            {resolvedAddress && !isResolving && (
-              <span className="text-xs bg-blue-500/15 text-blue-300 px-2 py-1 rounded-lg font-mono border border-blue-500/20">
-                {resolvedAddress}
-              </span>
-            )}
-          </div>
         </div>
       </div>
 
