@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Shield, Send, Unlock, CheckCircle2, Clock, Search, Filter, ChevronDown, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Shield, Send, Unlock, CheckCircle2, Clock, Search, Filter, ChevronDown, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
+import { useAccount } from 'wagmi';
 import { cn } from '@/lib/utils';
 
 type TxType = 'all' | 'shield' | 'send' | 'unshield';
@@ -119,9 +120,50 @@ const filters: { label: string; value: TxType }[] = [
 ];
 
 export default function HistoryPage() {
+  const { address, isConnected } = useAccount();
   const [activeFilter, setActiveFilter] = useState<TxType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedTx, setExpandedTx] = useState<string | null>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (!address) {
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/transactions/history?address=${address}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          // Format data for UI
+          const formatted = data.history.map((tx: any) => ({
+            id: tx.id,
+            type: tx.type.toLowerCase(),
+            label: tx.type === 'SEND' ? 'Private Send' : tx.type.charAt(0) + tx.type.slice(1).toLowerCase(),
+            description: tx.type === 'SHIELD' ? 'USDC → Morphic Vault' : tx.type === 'UNSHIELD' ? 'Morphic Vault → USDC' : 'Private Transfer',
+            amount: tx.type === 'SHIELD' ? `+${tx.amount}` : `-${tx.amount}`,
+            token: tx.token,
+            status: tx.status.toLowerCase(),
+            time: new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: new Date(tx.timestamp).toDateString() === new Date().toDateString() ? 'Today' : new Date(tx.timestamp).toLocaleDateString(),
+            hash: tx.txHash,
+            positive: tx.type === 'SHIELD',
+          }));
+          setTransactions(formatted);
+        }
+      } catch (e) {
+        console.error("Failed to fetch history", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [address]);
 
   const filtered = transactions.filter((tx) => {
     const matchType = activeFilter === 'all' || tx.type === activeFilter;
@@ -182,13 +224,24 @@ export default function HistoryPage() {
       </div>
 
       {/* Transaction List */}
-      {Object.keys(grouped).length === 0 ? (
+      {isLoading ? (
+        <div className="glass-panel p-10 text-center flex flex-col items-center">
+          <Loader2 className="w-8 h-8 text-violet-400 animate-spin mb-2" />
+          <p className="text-gray-400 font-medium">Fetching history...</p>
+        </div>
+      ) : !isConnected ? (
+        <div className="glass-panel p-10 text-center">
+          <Shield className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-400 font-semibold">Wallet Not Connected</p>
+          <p className="text-gray-600 text-sm mt-1">Connect your wallet to see your private history</p>
+        </div>
+      ) : Object.keys(grouped).length === 0 ? (
         <div className="glass-panel p-10 text-center">
           <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-3">
             <Clock className="w-6 h-6 text-gray-500" />
           </div>
           <p className="text-gray-400 font-semibold">No transactions found</p>
-          <p className="text-gray-600 text-sm mt-1">Try adjusting your filters</p>
+          <p className="text-gray-600 text-sm mt-1">Transactions recorded on this device will appear here</p>
         </div>
       ) : (
         Object.entries(grouped).map(([date, txs]) => (
@@ -196,7 +249,7 @@ export default function HistoryPage() {
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1 mb-2">{date}</p>
             <div className="glass-panel overflow-hidden" style={{ borderRadius: '20px' }}>
               {txs.map((tx, i) => {
-                const cfg = typeConfig[tx.type];
+                const cfg = typeConfig[tx.type as keyof typeof typeConfig];
                 const Icon = cfg.icon;
                 const isExpanded = expandedTx === tx.id;
 

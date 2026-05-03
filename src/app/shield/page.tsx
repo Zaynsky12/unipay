@@ -11,7 +11,7 @@ import { useAccount } from 'wagmi';
 type Status = 'idle' | 'shielding' | 'success';
 
 export default function ShieldPage() {
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -38,7 +38,25 @@ export default function ShieldPage() {
         token: "USDC",
       });
 
-      setTxHash(result as any || "0x_mock_hash");
+      const hash = result as any || "0x_mock_hash";
+      setTxHash(hash);
+
+      // Record transaction to backend for history
+      try {
+        await fetch('/api/transactions/record', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userAddress: address,
+            type: 'SHIELD',
+            amount,
+            txHash: hash
+          }),
+        });
+      } catch (e) {
+        console.error("Backend recording failed", e);
+      }
+
       setStatus('success');
     } catch (error) {
       console.error("Shield failed:", error);

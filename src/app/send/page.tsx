@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 type Status = 'idle' | 'sending' | 'success';
 
 export default function PrivateSendPage() {
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState<Status>('idle');
@@ -40,7 +40,25 @@ export default function PrivateSendPage() {
 
       // Assuming result contains a hash or we just set success
       // If result is undefined, we still set success
-      setTxHash(result as any || "0x_mock_hash");
+      const hash = result as any || "0x_mock_hash";
+      setTxHash(hash);
+
+      // Record transaction to backend for history
+      try {
+        await fetch('/api/transactions/record', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userAddress: address,
+            type: 'SEND',
+            amount,
+            txHash: hash
+          }),
+        });
+      } catch (e) {
+        console.error("Backend recording failed", e);
+      }
+
       setStatus('success');
     } catch (error) {
       console.error("Send failed:", error);
