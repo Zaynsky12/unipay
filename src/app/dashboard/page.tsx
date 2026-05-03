@@ -107,28 +107,28 @@ export default function HomePage() {
         // Fetch logs for Shielded, Unshielded, and PrivateTransfer
         const shieldedLogs = await publicClient.getLogs({
           address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI[4] as any,
+          event: VAULT_ABI.find(i => i.name === 'Shielded') as any,
           args: { user: address as `0x${string}` },
           fromBlock: 0n
         });
 
         const unshieldedLogs = await publicClient.getLogs({
           address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI[5] as any,
+          event: VAULT_ABI.find(i => i.name === 'Unshielded') as any,
           args: { user: address as `0x${string}` },
           fromBlock: 0n
         });
 
         const sentLogs = await publicClient.getLogs({
           address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI[6] as any,
+          event: VAULT_ABI.find(i => i.name === 'PrivateTransfer') as any,
           args: { from: address as `0x${string}` },
           fromBlock: 0n
         });
 
         const receivedLogs = await publicClient.getLogs({
           address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI[6] as any,
+          event: VAULT_ABI.find(i => i.name === 'PrivateTransfer') as any,
           args: { to: address as `0x${string}` },
           fromBlock: 0n
         });

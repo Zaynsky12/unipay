@@ -141,15 +141,15 @@ export default function HistoryPage() {
         // 1. Fetch Shielded Events (Deposit)
         const shieldedLogs = await publicClient.getLogs({
           address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI[4] as any, // Shielded
+          event: VAULT_ABI.find(i => i.name === 'Shielded') as any,
           args: { user: address as `0x${string}` },
-          fromBlock: 0n // In production, use a more recent block or indexed service
+          fromBlock: 0n
         });
 
         // 2. Fetch Unshielded Events (Withdraw)
         const unshieldedLogs = await publicClient.getLogs({
           address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI[5] as any, // Unshielded
+          event: VAULT_ABI.find(i => i.name === 'Unshielded') as any,
           args: { user: address as `0x${string}` },
           fromBlock: 0n
         });
@@ -157,14 +157,14 @@ export default function HistoryPage() {
         // 3. Fetch Private Transfer Events (Send/Receive)
         const sentLogs = await publicClient.getLogs({
           address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI[6] as any, // PrivateTransfer
+          event: VAULT_ABI.find(i => i.name === 'PrivateTransfer') as any,
           args: { from: address as `0x${string}` },
           fromBlock: 0n
         });
 
         const receivedLogs = await publicClient.getLogs({
           address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI[6] as any, // PrivateTransfer
+          event: VAULT_ABI.find(i => i.name === 'PrivateTransfer') as any,
           args: { to: address as `0x${string}` },
           fromBlock: 0n
         });
