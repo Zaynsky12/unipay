@@ -7,11 +7,11 @@ import { Eye, Shield, Send, Unlock, History, LayoutDashboard } from 'lucide-reac
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { name: 'Home',     href: '/',         icon: LayoutDashboard },
-  { name: 'Shield',   href: '/shield',   icon: Shield },
-  { name: 'Send',     href: '/send',     icon: Send },
-  { name: 'Unshield', href: '/unshield', icon: Unlock },
-  { name: 'History',  href: '/history',  icon: History },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Shield',    href: '/shield',    icon: Shield },
+  { name: 'Send',      href: '/send',      icon: Send },
+  { name: 'Unshield',  href: '/unshield',  icon: Unlock },
+  { name: 'History',   href: '/history',   icon: History },
 ];
 
 export function Navbar() {
