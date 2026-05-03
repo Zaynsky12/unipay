@@ -58,7 +58,8 @@ export default function PrivateSendPage() {
           body: JSON.stringify({
             userAddress: address,
             type: 'SEND',
-            amount: `${amount} ${selectedToken}`,
+            amount: amount,
+            token: selectedToken,
             txHash: hash
           }),
         });

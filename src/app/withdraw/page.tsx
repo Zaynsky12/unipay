@@ -66,7 +66,8 @@ export default function WithdrawPage() {
           body: JSON.stringify({
             userAddress: address,
             type: 'UNSHIELD',
-            amount: `${amount} ${selectedToken}`,
+            amount: amount,
+            token: selectedToken,
             txHash: hash
           }),
         });

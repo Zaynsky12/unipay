@@ -261,14 +261,17 @@ export default function HomePage() {
             </div>
           ) : (
             activities.map((tx, i) => {
-              const type = tx.type.toLowerCase() as keyof typeof typeConfig;
-              const cfg = typeConfig[type];
+              const type = (tx.type?.toLowerCase() || 'shield') as keyof typeof typeConfig;
+              const cfg = typeConfig[type] || typeConfig.shield;
               const Icon = cfg.icon;
               const isPositive = tx.type === 'SHIELD';
+              
+              // Clean amount (remove token if it was stored in amount)
+              const cleanAmount = tx.amount?.toString().split(' ')[0] || '0';
 
               return (
                 <div
-                  key={tx.id}
+                  key={tx.id || i}
                   className={cn(
                     "flex items-center gap-4 px-4 py-3.5 hover:bg-white/3 transition-colors",
                     i < activities.length - 1 && "border-b border-white/5"
@@ -279,11 +282,13 @@ export default function HomePage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-white truncate">{cfg.label}</p>
-                    <p className="text-xs text-gray-500">{new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-xs text-gray-500">
+                      {tx.timestamp ? new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
+                    </p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className={cn("text-sm font-bold", isPositive ? "text-emerald-400" : "text-gray-300")}>
-                      {showBalance ? (isPositive ? `+${tx.amount}` : `-${tx.amount}`) : '••••'} <span className="text-xs font-normal text-gray-500">{tx.token}</span>
+                      {showBalance ? (isPositive ? `+${cleanAmount}` : `-${cleanAmount}`) : '••••'} <span className="text-xs font-normal text-gray-500">{tx.token || 'USDC'}</span>
                     </p>
                     <div className={cn("flex items-center justify-end gap-0.5 text-xs", isPositive ? "text-emerald-500" : "text-gray-500")}>
                       {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}

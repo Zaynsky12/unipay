@@ -80,7 +80,8 @@ export default function DepositPage() {
           body: JSON.stringify({
             userAddress: address,
             type: 'SHIELD',
-            amount: `${amount} ${selectedToken}`,
+            amount: amount,
+            token: selectedToken,
             txHash: depositHash
           }),
         });

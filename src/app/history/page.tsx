@@ -124,7 +124,7 @@ export default function HistoryPage() {
   const [activeFilter, setActiveFilter] = useState<TxType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedTx, setExpandedTx] = useState<string | null>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [txHistory, setTxHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -138,22 +138,27 @@ export default function HistoryPage() {
         const response = await fetch(`/api/transactions/history?address=${address}`);
         const data = await response.json();
         
-        if (data.success) {
+        if (data.success && Array.isArray(data.history)) {
           // Format data for UI
-          const formatted = data.history.map((tx: any) => ({
-            id: tx.id,
-            type: tx.type.toLowerCase(),
-            label: tx.type === 'SEND' ? 'Private Send' : tx.type.charAt(0) + tx.type.slice(1).toLowerCase(),
-            description: tx.type === 'SHIELD' ? 'USDC → Morphic Vault' : tx.type === 'UNSHIELD' ? 'Morphic Vault → USDC' : 'Private Transfer',
-            amount: tx.type === 'SHIELD' ? `+${tx.amount}` : `-${tx.amount}`,
-            token: tx.token,
-            status: tx.status.toLowerCase(),
-            time: new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            date: new Date(tx.timestamp).toDateString() === new Date().toDateString() ? 'Today' : new Date(tx.timestamp).toLocaleDateString(),
-            hash: tx.txHash,
-            positive: tx.type === 'SHIELD',
-          }));
-          setTransactions(formatted);
+          const formatted = data.history.map((tx: any) => {
+            const cleanAmount = tx.amount?.toString().split(' ')[0] || '0';
+            const type = tx.type?.toLowerCase() || 'shield';
+            
+            return {
+              id: tx.id,
+              type: type,
+              label: tx.type === 'SEND' ? 'Private Send' : tx.type?.charAt(0) + tx.type?.slice(1).toLowerCase(),
+              description: tx.type === 'SHIELD' ? `${tx.token || 'USDC'} → Morphic Vault` : tx.type === 'UNSHIELD' ? `Morphic Vault → ${tx.token || 'USDC'}` : 'Private Transfer',
+              amount: tx.type === 'SHIELD' ? `+${cleanAmount}` : `-${cleanAmount}`,
+              token: tx.token || 'USDC',
+              status: tx.status?.toLowerCase() || 'confirmed',
+              time: tx.timestamp ? new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Unknown',
+              date: tx.timestamp ? (new Date(tx.timestamp).toDateString() === new Date().toDateString() ? 'Today' : new Date(tx.timestamp).toLocaleDateString()) : 'Unknown',
+              hash: tx.txHash || '0x...',
+              positive: tx.type === 'SHIELD',
+            };
+          });
+          setTxHistory(formatted);
         }
       } catch (e) {
         console.error("Failed to fetch history", e);
@@ -165,7 +170,7 @@ export default function HistoryPage() {
     fetchHistory();
   }, [address]);
 
-  const filtered = transactions.filter((tx) => {
+  const filtered = txHistory.filter((tx) => {
     const matchType = activeFilter === 'all' || tx.type === activeFilter;
     const matchSearch =
       !searchQuery ||
