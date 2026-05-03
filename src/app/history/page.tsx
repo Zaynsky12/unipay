@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Send, Unlock, CheckCircle2, Clock, Search, Filter, ChevronDown, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
 import { useAccount, usePublicClient } from 'wagmi';
-import { formatUnits } from 'viem';
+import { formatUnits, parseAbiItem } from 'viem';
 import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
@@ -138,49 +138,32 @@ export default function HistoryPage() {
       }
       
       try {
-        // 1. Fetch Shielded Events (Deposit)
-        const shieldedLogs = await publicClient.getLogs({
-          address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI.find(i => i.name === 'Shielded') as any,
-          args: { user: address as `0x${string}` },
-          fromBlock: 0n
-        });
+        // Define events clearly
+        const shieldedEvent = parseAbiItem('event Shielded(address indexed user, address indexed token, uint256 amount, string privateAddress)');
+        const unshieldedEvent = parseAbiItem('event Unshielded(address indexed user, address indexed token, uint256 amount)');
+        const transferEvent = parseAbiItem('event PrivateTransfer(address indexed from, address indexed to, address indexed token, uint256 amount)');
 
-        // 2. Fetch Unshielded Events (Withdraw)
-        const unshieldedLogs = await publicClient.getLogs({
-          address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI.find(i => i.name === 'Unshielded') as any,
-          args: { user: address as `0x${string}` },
-          fromBlock: 0n
-        });
+        // 1. Fetch Logs
+        const [shieldedLogs, unshieldedLogs, sentLogs, receivedLogs] = await Promise.all([
+          publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: shieldedEvent, args: { user: address as `0x${string}` }, fromBlock: 0n }),
+          publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: unshieldedEvent, args: { user: address as `0x${string}` }, fromBlock: 0n }),
+          publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { from: address as `0x${string}` }, fromBlock: 0n }),
+          publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { to: address as `0x${string}` }, fromBlock: 0n }),
+        ]);
 
-        // 3. Fetch Private Transfer Events (Send/Receive)
-        const sentLogs = await publicClient.getLogs({
-          address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI.find(i => i.name === 'PrivateTransfer') as any,
-          args: { from: address as `0x${string}` },
-          fromBlock: 0n
-        });
-
-        const receivedLogs = await publicClient.getLogs({
-          address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI.find(i => i.name === 'PrivateTransfer') as any,
-          args: { to: address as `0x${string}` },
-          fromBlock: 0n
-        });
-
-        // Get block data for timestamps
         const allLogs = [...shieldedLogs, ...unshieldedLogs, ...sentLogs, ...receivedLogs];
-        
-        // Remove duplicates (e.g. if a log is both sent and received)
         const uniqueLogs = allLogs.filter((log, index, self) =>
           index === self.findIndex((t) => t.transactionHash === log.transactionHash)
         );
 
-        // Fetch block timestamps for all unique logs
+        // Fetch block timestamps with a simple fallback to prevent rate limit issues
         const logsWithTime = await Promise.all(uniqueLogs.map(async (log) => {
-          const block = await publicClient.getBlock({ blockNumber: log.blockNumber! });
-          return { ...log, timestamp: Number(block.timestamp) * 1000 };
+          try {
+            const block = await publicClient.getBlock({ blockNumber: log.blockNumber! });
+            return { ...log, timestamp: Number(block.timestamp) * 1000 };
+          } catch (e) {
+            return { ...log, timestamp: Date.now() };
+          }
         }));
 
         // Format data for UI
@@ -190,8 +173,14 @@ export default function HistoryPage() {
           const amount = formatUnits(args.amount || 0n, 6);
           const isDeposit = type === 'Shielded';
           const isWithdraw = type === 'Unshielded';
-          const isSend = type === 'PrivateTransfer' && args.from?.toLowerCase() === address.toLowerCase();
-          const isReceive = type === 'PrivateTransfer' && args.to?.toLowerCase() === address.toLowerCase();
+          const userAddr = address.toLowerCase();
+          const isSend = type === 'PrivateTransfer' && args.from?.toLowerCase() === userAddr;
+          const isReceive = type === 'PrivateTransfer' && args.to?.toLowerCase() === userAddr;
+
+          // Case-insensitive token check
+          const tokenAddr = args.token?.toLowerCase();
+          const isUSDC = tokenAddr === USDC_ADDRESS.toLowerCase();
+          const isEURC = tokenAddr === EURC_ADDRESS.toLowerCase();
 
           return {
             id: log.transactionHash,
@@ -199,9 +188,9 @@ export default function HistoryPage() {
             label: isDeposit ? 'Deposit' : isWithdraw ? 'Withdraw' : isReceive ? 'Private Receive' : 'Private Send',
             description: isDeposit ? `Public → Private Vault` : isWithdraw ? `Private Vault → Public` : isReceive ? `From ${args.from?.slice(0, 6)}...` : `To ${args.to?.slice(0, 6)}...`,
             amount: (isDeposit || isReceive) ? `+${amount}` : `-${amount}`,
-            token: args.token === USDC_ADDRESS ? 'USDC' : args.token === EURC_ADDRESS ? 'EURC' : 'Asset',
+            token: isUSDC ? 'USDC' : isEURC ? 'EURC' : 'Asset',
             status: 'confirmed',
-            timestamp: log.timestamp, // Store raw timestamp for sorting
+            timestamp: log.timestamp,
             time: new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             date: new Date(log.timestamp).toDateString() === new Date().toDateString() ? 'Today' : new Date(log.timestamp).toLocaleDateString(),
             hash: log.transactionHash,
@@ -209,7 +198,6 @@ export default function HistoryPage() {
           };
         });
 
-        // Sort by timestamp descending
         formatted.sort((a, b) => b.timestamp - a.timestamp);
         setTxHistory(formatted);
 

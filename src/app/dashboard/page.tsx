@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccount, useBalance, useReadContract, usePublicClient } from 'wagmi';
-import { formatUnits } from 'viem';
+import { formatUnits, parseAbiItem } from 'viem';
 import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
 import {
   Shield, Send, Unlock, Eye, EyeOff, ArrowUpRight,
@@ -104,34 +104,17 @@ export default function HomePage() {
         return;
       }
       try {
+        const shieldedEvent = parseAbiItem('event Shielded(address indexed user, address indexed token, uint256 amount, string privateAddress)');
+        const unshieldedEvent = parseAbiItem('event Unshielded(address indexed user, address indexed token, uint256 amount)');
+        const transferEvent = parseAbiItem('event PrivateTransfer(address indexed from, address indexed to, address indexed token, uint256 amount)');
+
         // Fetch logs for Shielded, Unshielded, and PrivateTransfer
-        const shieldedLogs = await publicClient.getLogs({
-          address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI.find(i => i.name === 'Shielded') as any,
-          args: { user: address as `0x${string}` },
-          fromBlock: 0n
-        });
-
-        const unshieldedLogs = await publicClient.getLogs({
-          address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI.find(i => i.name === 'Unshielded') as any,
-          args: { user: address as `0x${string}` },
-          fromBlock: 0n
-        });
-
-        const sentLogs = await publicClient.getLogs({
-          address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI.find(i => i.name === 'PrivateTransfer') as any,
-          args: { from: address as `0x${string}` },
-          fromBlock: 0n
-        });
-
-        const receivedLogs = await publicClient.getLogs({
-          address: VAULT_ADDRESS as `0x${string}`,
-          event: VAULT_ABI.find(i => i.name === 'PrivateTransfer') as any,
-          args: { to: address as `0x${string}` },
-          fromBlock: 0n
-        });
+        const [shieldedLogs, unshieldedLogs, sentLogs, receivedLogs] = await Promise.all([
+          publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: shieldedEvent, args: { user: address as `0x${string}` }, fromBlock: 0n }),
+          publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: unshieldedEvent, args: { user: address as `0x${string}` }, fromBlock: 0n }),
+          publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { from: address as `0x${string}` }, fromBlock: 0n }),
+          publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { to: address as `0x${string}` }, fromBlock: 0n }),
+        ]);
 
         const allLogs = [...shieldedLogs, ...unshieldedLogs, ...sentLogs, ...receivedLogs];
         const uniqueLogs = allLogs.filter((log, index, self) =>
