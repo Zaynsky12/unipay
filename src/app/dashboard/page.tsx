@@ -105,7 +105,8 @@ export default function HomePage() {
       }
       try {
         const currentBlock = await publicClient.getBlockNumber();
-        const fromBlock = currentBlock > 9999n ? currentBlock - 9999n : 0n;
+        const toBlock = currentBlock;
+        const fromBlock = currentBlock > 4999n ? currentBlock - 4999n : 0n;
 
         const shieldedEvent = parseAbiItem('event Shielded(address indexed user, address indexed token, uint256 amount, string privateAddress)');
         const unshieldedEvent = parseAbiItem('event Unshielded(address indexed user, address indexed token, uint256 amount)');
@@ -115,22 +116,22 @@ export default function HomePage() {
         let allLogs: any[] = [];
         
         try {
-          const sLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: shieldedEvent, args: { user: address as `0x${string}` }, fromBlock });
+          const sLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: shieldedEvent, args: { user: address as `0x${string}` }, fromBlock, toBlock });
           allLogs = [...allLogs, ...sLogs];
         } catch (e) { console.error("Shield logs failed", e); }
 
         try {
-          const uLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: unshieldedEvent, args: { user: address as `0x${string}` }, fromBlock });
+          const uLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: unshieldedEvent, args: { user: address as `0x${string}` }, fromBlock, toBlock });
           allLogs = [...allLogs, ...uLogs];
         } catch (e) { console.error("Unshield logs failed", e); }
 
         try {
-          const sentLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { from: address as `0x${string}` }, fromBlock });
+          const sentLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { from: address as `0x${string}` }, fromBlock, toBlock });
           allLogs = [...allLogs, ...sentLogs];
         } catch (e) { console.error("Sent logs failed", e); }
 
         try {
-          const rLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { to: address as `0x${string}` }, fromBlock });
+          const rLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { to: address as `0x${string}` }, fromBlock, toBlock });
           allLogs = [...allLogs, ...rLogs];
         } catch (e) { console.error("Received logs failed", e); }
 
