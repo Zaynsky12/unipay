@@ -1,26 +1,153 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-background: #07070a;
+  --color-surface: rgba(255, 255, 255, 0.035);
+  --color-surface-hover: rgba(255, 255, 255, 0.06);
+  --color-surface-border: rgba(255, 255, 255, 0.08);
+  --color-primary: #7c3aed;
+  --color-primary-light: #8b5cf6;
+  --color-primary-glow: rgba(124, 58, 237, 0.3);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-background);
+  color: #ededed;
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
+
+/* ---- AMBIENT BACKGROUND GLOW ---- */
+.glow-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.glow-bg::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 700px;
+  height: 500px;
+  background: radial-gradient(ellipse at center, rgba(109, 40, 217, 0.18) 0%, transparent 70%);
+  filter: blur(40px);
+  animation: glow-pulse 6s ease-in-out infinite;
+}
+.glow-bg::after {
+  content: '';
+  position: absolute;
+  bottom: 10%;
+  right: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+  filter: blur(60px);
+  animation: glow-pulse 8s ease-in-out infinite reverse;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1) translateX(-50%); }
+  50% { opacity: 1; transform: scale(1.08) translateX(-50%); }
+}
+
+/* ---- GLASS PANELS ---- */
+.glass-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: 32px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  z-index: 1;
+}
+
+.glass-panel-sm {
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: 20px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ---- STAT CARDS ---- */
+.stat-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+.stat-card:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(124, 58, 237, 0.3);
+  transform: translateY(-2px);
+}
+
+/* ---- PRIMARY BUTTON ---- */
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  border-radius: 20px;
+  font-weight: 700;
+  transition: all 0.2s;
+  box-shadow: 0 0 0 0 var(--color-primary-glow);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--color-primary-glow);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- CUSTOM SCROLLBAR ---- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* ---- INPUTS ---- */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ---- ANIMATIONS ---- */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.06) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
