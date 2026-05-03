@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\Thoriq\\Documents\\morphic\\contracts\\MorphicVault.sol": {
-      "lastModificationDate": 1777832161963,
-      "contentHash": "176b50913204dcbbcdbbd2a76554cf60",
+      "lastModificationDate": 1777833398425,
+      "contentHash": "a8336b5ea43208f3f02368f8286f96ad",
       "sourceName": "contracts/MorphicVault.sol",
       "solcConfig": {
         "version": "0.8.20",

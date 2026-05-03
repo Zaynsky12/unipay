@@ -1,4 +1,4 @@
-export const VAULT_ADDRESS = "0xA08057b48C41B915112B5d1a7e462A1D44CC51a9";
+export const VAULT_ADDRESS = "0xdb550A1302a20907A6f086828c425e71e08F1D17";
 
 export const VAULT_ABI = [
   {
@@ -28,6 +28,17 @@ export const VAULT_ABI = [
       { "internalType": "uint256", "name": "amount", "type": "uint256" }
     ],
     "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "token", "type": "address" },
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "privateTransfer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

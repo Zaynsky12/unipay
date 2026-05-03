@@ -18,6 +18,7 @@ contract MorphicVault is Ownable {
     event Shielded(address indexed user, address indexed token, uint256 amount, string privateAddress);
     event Unshielded(address indexed user, address indexed token, uint256 amount);
     event TokenSupported(address indexed token, bool status);
+    event PrivateTransfer(address indexed from, address indexed to, address indexed token, uint256 amount);
 
     constructor(address[] memory initialTokens) Ownable(msg.sender) {
         for (uint i = 0; i < initialTokens.length; i++) {
@@ -54,5 +55,21 @@ contract MorphicVault is Ownable {
         require(IERC20(token).transfer(msg.sender, amount), "Transfer failed");
         
         emit Unshielded(msg.sender, token, amount);
+    }
+
+    /**
+     * @dev Transfer shielded token balances internally between users without public token transfer.
+     */
+    function privateTransfer(address token, address to, uint256 amount) external {
+        require(supportedTokens[token], "Token not supported");
+        require(amount > 0, "Amount must be greater than 0");
+        require(to != address(0), "Invalid recipient");
+        require(to != msg.sender, "Cannot send to self");
+        require(balances[msg.sender][token] >= amount, "Insufficient shielded balance");
+
+        balances[msg.sender][token] -= amount;
+        balances[to][token] += amount;
+
+        emit PrivateTransfer(msg.sender, to, token, amount);
     }
 }

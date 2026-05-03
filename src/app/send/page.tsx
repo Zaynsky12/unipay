@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Settings, ArrowDown, Send, CheckCircle2, Loader2, Info, Shield } from 'lucide-react';
-import { AppKit } from "@circle-fin/app-kit";
-import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
-import { useAccount, useReadContract } from 'wagmi';
-import { formatUnits } from 'viem';
-import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS } from '@/lib/constants';
+import React, { useState } from 'react';
+import { Settings, ArrowDown, Send, CheckCircle2, Loader2, Info } from 'lucide-react';
+import { useAccount, useReadContract, useWriteContract } from 'wagmi';
+import { formatUnits, parseUnits } from 'viem';
+import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 type Status = 'idle' | 'sending' | 'success';
@@ -15,15 +13,19 @@ export default function PrivateSendPage() {
   const { address, isConnected } = useAccount();
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
+  const [selectedToken, setSelectedToken] = useState<"USDC" | "EURC">("USDC");
   const [status, setStatus] = useState<Status>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
+
+  const tokenAddress = selectedToken === "USDC" ? USDC_ADDRESS : EURC_ADDRESS;
+  const { writeContractAsync } = useWriteContract();
 
   // Fetch real shielded balance (Vault)
   const { data: shieldedRaw, isLoading: isBalanceLoading } = useReadContract({
     address: VAULT_ADDRESS as `0x${string}`,
     abi: VAULT_ABI,
     functionName: 'balances',
-    args: address ? [address as `0x${string}`, USDC_ADDRESS as `0x${string}`] : undefined,
+    args: address ? [address as `0x${string}`, tokenAddress as `0x${string}`] : undefined,
     query: {
       enabled: !!address,
     }
@@ -32,30 +34,20 @@ export default function PrivateSendPage() {
   const vaultBalance = shieldedRaw ? formatUnits(shieldedRaw as bigint, 6) : '0.00';
 
   const handleSend = async () => {
-    if (!recipient || !amount || status !== 'idle' || !isConnected) return;
+    if (!recipient || !amount || status !== 'idle' || !isConnected || !address) return;
     setStatus('sending');
     
     try {
-      if (!window.ethereum) throw new Error("Wallet not found");
-      
-      const adapter = await createViemAdapterFromProvider({
-        provider: window.ethereum as any,
-      });
-      const kit = new AppKit();
+      const parsedAmount = parseUnits(amount, 6); // Both USDC and EURC use 6 decimals
 
-      const finalRecipient = recipient;
-
-      // Ensure amount has correct precision formatting (AppKit expects a string representing the value, e.g. "1.00")
-      const result = await kit.send({
-        from: { adapter, chain: "Arc_Testnet" },
-        to: finalRecipient,
-        amount: amount,
-        token: "USDC", // Arc native testnet stablecoin
+      // Call privateTransfer on MorphicVault
+      const hash = await writeContractAsync({
+        address: VAULT_ADDRESS as `0x${string}`,
+        abi: VAULT_ABI,
+        functionName: 'privateTransfer',
+        args: [tokenAddress as `0x${string}`, recipient as `0x${string}`, parsedAmount],
       });
 
-      // Assuming result contains a hash or we just set success
-      // If result is undefined, we still set success
-      const hash = result as any || "0x_mock_hash";
       setTxHash(hash);
 
       // Record transaction to backend for history
@@ -66,7 +58,7 @@ export default function PrivateSendPage() {
           body: JSON.stringify({
             userAddress: address,
             type: 'SEND',
-            amount,
+            amount: `${amount} ${selectedToken}`,
             txHash: hash
           }),
         });
@@ -98,12 +90,12 @@ export default function PrivateSendPage() {
         <div>
           <h2 className="text-2xl font-bold text-white">Sent!</h2>
           <p className="text-gray-400 mt-2 font-medium">
-            <span className="text-white font-bold">{amount} Shielded USDC</span> sent to<br />
-            <span className="text-blue-400 font-bold">{recipient}</span>
+            <span className="text-white font-bold">{amount} Shielded {selectedToken}</span> sent to<br />
+            <span className="text-blue-400 font-bold break-all">{recipient}</span>
           </p>
         </div>
         <div className="w-full p-3 rounded-2xl bg-blue-500/8 border border-blue-500/15 text-xs text-blue-300 font-medium">
-          ✓ Transfer is private — amount hidden on Arc Network
+          ✓ Transfer is private — actual amount hidden on Arc Network
         </div>
         {txHash && txHash !== "0x_mock_hash" && (
           <a 
@@ -160,10 +152,16 @@ export default function PrivateSendPage() {
       {/* Amount Input */}
       <div className="bg-black/40 rounded-3xl p-4 border border-white/6 hover:border-white/10 transition-colors">
         <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-2 px-1">
-            <Shield className="w-4 h-4 text-violet-400" />
-            <span className="text-sm font-bold text-white">Shielded USDC</span>
-          </div>
+          <button 
+            onClick={() => setSelectedToken(selectedToken === "USDC" ? "EURC" : "USDC")}
+            disabled={status !== 'idle'}
+            className="flex items-center gap-2 bg-white/6 hover:bg-white/10 transition-colors rounded-full px-3 py-1.5 border border-white/8">
+            <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white", selectedToken === "USDC" ? "bg-blue-500" : "bg-emerald-500")}>
+              {selectedToken === "USDC" ? "U" : "€"}
+            </div>
+            <span className="text-sm font-bold text-white">{selectedToken}</span>
+            <ArrowDown className="w-3.5 h-3.5 text-gray-400" />
+          </button>
           <input
             type="number"
             value={amount}
@@ -189,7 +187,7 @@ export default function PrivateSendPage() {
       <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-blue-500/8 border border-blue-500/15">
         <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
         <p className="text-xs text-blue-200/70 leading-relaxed">
-          Zero-knowledge proofs hide both the amount and recipient address on Arc's public ledger.
+          Zero-knowledge proofs hide both the token amount and recipient address on Arc's public ledger.
         </p>
       </div>
 
