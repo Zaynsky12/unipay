@@ -1,5 +1,9 @@
 "use client";
 
+// Real-time balance integration for Morphic Privacy Platform
+
+import React, { useState } from 'react';
+import Link from 'next/link';
 import { useAccount, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
 import {
