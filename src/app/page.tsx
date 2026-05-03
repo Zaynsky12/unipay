@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
+import { useAccount, useBalance } from 'wagmi';
+import { formatUnits } from 'viem';
 import {
   Shield, Send, Unlock, Eye, EyeOff, ArrowUpRight,
   ArrowDownRight, TrendingUp, Lock, Zap, ChevronRight, History
@@ -81,7 +81,23 @@ const recentActivity = [
 ];
 
 export default function HomePage() {
+  const { address, isConnected } = useAccount();
   const [showBalance, setShowBalance] = useState(true);
+
+  // Fetch Public Balance
+  const { data: balanceData, isLoading: isBalanceLoading } = useBalance({
+    address: address,
+  });
+
+  // For Demo: Shielded Balance is 0.00 unless we have a specific contract call
+  // In a real app, you would fetch this from the MorphicVault contract
+  const shieldedBalance = '0.00';
+  const publicBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
+  const totalValue = (parseFloat(publicBalance) + parseFloat(shieldedBalance)).toFixed(2);
+
+  const balanceParts = parseFloat(shieldedBalance).toFixed(2).split('.');
+  const wholePart = balanceParts[0];
+  const decimalPart = balanceParts[1];
 
   return (
     <div className="flex flex-col gap-5 mt-6 pb-4">
@@ -112,8 +128,8 @@ export default function HomePage() {
           <div className="flex items-end gap-2">
             {showBalance ? (
               <>
-                <span className="text-5xl font-bold text-white tracking-tight">4,500</span>
-                <span className="text-2xl font-semibold text-gray-400 mb-1">.00</span>
+                <span className="text-5xl font-bold text-white tracking-tight">{isBalanceLoading ? '...' : wholePart}</span>
+                <span className="text-2xl font-semibold text-gray-400 mb-1">.{decimalPart}</span>
                 <span className="text-lg font-bold text-violet-400 mb-1 ml-1">USDC</span>
               </>
             ) : (
@@ -123,7 +139,7 @@ export default function HomePage() {
           {showBalance && (
             <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
               <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-emerald-400 font-semibold">+12.5%</span>
+              <span className="text-emerald-400 font-semibold">+0.0%</span>
               <span>this month</span>
             </p>
           )}
@@ -137,13 +153,13 @@ export default function HomePage() {
           <div>
             <p className="text-xs text-gray-500 mb-1">Public Balance</p>
             <p className="text-base font-bold text-gray-300">
-              {showBalance ? '1,250.00 USDC' : '•••••••'}
+              {showBalance ? `${isBalanceLoading ? '...' : parseFloat(publicBalance).toLocaleString()} USDC` : '•••••••'}
             </p>
           </div>
           <div className="text-right">
             <p className="text-xs text-gray-500 mb-1">Total Value</p>
             <p className="text-base font-bold text-gray-300">
-              {showBalance ? '5,750.00 USDC' : '•••••••'}
+              {showBalance ? `${isBalanceLoading ? '...' : parseFloat(totalValue).toLocaleString()} USDC` : '•••••••'}
             </p>
           </div>
         </div>
