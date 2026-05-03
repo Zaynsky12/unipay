@@ -138,37 +138,54 @@ export default function HistoryPage() {
       }
       
       try {
-        // Get current block number to handle RPC 10,000 block range limit
+        // Get current block number
         const currentBlock = await publicClient.getBlockNumber();
         const fromBlock = currentBlock > 9999n ? currentBlock - 9999n : 0n;
 
-        // Define events clearly
+        // Define events
         const shieldedEvent = parseAbiItem('event Shielded(address indexed user, address indexed token, uint256 amount, string privateAddress)');
         const unshieldedEvent = parseAbiItem('event Unshielded(address indexed user, address indexed token, uint256 amount)');
         const transferEvent = parseAbiItem('event PrivateTransfer(address indexed from, address indexed to, address indexed token, uint256 amount)');
 
-        // 1. Fetch Logs (Limited to 10k range)
-        const [shieldedLogs, unshieldedLogs, sentLogs, receivedLogs] = await Promise.all([
-          publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: shieldedEvent, args: { user: address as `0x${string}` }, fromBlock }),
-          publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: unshieldedEvent, args: { user: address as `0x${string}` }, fromBlock }),
-          publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { from: address as `0x${string}` }, fromBlock }),
-          publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { to: address as `0x${string}` }, fromBlock }),
-        ]);
+        // Fetch logs one by one to avoid overwhelming the RPC
+        let allLogs: any[] = [];
+        
+        try {
+          const sLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: shieldedEvent, args: { user: address as `0x${string}` }, fromBlock });
+          allLogs = [...allLogs, ...sLogs];
+        } catch (e) { console.error("Shielded logs failed", e); }
 
-        const allLogs = [...shieldedLogs, ...unshieldedLogs, ...sentLogs, ...receivedLogs];
+        try {
+          const uLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: unshieldedEvent, args: { user: address as `0x${string}` }, fromBlock });
+          allLogs = [...allLogs, ...uLogs];
+        } catch (e) { console.error("Unshielded logs failed", e); }
+
+        try {
+          const sentLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { from: address as `0x${string}` }, fromBlock });
+          allLogs = [...allLogs, ...sentLogs];
+        } catch (e) { console.error("Sent logs failed", e); }
+
+        try {
+          const rLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { to: address as `0x${string}` }, fromBlock });
+          allLogs = [...allLogs, ...rLogs];
+        } catch (e) { console.error("Received logs failed", e); }
+
         const uniqueLogs = allLogs.filter((log, index, self) =>
           index === self.findIndex((t) => t.transactionHash === log.transactionHash)
         );
 
-        // Fetch block timestamps with a simple fallback to prevent rate limit issues
-        const logsWithTime = await Promise.all(uniqueLogs.map(async (log) => {
+        // Fetch timestamps one by one (Limit to first 10 for performance/stability)
+        const sortedLogs = uniqueLogs.sort((a, b) => Number(b.blockNumber) - Number(a.blockNumber)).slice(0, 20);
+        
+        const logsWithTime = [];
+        for (const log of sortedLogs) {
           try {
             const block = await publicClient.getBlock({ blockNumber: log.blockNumber! });
-            return { ...log, timestamp: Number(block.timestamp) * 1000 };
+            logsWithTime.push({ ...log, timestamp: Number(block.timestamp) * 1000 });
           } catch (e) {
-            return { ...log, timestamp: Date.now() };
+            logsWithTime.push({ ...log, timestamp: Date.now() });
           }
-        }));
+        }
 
         // Format data for UI
         const formatted = logsWithTime.map((log: any) => {
