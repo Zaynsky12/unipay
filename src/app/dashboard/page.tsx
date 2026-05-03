@@ -4,9 +4,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAccount, useBalance, useReadContract } from 'wagmi';
+import { useAccount, useBalance, useReadContract, usePublicClient } from 'wagmi';
 import { formatUnits } from 'viem';
-import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS } from '@/lib/constants';
+import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
 import {
   Shield, Send, Unlock, Eye, EyeOff, ArrowUpRight,
   ArrowDownRight, TrendingUp, Lock, Zap, ChevronRight, History, Loader2
@@ -57,7 +57,7 @@ const typeConfig = {
     icon: Shield,
     color: 'text-violet-400',
     bg: 'bg-violet-500/10',
-    label: 'Deposited Asset',
+    label: 'Deposit',
   },
   send: {
     icon: Send,
@@ -69,13 +69,14 @@ const typeConfig = {
     icon: Unlock,
     color: 'text-emerald-400',
     bg: 'bg-emerald-500/10',
-    label: 'Withdrawn Asset',
+    label: 'Withdraw',
   },
 };
 
 export default function HomePage() {
   const { address, isConnected } = useAccount();
   const [showBalance, setShowBalance] = useState(true);
+  const publicClient = usePublicClient();
   const [activities, setActivities] = useState<any[]>([]);
   const [isActivityLoading, setIsActivityLoading] = useState(true);
 
@@ -95,27 +96,67 @@ export default function HomePage() {
     }
   });
 
-  // Fetch Recent Activity
+  // Fetch Recent Activity On-Chain
   useEffect(() => {
-    const fetchRecent = async () => {
-      if (!address) {
+    const fetchOnChainRecent = async () => {
+      if (!address || !publicClient) {
         setIsActivityLoading(false);
         return;
       }
       try {
-        const response = await fetch(`/api/transactions/history?address=${address}`);
-        const data = await response.json();
-        if (data.success) {
-          setActivities(data.history.slice(0, 3)); // Only show last 3
-        }
+        // Fetch logs for Shielded, Unshielded, and PrivateTransfer
+        const shieldedLogs = await publicClient.getLogs({
+          address: VAULT_ADDRESS as `0x${string}`,
+          event: VAULT_ABI[4] as any,
+          args: { user: address as `0x${string}` },
+          fromBlock: 0n
+        });
+
+        const unshieldedLogs = await publicClient.getLogs({
+          address: VAULT_ADDRESS as `0x${string}`,
+          event: VAULT_ABI[5] as any,
+          args: { user: address as `0x${string}` },
+          fromBlock: 0n
+        });
+
+        const sentLogs = await publicClient.getLogs({
+          address: VAULT_ADDRESS as `0x${string}`,
+          event: VAULT_ABI[6] as any,
+          args: { from: address as `0x${string}` },
+          fromBlock: 0n
+        });
+
+        const receivedLogs = await publicClient.getLogs({
+          address: VAULT_ADDRESS as `0x${string}`,
+          event: VAULT_ABI[6] as any,
+          args: { to: address as `0x${string}` },
+          fromBlock: 0n
+        });
+
+        const allLogs = [...shieldedLogs, ...unshieldedLogs, ...sentLogs, ...receivedLogs];
+        const uniqueLogs = allLogs.filter((log, index, self) =>
+          index === self.findIndex((t) => t.transactionHash === log.transactionHash)
+        );
+
+        // Sort by block number descending and take top 3
+        const recentLogs = uniqueLogs
+          .sort((a, b) => Number(b.blockNumber) - Number(a.blockNumber))
+          .slice(0, 3);
+
+        const logsWithTime = await Promise.all(recentLogs.map(async (log) => {
+          const block = await publicClient.getBlock({ blockNumber: log.blockNumber! });
+          return { ...log, timestamp: Number(block.timestamp) * 1000 };
+        }));
+
+        setActivities(logsWithTime);
       } catch (e) {
         console.error("Failed to fetch recent activity", e);
       } finally {
         setIsActivityLoading(false);
       }
     };
-    fetchRecent();
-  }, [address]);
+    fetchOnChainRecent();
+  }, [address, publicClient]);
 
   const shieldedBalance = shieldedRaw ? formatUnits(shieldedRaw as bigint, 6) : '0.00';
   const publicBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
@@ -260,18 +301,22 @@ export default function HomePage() {
               <p className="text-xs text-gray-600">No recent activity</p>
             </div>
           ) : (
-            activities.map((tx, i) => {
-              const type = (tx.type?.toLowerCase() || 'shield') as keyof typeof typeConfig;
-              const cfg = typeConfig[type] || typeConfig.shield;
-              const Icon = cfg.icon;
-              const isPositive = tx.type === 'SHIELD';
+            activities.map((log, i) => {
+              const type = log.eventName.toUpperCase();
+              const args = log.args;
+              const amount = formatUnits(args.amount, 6);
               
-              // Clean amount (remove token if it was stored in amount)
-              const cleanAmount = tx.amount?.toString().split(' ')[0] || '0';
+              const isDeposit = type === 'SHIELDED';
+              const isWithdraw = type === 'UNSHIELDED';
+              const isSend = type === 'PRIVATETRANSFER' && args.from?.toLowerCase() === address?.toLowerCase();
+              const isReceive = type === 'PRIVATETRANSFER' && args.to?.toLowerCase() === address?.toLowerCase();
+
+              const cfg = isDeposit ? typeConfig.shield : isWithdraw ? typeConfig.unshield : typeConfig.send;
+              const Icon = cfg.icon;
 
               return (
                 <div
-                  key={tx.id || i}
+                  key={log.transactionHash}
                   className={cn(
                     "flex items-center gap-4 px-4 py-3.5 hover:bg-white/3 transition-colors",
                     i < activities.length - 1 && "border-b border-white/5"
@@ -281,18 +326,20 @@ export default function HomePage() {
                     <Icon className={cn("w-4 h-4", cfg.color)} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{cfg.label}</p>
+                    <p className="text-sm font-semibold text-white truncate">
+                      {isDeposit ? 'Deposit' : isWithdraw ? 'Withdraw' : isReceive ? 'Private Receive' : 'Private Send'}
+                    </p>
                     <p className="text-xs text-gray-500">
-                      {tx.timestamp ? new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
+                      {log.timestamp ? new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className={cn("text-sm font-bold", isPositive ? "text-emerald-400" : "text-gray-300")}>
-                      {showBalance ? (isPositive ? `+${cleanAmount}` : `-${cleanAmount}`) : '••••'} <span className="text-xs font-normal text-gray-500">{tx.token || 'USDC'}</span>
+                    <p className={cn("text-sm font-bold", (isDeposit || isReceive) ? "text-emerald-400" : "text-gray-300")}>
+                      {showBalance ? ((isDeposit || isReceive) ? `+${amount}` : `-${amount}`) : '••••'} <span className="text-xs font-normal text-gray-500">{args.token === USDC_ADDRESS ? 'USDC' : args.token === EURC_ADDRESS ? 'EURC' : 'Asset'}</span>
                     </p>
-                    <div className={cn("flex items-center justify-end gap-0.5 text-xs", isPositive ? "text-emerald-500" : "text-gray-500")}>
-                      {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                      {isPositive ? 'Received' : tx.type === 'SEND' ? 'Sent' : 'Withdrawn'}
+                    <div className={cn("flex items-center justify-end gap-0.5 text-xs", (isDeposit || isReceive) ? "text-emerald-500" : "text-gray-500")}>
+                      {(isDeposit || isReceive) ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                      {isDeposit ? 'Received' : isWithdraw ? 'Withdrawn' : isReceive ? 'Received' : 'Sent'}
                     </div>
                   </div>
                 </div>

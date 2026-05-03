@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Shield, Send, Unlock, CheckCircle2, Clock, Search, Filter, ChevronDown, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
-import { useAccount } from 'wagmi';
+import { useAccount, usePublicClient } from 'wagmi';
+import { formatUnits } from 'viem';
+import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 type TxType = 'all' | 'shield' | 'send' | 'unshield';
@@ -94,7 +96,7 @@ const typeConfig = {
     color: 'text-violet-400',
     bg: 'bg-violet-500/10',
     border: 'border-violet-500/20',
-    label: 'Shield',
+    label: 'Deposit',
   },
   send: {
     icon: Send,
@@ -108,15 +110,15 @@ const typeConfig = {
     color: 'text-emerald-400',
     bg: 'bg-emerald-500/10',
     border: 'border-emerald-500/20',
-    label: 'Unshield',
+    label: 'Withdraw',
   },
 };
 
 const filters: { label: string; value: TxType }[] = [
   { label: 'All', value: 'all' },
-  { label: 'Shield', value: 'shield' },
+  { label: 'Deposit', value: 'shield' },
   { label: 'Send', value: 'send' },
-  { label: 'Unshield', value: 'unshield' },
+  { label: 'Withdraw', value: 'unshield' },
 ];
 
 export default function HistoryPage() {
@@ -126,49 +128,99 @@ export default function HistoryPage() {
   const [expandedTx, setExpandedTx] = useState<string | null>(null);
   const [txHistory, setTxHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const publicClient = usePublicClient();
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      if (!address) {
+    const fetchOnChainHistory = async () => {
+      if (!address || !publicClient) {
         setIsLoading(false);
         return;
       }
       
       try {
-        const response = await fetch(`/api/transactions/history?address=${address}`);
-        const data = await response.json();
+        // 1. Fetch Shielded Events (Deposit)
+        const shieldedLogs = await publicClient.getLogs({
+          address: VAULT_ADDRESS as `0x${string}`,
+          event: VAULT_ABI[4] as any, // Shielded
+          args: { user: address as `0x${string}` },
+          fromBlock: 0n // In production, use a more recent block or indexed service
+        });
+
+        // 2. Fetch Unshielded Events (Withdraw)
+        const unshieldedLogs = await publicClient.getLogs({
+          address: VAULT_ADDRESS as `0x${string}`,
+          event: VAULT_ABI[5] as any, // Unshielded
+          args: { user: address as `0x${string}` },
+          fromBlock: 0n
+        });
+
+        // 3. Fetch Private Transfer Events (Send/Receive)
+        const sentLogs = await publicClient.getLogs({
+          address: VAULT_ADDRESS as `0x${string}`,
+          event: VAULT_ABI[6] as any, // PrivateTransfer
+          args: { from: address as `0x${string}` },
+          fromBlock: 0n
+        });
+
+        const receivedLogs = await publicClient.getLogs({
+          address: VAULT_ADDRESS as `0x${string}`,
+          event: VAULT_ABI[6] as any, // PrivateTransfer
+          args: { to: address as `0x${string}` },
+          fromBlock: 0n
+        });
+
+        // Get block data for timestamps
+        const allLogs = [...shieldedLogs, ...unshieldedLogs, ...sentLogs, ...receivedLogs];
         
-        if (data.success && Array.isArray(data.history)) {
-          // Format data for UI
-          const formatted = data.history.map((tx: any) => {
-            const cleanAmount = tx.amount?.toString().split(' ')[0] || '0';
-            const type = tx.type?.toLowerCase() || 'shield';
-            
-            return {
-              id: tx.id,
-              type: type,
-              label: tx.type === 'SEND' ? 'Private Send' : tx.type?.charAt(0) + tx.type?.slice(1).toLowerCase(),
-              description: tx.type === 'SHIELD' ? `${tx.token || 'USDC'} → Morphic Vault` : tx.type === 'UNSHIELD' ? `Morphic Vault → ${tx.token || 'USDC'}` : 'Private Transfer',
-              amount: tx.type === 'SHIELD' ? `+${cleanAmount}` : `-${cleanAmount}`,
-              token: tx.token || 'USDC',
-              status: tx.status?.toLowerCase() || 'confirmed',
-              time: tx.timestamp ? new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Unknown',
-              date: tx.timestamp ? (new Date(tx.timestamp).toDateString() === new Date().toDateString() ? 'Today' : new Date(tx.timestamp).toLocaleDateString()) : 'Unknown',
-              hash: tx.txHash || '0x...',
-              positive: tx.type === 'SHIELD',
-            };
-          });
-          setTxHistory(formatted);
-        }
+        // Remove duplicates (e.g. if a log is both sent and received)
+        const uniqueLogs = allLogs.filter((log, index, self) =>
+          index === self.findIndex((t) => t.transactionHash === log.transactionHash)
+        );
+
+        // Fetch block timestamps for all unique logs
+        const logsWithTime = await Promise.all(uniqueLogs.map(async (log) => {
+          const block = await publicClient.getBlock({ blockNumber: log.blockNumber! });
+          return { ...log, timestamp: Number(block.timestamp) * 1000 };
+        }));
+
+        // Format data for UI
+        const formatted = logsWithTime.map((log: any) => {
+          const type = log.eventName.toUpperCase();
+          const args = log.args;
+          const amount = formatUnits(args.amount, 6);
+          const isDeposit = type === 'SHIELDED';
+          const isWithdraw = type === 'UNSHIELDED';
+          const isSend = type === 'PRIVATETRANSFER' && args.from?.toLowerCase() === address.toLowerCase();
+          const isReceive = type === 'PRIVATETRANSFER' && args.to?.toLowerCase() === address.toLowerCase();
+
+          return {
+            id: log.transactionHash,
+            type: isDeposit ? 'shield' : isWithdraw ? 'unshield' : 'send',
+            label: isDeposit ? 'Deposit' : isWithdraw ? 'Withdraw' : isReceive ? 'Private Receive' : 'Private Send',
+            description: isDeposit ? `Public → Private Vault` : isWithdraw ? `Private Vault → Public` : isReceive ? `From ${args.from.slice(0, 6)}...` : `To ${args.to.slice(0, 6)}...`,
+            amount: (isDeposit || isReceive) ? `+${amount}` : `-${amount}`,
+            token: args.token === USDC_ADDRESS ? 'USDC' : args.token === EURC_ADDRESS ? 'EURC' : 'Asset',
+            status: 'confirmed',
+            time: new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: new Date(log.timestamp).toDateString() === new Date().toDateString() ? 'Today' : new Date(log.timestamp).toLocaleDateString(),
+            hash: log.transactionHash,
+            positive: isDeposit || isReceive,
+          };
+        });
+
+        // Sort by time descending
+        formatted.sort((a, b) => new Date(b.date + ' ' + b.time).getTime() - new Date(a.date + ' ' + a.time).getTime());
+        setTxHistory(formatted);
+
       } catch (e) {
-        console.error("Failed to fetch history", e);
+        console.error("Failed to fetch on-chain history", e);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchHistory();
-  }, [address]);
+    fetchOnChainHistory();
+  }, [address, publicClient]);
 
   const filtered = txHistory.filter((tx) => {
     const matchType = activeFilter === 'all' || tx.type === activeFilter;
