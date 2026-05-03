@@ -50,16 +50,6 @@ export default function LandingPage() {
             How it works
           </a>
         </div>
-
-        {/* Hero Image Mockup */}
-        <div className="mt-20 relative w-full max-w-5xl aspect-video rounded-3xl border border-white/10 overflow-hidden shadow-2xl animate-fade-in-up delay-300">
-          <img 
-            src="/morphic_vault_hero_1777834223698.png" 
-            alt="Morphic Vault" 
-            className="w-full h-full object-cover grayscale-[0.2] contrast-125"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#030305] via-transparent to-transparent" />
-        </div>
       </section>
 
       {/* ── How It Works Section ── */}

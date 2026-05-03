@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 const navItems = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Deposit', href: '/deposit', icon: Shield },
   { name: 'Private Send', href: '/send', icon: Send },
   { name: 'Withdraw', href: '/withdraw', icon: Unlock },
@@ -57,7 +57,7 @@ export function Sidebar() {
         <div className="text-xs text-gray-500 mb-1">Network</div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-          <span className="text-sm text-green-400 font-medium">Arc Mainnet</span>
+          <span className="text-sm text-green-400 font-medium">Arc Testnet</span>
         </div>
       </div>
     </aside>

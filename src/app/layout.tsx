@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Orbitron } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
+import { MainContainer } from "@/components/layout/MainContainer";
 import { Web3Provider } from "@/context/Web3Provider";
 import "./globals.css";
 
@@ -39,11 +40,9 @@ export default function RootLayout({
           {/* Ambient glow background */}
           <div className="glow-bg" />
           <Navbar />
-          <main className="flex-1 pt-24 px-4 pb-28 md:pb-12 flex items-start justify-center relative z-10">
-            <div className="w-full max-w-[480px]">
-              {children}
-            </div>
-          </main>
+          <MainContainer>
+            {children}
+          </MainContainer>
         </Web3Provider>
       </body>
     </html>
