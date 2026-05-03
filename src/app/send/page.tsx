@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Settings, ArrowDown, Send, CheckCircle2, Loader2, Info, Shield } from 'lucide-react';
 import { AppKit } from "@circle-fin/app-kit";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
-import { useAccount } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
+import { formatUnits } from 'viem';
 import { cn } from '@/lib/utils';
 
 type Status = 'idle' | 'sending' | 'success';
@@ -15,6 +16,14 @@ export default function PrivateSendPage() {
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
+
+  // Fetch real balance (Shielded Vault Balance)
+  // In a real scenario, this would fetch from the privacy pool contract
+  const { data: balanceData, isLoading: isBalanceLoading } = useBalance({
+    address: address,
+  });
+
+  const vaultBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
 
   const handleSend = async () => {
     if (!recipient || !amount || status !== 'idle' || !isConnected) return;
@@ -159,11 +168,11 @@ export default function PrivateSendPage() {
           />
         </div>
         <div className="flex justify-between items-center text-xs font-medium text-gray-500">
-          <span>Vault Balance: <span className="text-gray-400">4,500.00</span></span>
+          <span>Vault Balance: <span className="text-gray-400">{isBalanceLoading ? '...' : vaultBalance}</span></span>
           <div className="flex items-center gap-2">
             <span>{amount ? `≈ $${parseFloat(amount).toLocaleString()}` : '~$0.00'}</span>
             <button
-              onClick={() => setAmount('4500')}
+              onClick={() => setAmount(vaultBalance)}
               className="text-blue-400 hover:text-blue-300 font-bold bg-blue-500/10 hover:bg-blue-500/20 px-2 py-0.5 rounded-md transition-all"
             >MAX</button>
           </div>

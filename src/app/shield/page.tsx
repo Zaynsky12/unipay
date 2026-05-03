@@ -6,7 +6,8 @@ import { cn } from '@/lib/utils';
 
 import { AppKit } from "@circle-fin/app-kit";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
-import { useAccount } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
+import { formatUnits } from 'viem';
 
 type Status = 'idle' | 'shielding' | 'success';
 
@@ -15,6 +16,13 @@ export default function ShieldPage() {
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
+
+  // Fetch real balance
+  const { data: balanceData, isLoading: isBalanceLoading } = useBalance({
+    address: address,
+  });
+
+  const publicBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
 
   const handleShield = async () => {
     if (!amount || status !== 'idle' || !isConnected) return;
@@ -134,11 +142,11 @@ export default function ShieldPage() {
           />
         </div>
         <div className="flex justify-between items-center text-xs font-medium text-gray-500">
-          <span>Public Balance: <span className="text-gray-400">1,250.00</span></span>
+          <span>Public Balance: <span className="text-gray-400">{isBalanceLoading ? '...' : publicBalance}</span></span>
           <div className="flex items-center gap-2">
             <span>{amount ? `≈ $${parseFloat(amount).toLocaleString()}` : '~$0.00'}</span>
             <button
-              onClick={() => setAmount('1250')}
+              onClick={() => setAmount(publicBalance)}
               className="text-violet-400 hover:text-violet-300 font-bold bg-violet-500/10 hover:bg-violet-500/20 px-2 py-0.5 rounded-md transition-all"
             >MAX</button>
           </div>

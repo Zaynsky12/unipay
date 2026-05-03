@@ -6,7 +6,8 @@ import { cn } from '@/lib/utils';
 
 import { AppKit } from "@circle-fin/app-kit";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
-import { useAccount } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
+import { formatUnits } from 'viem';
 
 type Status = 'idle' | 'unshielding' | 'success';
 
@@ -15,6 +16,14 @@ export default function UnshieldPage() {
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
+
+  // Fetch real balance
+  const { data: balanceData, isLoading: isBalanceLoading } = useBalance({
+    address: address,
+  });
+
+  const vaultBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
+  const publicBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
 
   const handleUnshield = async () => {
     if (!amount || status !== 'idle' || !isConnected || !address) return;
@@ -134,11 +143,11 @@ export default function UnshieldPage() {
           />
         </div>
         <div className="flex justify-between items-center text-xs font-medium text-gray-500">
-          <span>Shielded Balance: <span className="text-violet-400">4,500.00</span></span>
+          <span>Shielded Balance: <span className="text-violet-400">{isBalanceLoading ? '...' : vaultBalance}</span></span>
           <div className="flex items-center gap-2">
             <span>{amount ? `≈ $${parseFloat(amount).toLocaleString()}` : '~$0.00'}</span>
             <button
-              onClick={() => setAmount('4500')}
+              onClick={() => setAmount(vaultBalance)}
               className="text-violet-400 hover:text-violet-300 font-bold bg-violet-500/10 hover:bg-violet-500/20 px-2 py-0.5 rounded-md transition-all"
             >MAX</button>
           </div>
@@ -164,7 +173,7 @@ export default function UnshieldPage() {
           </div>
         </div>
         <div className="flex justify-between items-center text-xs font-medium text-gray-500">
-          <span>Public Balance: <span className="text-gray-400">1,250.00</span></span>
+          <span>Public Balance: <span className="text-gray-400">{isBalanceLoading ? '...' : publicBalance}</span></span>
           <span className="text-gray-600">1:1 ratio</span>
         </div>
       </div>
