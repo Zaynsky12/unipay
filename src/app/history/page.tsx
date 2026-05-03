@@ -185,22 +185,23 @@ export default function HistoryPage() {
 
         // Format data for UI
         const formatted = logsWithTime.map((log: any) => {
-          const type = log.eventName.toUpperCase();
+          const type = log.eventName;
           const args = log.args;
-          const amount = formatUnits(args.amount, 6);
-          const isDeposit = type === 'SHIELDED';
-          const isWithdraw = type === 'UNSHIELDED';
-          const isSend = type === 'PRIVATETRANSFER' && args.from?.toLowerCase() === address.toLowerCase();
-          const isReceive = type === 'PRIVATETRANSFER' && args.to?.toLowerCase() === address.toLowerCase();
+          const amount = formatUnits(args.amount || 0n, 6);
+          const isDeposit = type === 'Shielded';
+          const isWithdraw = type === 'Unshielded';
+          const isSend = type === 'PrivateTransfer' && args.from?.toLowerCase() === address.toLowerCase();
+          const isReceive = type === 'PrivateTransfer' && args.to?.toLowerCase() === address.toLowerCase();
 
           return {
             id: log.transactionHash,
             type: isDeposit ? 'shield' : isWithdraw ? 'unshield' : 'send',
             label: isDeposit ? 'Deposit' : isWithdraw ? 'Withdraw' : isReceive ? 'Private Receive' : 'Private Send',
-            description: isDeposit ? `Public → Private Vault` : isWithdraw ? `Private Vault → Public` : isReceive ? `From ${args.from.slice(0, 6)}...` : `To ${args.to.slice(0, 6)}...`,
+            description: isDeposit ? `Public → Private Vault` : isWithdraw ? `Private Vault → Public` : isReceive ? `From ${args.from?.slice(0, 6)}...` : `To ${args.to?.slice(0, 6)}...`,
             amount: (isDeposit || isReceive) ? `+${amount}` : `-${amount}`,
             token: args.token === USDC_ADDRESS ? 'USDC' : args.token === EURC_ADDRESS ? 'EURC' : 'Asset',
             status: 'confirmed',
+            timestamp: log.timestamp, // Store raw timestamp for sorting
             time: new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             date: new Date(log.timestamp).toDateString() === new Date().toDateString() ? 'Today' : new Date(log.timestamp).toLocaleDateString(),
             hash: log.transactionHash,
@@ -208,8 +209,8 @@ export default function HistoryPage() {
           };
         });
 
-        // Sort by time descending
-        formatted.sort((a, b) => new Date(b.date + ' ' + b.time).getTime() - new Date(a.date + ' ' + a.time).getTime());
+        // Sort by timestamp descending
+        formatted.sort((a, b) => b.timestamp - a.timestamp);
         setTxHistory(formatted);
 
       } catch (e) {

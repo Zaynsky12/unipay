@@ -144,9 +144,16 @@ export default function HomePage() {
           .slice(0, 3);
 
         const logsWithTime = await Promise.all(recentLogs.map(async (log) => {
-          const block = await publicClient.getBlock({ blockNumber: log.blockNumber! });
-          return { ...log, timestamp: Number(block.timestamp) * 1000 };
+          try {
+            const block = await publicClient.getBlock({ blockNumber: log.blockNumber! });
+            return { ...log, timestamp: Number(block.timestamp) * 1000 };
+          } catch (e) {
+            return { ...log, timestamp: Date.now() };
+          }
         }));
+
+        // Sort by timestamp descending
+        logsWithTime.sort((a, b) => b.timestamp - a.timestamp);
 
         setActivities(logsWithTime);
       } catch (e) {
@@ -302,14 +309,14 @@ export default function HomePage() {
             </div>
           ) : (
             activities.map((log, i) => {
-              const type = log.eventName.toUpperCase();
+              const type = log.eventName;
               const args = log.args;
-              const amount = formatUnits(args.amount, 6);
+              const amount = formatUnits(args.amount || 0n, 6);
               
-              const isDeposit = type === 'SHIELDED';
-              const isWithdraw = type === 'UNSHIELDED';
-              const isSend = type === 'PRIVATETRANSFER' && args.from?.toLowerCase() === address?.toLowerCase();
-              const isReceive = type === 'PRIVATETRANSFER' && args.to?.toLowerCase() === address?.toLowerCase();
+              const isDeposit = type === 'Shielded';
+              const isWithdraw = type === 'Unshielded';
+              const isSend = type === 'PrivateTransfer' && args.from?.toLowerCase() === address?.toLowerCase();
+              const isReceive = type === 'PrivateTransfer' && args.to?.toLowerCase() === address?.toLowerCase();
 
               const cfg = isDeposit ? typeConfig.shield : isWithdraw ? typeConfig.unshield : typeConfig.send;
               const Icon = cfg.icon;
