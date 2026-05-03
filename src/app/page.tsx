@@ -9,12 +9,12 @@ export default function LandingPage() {
     <div className="flex flex-col gap-20 py-10 animate-fade-in">
       
       {/* ── Hero Section ── */}
-      <section className="relative flex flex-col items-center text-center px-4 pt-10">
-        <div className="absolute top-0 -z-10 w-full h-[500px] bg-gradient-to-b from-cyan-500/10 via-transparent to-transparent opacity-50 blur-3xl" />
+      <section className="relative flex flex-col items-center text-center px-4 pt-16 md:pt-24 min-h-[70vh] flex justify-center">
+        <div className="absolute top-0 -z-10 w-full h-[600px] bg-gradient-to-b from-cyan-500/15 via-transparent to-transparent opacity-60 blur-3xl" />
         
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-bold text-cyan-400 mb-6 animate-bounce-subtle">
-          <Zap className="w-3.5 h-3.5 fill-current" />
-          Next-Gen Privacy Protocol
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-sm font-bold text-cyan-400 mb-8 animate-bounce-subtle">
+          <Zap className="w-4 h-4 fill-current" />
+          Built on Arc
         </div>
         
         <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight leading-tight mb-6">
