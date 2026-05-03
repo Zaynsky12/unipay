@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Hardhat
+/artifacts/
+/cache/
+
+# Database
+transactions.json
