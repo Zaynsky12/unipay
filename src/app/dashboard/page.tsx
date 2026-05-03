@@ -4,8 +4,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount, useBalance, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
+import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS } from '@/lib/constants';
 import {
   Shield, Send, Unlock, Eye, EyeOff, ArrowUpRight,
   ArrowDownRight, TrendingUp, Lock, Zap, ChevronRight, History, Loader2
@@ -14,9 +15,9 @@ import { cn } from '@/lib/utils';
 
 const quickActions = [
   {
-    label: 'Shield',
+    label: 'Deposit',
     description: 'Deposit to vault',
-    href: '/shield',
+    href: '/deposit',
     icon: Shield,
     color: 'from-violet-600 to-violet-800',
     glow: 'shadow-violet-500/25',
@@ -32,9 +33,9 @@ const quickActions = [
     bgHover: 'hover:border-blue-500/40',
   },
   {
-    label: 'Unshield',
+    label: 'Withdraw',
     description: 'Withdraw funds',
-    href: '/unshield',
+    href: '/withdraw',
     icon: Unlock,
     color: 'from-emerald-600 to-emerald-800',
     glow: 'shadow-emerald-500/25',
@@ -56,7 +57,7 @@ const typeConfig = {
     icon: Shield,
     color: 'text-violet-400',
     bg: 'bg-violet-500/10',
-    label: 'Shielded USDC',
+    label: 'Deposited Asset',
   },
   send: {
     icon: Send,
@@ -68,7 +69,7 @@ const typeConfig = {
     icon: Unlock,
     color: 'text-emerald-400',
     bg: 'bg-emerald-500/10',
-    label: 'Unshielded USDC',
+    label: 'Withdrawn Asset',
   },
 };
 
@@ -78,9 +79,20 @@ export default function HomePage() {
   const [activities, setActivities] = useState<any[]>([]);
   const [isActivityLoading, setIsActivityLoading] = useState(true);
 
-  // Fetch Public Balance
+  // Fetch Public Balance (USDC in wallet)
   const { data: balanceData, isLoading: isBalanceLoading } = useBalance({
     address: address,
+  });
+
+  // Fetch Shielded Balance from Smart Contract
+  const { data: shieldedRaw, isLoading: isShieldedLoading } = useReadContract({
+    address: VAULT_ADDRESS as `0x${string}`,
+    abi: VAULT_ABI,
+    functionName: 'balances',
+    args: [address as `0x${string}`, USDC_ADDRESS as `0x${string}`],
+    query: {
+      enabled: !!address,
+    }
   });
 
   // Fetch Recent Activity
@@ -105,10 +117,11 @@ export default function HomePage() {
     fetchRecent();
   }, [address]);
 
-  // For Demo: Shielded Balance is 0.00 unless we have a specific contract call
-  const shieldedBalance = '0.00';
+  const shieldedBalance = shieldedRaw ? formatUnits(shieldedRaw as bigint, 6) : '0.00';
   const publicBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
   const totalValue = (parseFloat(publicBalance) + parseFloat(shieldedBalance)).toFixed(2);
+
+  const isLoading = isBalanceLoading || isShieldedLoading;
 
   const balanceParts = parseFloat(shieldedBalance).toFixed(2).split('.');
   const wholePart = balanceParts[0];

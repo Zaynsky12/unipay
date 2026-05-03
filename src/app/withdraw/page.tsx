@@ -4,51 +4,58 @@ import React, { useState } from 'react';
 import { Settings, ArrowDown, ShieldAlert, Shield, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-import { AppKit } from "@circle-fin/app-kit";
-import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
-import { useAccount, useBalance } from 'wagmi';
-import { formatUnits } from 'viem';
+import { useAccount, useBalance, useReadContract, useWriteContract } from 'wagmi';
+import { formatUnits, parseUnits } from 'viem';
+import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
 
 type Status = 'idle' | 'unshielding' | 'success';
 
-export default function UnshieldPage() {
+export default function WithdrawPage() {
   const { isConnected, address } = useAccount();
   const [amount, setAmount] = useState('');
+  const [selectedToken, setSelectedToken] = useState<"USDC" | "EURC">("USDC");
   const [status, setStatus] = useState<Status>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
 
-  // Fetch real balance
+  const tokenAddress = selectedToken === "USDC" ? USDC_ADDRESS : EURC_ADDRESS;
+  const { writeContractAsync } = useWriteContract();
+
+  // Fetch real public balance
   const { data: balanceData, isLoading: isBalanceLoading } = useBalance({
     address: address,
+    // @ts-ignore
+    token: tokenAddress as `0x${string}`,
   });
 
-  const vaultBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
-  const publicBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
+  // Fetch real shielded balance (Vault)
+  const { data: shieldedRaw, isLoading: isShieldedLoading } = useReadContract({
+    address: VAULT_ADDRESS as `0x${string}`,
+    abi: VAULT_ABI,
+    functionName: 'balances',
+    args: address ? [address as `0x${string}`, tokenAddress as `0x${string}`] : undefined,
+    query: {
+      enabled: !!address,
+    }
+  });
 
-  const handleUnshield = async () => {
+  const publicBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
+  const vaultBalance = shieldedRaw ? formatUnits(shieldedRaw as bigint, 6) : '0.00';
+
+  const handleWithdraw = async () => {
     if (!amount || status !== 'idle' || !isConnected || !address) return;
     setStatus('unshielding');
     
     try {
-      if (!window.ethereum) throw new Error("Wallet not found");
-      
-      const adapter = await createViemAdapterFromProvider({
-        provider: window.ethereum as any,
-      });
-      const kit = new AppKit();
+      const parsedAmount = parseUnits(amount, 6); // 6 decimals for both USDC and EURC
 
-      // For Unshielding, we simulate an interaction where the Vault sends USDC back.
-      // Since kit.send only sends from the current user, in a real app this would call
-      // a specific smart contract function (e.g. unshield()). Here we mock the behavior
-      // to demonstrate the integration with Arc AppKit for the demo.
-      const mockResult = await kit.send({
-        from: { adapter, chain: "Arc_Testnet" },
-        to: address, // sending to self just to trigger an Arc testnet transaction
-        amount: "0.000001", // minimal amount just to get a real tx hash
-        token: "USDC",
+      // Withdraw from Vault
+      const hash = await writeContractAsync({
+        address: VAULT_ADDRESS as `0x${string}`,
+        abi: VAULT_ABI,
+        functionName: 'withdraw',
+        args: [tokenAddress as `0x${string}`, parsedAmount],
       });
 
-      const hash = mockResult as any || "0x_mock_hash";
       setTxHash(hash);
 
       // Record transaction to backend for history
@@ -59,7 +66,7 @@ export default function UnshieldPage() {
           body: JSON.stringify({
             userAddress: address,
             type: 'UNSHIELD',
-            amount,
+            amount: `${amount} ${selectedToken}`,
             txHash: hash
           }),
         });
@@ -69,9 +76,9 @@ export default function UnshieldPage() {
 
       setStatus('success');
     } catch (error) {
-      console.error("Unshield failed:", error);
+      console.error("Withdraw failed:", error);
       setStatus('idle');
-      alert("Unshield failed: " + (error as Error).message);
+      alert("Withdraw failed: " + (error as Error).message);
     }
   };
 
@@ -90,7 +97,7 @@ export default function UnshieldPage() {
         <div>
           <h2 className="text-2xl font-bold text-white">Withdrawn!</h2>
           <p className="text-gray-400 mt-2 font-medium">
-            <span className="text-white font-bold">{amount} USDC</span> moved to your<br />
+            <span className="text-white font-bold">{amount} {selectedToken}</span> moved to your<br />
             <span className="text-emerald-400 font-bold">public wallet</span>
           </p>
         </div>
@@ -108,7 +115,7 @@ export default function UnshieldPage() {
           </a>
         )}
         <button onClick={reset} className="w-full py-4 rounded-[20px] font-bold text-base bg-emerald-600 text-white hover:bg-emerald-500 hover:-translate-y-0.5 shadow-lg hover:shadow-emerald-500/25 transition-all">
-          Unshield More
+          Withdraw More
         </button>
       </div>
     );
@@ -119,7 +126,7 @@ export default function UnshieldPage() {
       {/* Header */}
       <div className="flex items-center justify-between px-2 mb-1">
         <div>
-          <h2 className="text-lg font-bold text-white">Unshield</h2>
+          <h2 className="text-lg font-bold text-white">Withdraw</h2>
           <p className="text-xs text-gray-500">Withdraw from your private vault</p>
         </div>
         <button className="text-gray-400 hover:text-white transition-colors bg-white/5 p-2 rounded-full border border-white/8">
@@ -161,12 +168,18 @@ export default function UnshieldPage() {
         </div>
       </div>
 
-      {/* Output — Public USDC */}
+      {/* Output — Public Asset */}
       <div className="bg-black/40 rounded-3xl p-4 border border-white/6">
         <div className="flex justify-between items-center mb-3">
-          <button className="flex items-center gap-2 bg-white/6 rounded-full px-3 py-1.5 border border-white/8">
-            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white">U</div>
-            <span className="text-sm font-bold text-white">USDC</span>
+          <button 
+            onClick={() => setSelectedToken(selectedToken === "USDC" ? "EURC" : "USDC")}
+            disabled={status !== 'idle'}
+            className="flex items-center gap-2 bg-white/6 hover:bg-white/10 transition-colors rounded-full px-3 py-1.5 border border-white/8">
+            <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white", selectedToken === "USDC" ? "bg-blue-500" : "bg-emerald-500")}>
+              {selectedToken === "USDC" ? "U" : "€"}
+            </div>
+            <span className="text-sm font-bold text-white">{selectedToken}</span>
+            <ArrowDown className="w-3.5 h-3.5 text-gray-400" />
           </button>
           <div className="text-right text-4xl font-bold text-gray-500">
             {amount || '0'}
@@ -182,13 +195,13 @@ export default function UnshieldPage() {
       <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-orange-500/8 border border-orange-500/20">
         <ShieldAlert className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
         <p className="text-xs text-orange-200/70 leading-relaxed">
-          Unshielding reveals this amount on Arc's public explorer. Your previous private history remains hidden.
+          Withdrawing reveals this amount on Arc's public explorer. Your previous private history remains hidden.
         </p>
       </div>
 
       {/* Action Button */}
       <button
-        onClick={handleUnshield}
+        onClick={handleWithdraw}
         disabled={!amount || status === 'unshielding'}
         className={cn(
           "w-full py-4 rounded-[20px] font-bold text-base transition-all flex items-center justify-center gap-2 shadow-lg",
@@ -204,7 +217,7 @@ export default function UnshieldPage() {
         ) : !amount ? (
           'Enter an amount'
         ) : (
-          'Unshield Assets'
+          'Withdraw Assets'
         )}
       </button>
     </div>

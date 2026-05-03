@@ -46,37 +46,48 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Feature Cards ── */}
-      <section id="features" className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
-        <div className="glass-panel p-8 group hover:border-cyan-500/30 transition-all">
-          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-6 text-cyan-400 group-hover:scale-110 transition-transform">
-            <Lock className="w-6 h-6" />
+      {/* ── Feature Cards (Vertical Stack) ── */}
+      <section id="features" className="w-full max-w-4xl mx-auto px-6 py-16 flex flex-col gap-6">
+        
+        {/* Shielded Assets */}
+        <div className="glass-panel p-8 md:p-10 group hover:border-cyan-500/30 transition-all duration-300 bg-white/5 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0 text-cyan-400 group-hover:scale-110 transition-transform">
+            <ShieldCheck className="w-7 h-7" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-3">Shielded Assets</h3>
-          <p className="text-gray-500 text-sm leading-relaxed">
-            Break the link between your public identity and your on-chain assets. Convert public tokens into private shielded assets instantly.
-          </p>
+          <div>
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Shielded Assets</h3>
+            <p className="text-gray-400 text-sm md:text-base leading-relaxed">
+              Break the link between your public identity and your on-chain assets. Convert public tokens into private shielded assets instantly.
+            </p>
+          </div>
         </div>
 
-        <div className="glass-panel p-8 group hover:border-blue-500/30 transition-all">
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 text-blue-400 group-hover:scale-110 transition-transform">
-            <Fingerprint className="w-6 h-6" />
+        {/* ZK-Transfers */}
+        <div className="glass-panel p-8 md:p-10 group hover:border-blue-500/30 transition-all duration-300 bg-white/5 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 text-blue-400 group-hover:scale-110 transition-transform">
+            <Zap className="w-7 h-7" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-3">ZK-Transfers</h3>
-          <p className="text-gray-500 text-sm leading-relaxed">
-            Send assets privately to any address without revealing the sender, receiver, or amount on the public ledger.
-          </p>
+          <div>
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-2">ZK-Transfers</h3>
+            <p className="text-gray-400 text-sm md:text-base leading-relaxed">
+              Send assets privately to any address without revealing the sender, receiver, or amount on the public ledger.
+            </p>
+          </div>
         </div>
 
-        <div className="glass-panel p-8 group hover:border-violet-500/30 transition-all">
-          <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-6 text-violet-400 group-hover:scale-110 transition-transform">
-            <Eye className="w-6 h-6" />
+        {/* Selective Disclosure */}
+        <div className="glass-panel p-8 md:p-10 group hover:border-violet-500/30 transition-all duration-300 bg-white/5 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div className="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0 text-violet-400 group-hover:scale-110 transition-transform">
+            <Eye className="w-7 h-7" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-3">Selective Disclosure</h3>
-          <p className="text-gray-500 text-sm leading-relaxed">
-            You own your data. Use viewing keys to selectively share transaction history with auditors or for compliance needs.
-          </p>
+          <div>
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Selective Disclosure</h3>
+            <p className="text-gray-400 text-sm md:text-base leading-relaxed">
+              You own your data. Use viewing keys to selectively share transaction history with auditors or for compliance needs.
+            </p>
+          </div>
         </div>
+
       </section>
 
       {/* ── Stats / Trust ── */}

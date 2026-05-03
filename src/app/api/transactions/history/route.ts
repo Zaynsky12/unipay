@@ -1,4 +1,8 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
+
+const dataPath = path.join(process.cwd(), 'transactions.json');
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -8,30 +12,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Address is required' }, { status: 400 });
   }
 
-  // MOCK DATA: In a real app, this would be fetched from a database
-  const mockHistory = [
-    {
-      id: '1',
-      type: 'SHIELD',
-      amount: '1000.00',
-      token: 'USDC',
-      txHash: '0x123...abc',
-      timestamp: new Date(Date.now() - 86400000).toISOString(),
-      status: 'COMPLETED'
-    },
-    {
-      id: '2',
-      type: 'SEND',
-      amount: '250.00',
-      token: 'USDC',
-      txHash: '0x456...def',
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      status: 'COMPLETED'
+  let transactions = [];
+  try {
+    if (fs.existsSync(dataPath)) {
+      const data = fs.readFileSync(dataPath, 'utf8');
+      transactions = JSON.parse(data);
     }
-  ];
+  } catch (e) {
+    console.error("Error reading db", e);
+  }
+
+  const userHistory = transactions.filter((tx: any) => tx.userAddress?.toLowerCase() === address.toLowerCase());
+
+  // Sort by timestamp descending
+  userHistory.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   return NextResponse.json({ 
     success: true, 
-    history: mockHistory 
+    history: userHistory 
   });
 }

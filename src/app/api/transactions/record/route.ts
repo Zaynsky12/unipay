@@ -1,4 +1,8 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
+
+const dataPath = path.join(process.cwd(), 'transactions.json');
 
 export async function POST(request: Request) {
   try {
@@ -9,20 +13,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // MOCK: In a real app, you would save this to Supabase/PostgreSQL
-    console.log('Recording transaction:', {
+    const newTx = {
+      id: Math.random().toString(36).substr(2, 9),
       userAddress,
       type,
       amount,
+      token: 'USDC',
       txHash,
-      timestamp: new RegExp(new Date().toISOString())
-    });
+      timestamp: new Date().toISOString(),
+      status: 'COMPLETED'
+    };
 
-    // Simulate successful storage
+    let transactions = [];
+    if (fs.existsSync(dataPath)) {
+      const data = fs.readFileSync(dataPath, 'utf8');
+      transactions = JSON.parse(data);
+    }
+
+    transactions.push(newTx);
+    fs.writeFileSync(dataPath, JSON.stringify(transactions, null, 2));
+
     return NextResponse.json({ 
       success: true, 
       message: 'Transaction recorded successfully',
-      data: { userAddress, type, amount, txHash }
+      data: newTx
     });
 
   } catch (error) {

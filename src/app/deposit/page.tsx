@@ -4,50 +4,73 @@ import React, { useState } from 'react';
 import { Settings, ArrowDown, Info, Shield as ShieldIcon, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-import { AppKit } from "@circle-fin/app-kit";
-import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
-import { useAccount, useBalance } from 'wagmi';
-import { formatUnits } from 'viem';
+import { useAccount, useBalance, useReadContract, useWriteContract, useConfig } from 'wagmi';
+import { formatUnits, parseUnits } from 'viem';
+import { waitForTransactionReceipt } from 'wagmi/actions';
+import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS, EURC_ADDRESS, ERC20_ABI } from '@/lib/constants';
 
-type Status = 'idle' | 'shielding' | 'success';
+type Status = 'idle' | 'approving' | 'shielding' | 'success';
 
-export default function ShieldPage() {
+export default function DepositPage() {
   const { address, isConnected } = useAccount();
+  const config = useConfig();
   const [amount, setAmount] = useState('');
+  const [selectedToken, setSelectedToken] = useState<"USDC" | "EURC">("USDC");
   const [status, setStatus] = useState<Status>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
 
-  // Fetch real balance
+  const tokenAddress = selectedToken === "USDC" ? USDC_ADDRESS : EURC_ADDRESS;
+  const { writeContractAsync } = useWriteContract();
+
+  // Fetch real public balance
   const { data: balanceData, isLoading: isBalanceLoading } = useBalance({
     address: address,
+    // @ts-ignore
+    token: tokenAddress as `0x${string}`,
+  });
+
+  // Fetch real shielded balance
+  const { data: shieldedRaw, isLoading: isShieldedLoading } = useReadContract({
+    address: VAULT_ADDRESS as `0x${string}`,
+    abi: VAULT_ABI,
+    functionName: 'balances',
+    args: address ? [address as `0x${string}`, tokenAddress as `0x${string}`] : undefined,
+    query: {
+      enabled: !!address,
+    }
   });
 
   const publicBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
+  const shieldedBalance = shieldedRaw ? formatUnits(shieldedRaw as bigint, 6) : '0.00';
 
   const handleShield = async () => {
-    if (!amount || status !== 'idle' || !isConnected) return;
-    setStatus('shielding');
+    if (!amount || status !== 'idle' || !isConnected || !address) return;
     
     try {
-      if (!window.ethereum) throw new Error("Wallet not found");
-      
-      const adapter = await createViemAdapterFromProvider({
-        provider: window.ethereum as any,
-      });
-      const kit = new AppKit();
+      const parsedAmount = parseUnits(amount, 6); // 6 decimals for both USDC and EURC
 
-      // For Shielding, we send USDC to a known Vault address.
-      const vaultAddress = "0x00000000000000000000000000000000000M0RPH"; 
-      
-      const result = await kit.send({
-        from: { adapter, chain: "Arc_Testnet" },
-        to: vaultAddress,
-        amount: amount,
-        token: "USDC",
+      setStatus('approving');
+      // Step 1: Approve Vault to spend Token
+      const approveHash = await writeContractAsync({
+        address: tokenAddress as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: 'approve',
+        args: [VAULT_ADDRESS as `0x${string}`, parsedAmount],
       });
 
-      const hash = result as any || "0x_mock_hash";
-      setTxHash(hash);
+      // Wait for approval confirmation
+      await waitForTransactionReceipt(config, { hash: approveHash });
+
+      setStatus('shielding');
+      // Step 2: Deposit into Vault
+      const depositHash = await writeContractAsync({
+        address: VAULT_ADDRESS as `0x${string}`,
+        abi: VAULT_ABI,
+        functionName: 'deposit',
+        args: [tokenAddress as `0x${string}`, parsedAmount, "morphic-zk-address-placeholder"],
+      });
+      
+      setTxHash(depositHash);
 
       // Record transaction to backend for history
       try {
@@ -57,8 +80,8 @@ export default function ShieldPage() {
           body: JSON.stringify({
             userAddress: address,
             type: 'SHIELD',
-            amount,
-            txHash: hash
+            amount: `${amount} ${selectedToken}`,
+            txHash: depositHash
           }),
         });
       } catch (e) {
@@ -86,9 +109,9 @@ export default function ShieldPage() {
           <CheckCircle2 className="w-8 h-8 text-violet-400" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-white">Shielded!</h2>
+          <h2 className="text-2xl font-bold text-white">Deposited!</h2>
           <p className="text-gray-400 mt-2 font-medium">
-            <span className="text-white font-bold">{amount} USDC</span> moved to your<br />
+            <span className="text-white font-bold">{amount} {selectedToken}</span> moved to your<br />
             <span className="text-violet-400 font-bold">Morphic Vault</span>
           </p>
         </div>
@@ -106,7 +129,7 @@ export default function ShieldPage() {
           </a>
         )}
         <button onClick={reset} className="w-full py-4 rounded-[20px] font-bold text-base bg-violet-600 text-white hover:bg-violet-500 hover:-translate-y-0.5 shadow-lg hover:shadow-violet-500/25 transition-all">
-          Shield More
+          Deposit More
         </button>
       </div>
     );
@@ -117,7 +140,7 @@ export default function ShieldPage() {
       {/* Header */}
       <div className="flex items-center justify-between px-2 mb-1">
         <div>
-          <h2 className="text-lg font-bold text-white">Shield</h2>
+          <h2 className="text-lg font-bold text-white">Deposit</h2>
           <p className="text-xs text-gray-500">Deposit to your private vault</p>
         </div>
         <button className="text-gray-400 hover:text-white transition-colors bg-white/5 p-2 rounded-full border border-white/8">
@@ -125,12 +148,17 @@ export default function ShieldPage() {
         </button>
       </div>
 
-      {/* Input — Public USDC */}
+      {/* Input — Public Asset */}
       <div className="bg-black/40 rounded-3xl p-4 border border-white/6 relative group hover:border-white/10 transition-colors">
         <div className="flex justify-between items-center mb-3">
-          <button className="flex items-center gap-2 bg-white/6 hover:bg-white/10 transition-colors rounded-full px-3 py-1.5 border border-white/8">
-            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white">U</div>
-            <span className="text-sm font-bold text-white">USDC</span>
+          <button 
+            onClick={() => setSelectedToken(selectedToken === "USDC" ? "EURC" : "USDC")}
+            disabled={status !== 'idle'}
+            className="flex items-center gap-2 bg-white/6 hover:bg-white/10 transition-colors rounded-full px-3 py-1.5 border border-white/8">
+            <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white", selectedToken === "USDC" ? "bg-blue-500" : "bg-emerald-500")}>
+              {selectedToken === "USDC" ? "U" : "€"}
+            </div>
+            <span className="text-sm font-bold text-white">{selectedToken}</span>
             <ArrowDown className="w-3.5 h-3.5 text-gray-400" />
           </button>
           <input
@@ -174,7 +202,7 @@ export default function ShieldPage() {
           </div>
         </div>
         <div className="flex justify-between items-center text-xs font-medium text-gray-500">
-          <span>Shielded Balance: <span className="text-violet-400">4,500.00</span></span>
+          <span>Shielded Balance: <span className="text-violet-400">{isShieldedLoading ? '...' : shieldedBalance}</span></span>
           <span className="text-violet-400">1:1 ratio</span>
         </div>
       </div>
@@ -183,29 +211,29 @@ export default function ShieldPage() {
       <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-violet-500/8 border border-violet-500/15">
         <Info className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
         <p className="text-xs text-violet-200/70 leading-relaxed">
-          Shielding breaks the link between your public address and your private vault — powered by Arc's opt-in privacy.
+          Depositing breaks the link between your public address and your private vault — powered by Arc's opt-in privacy.
         </p>
       </div>
 
       {/* Action Button */}
       <button
         onClick={handleShield}
-        disabled={!amount || status === 'shielding'}
+        disabled={!amount || status === 'shielding' || status === 'approving'}
         className={cn(
           "w-full py-4 rounded-[20px] font-bold text-base transition-all flex items-center justify-center gap-2 shadow-lg",
           !amount
             ? "bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed"
-            : status === 'shielding'
+            : (status === 'shielding' || status === 'approving')
               ? "bg-violet-600/50 text-white cursor-not-allowed"
               : "bg-violet-600 text-white hover:bg-violet-500 hover:-translate-y-0.5 hover:shadow-violet-500/25"
         )}
       >
-        {status === 'shielding' ? (
-          <><Loader2 className="w-5 h-5 animate-spin" /> Generating ZK Proof...</>
+        {(status === 'shielding' || status === 'approving') ? (
+          <><Loader2 className="w-5 h-5 animate-spin" /> {status === 'approving' ? `Approving ${selectedToken}...` : 'Generating ZK Proof...'}</>
         ) : !amount ? (
           'Enter an amount'
         ) : (
-          <><ShieldIcon className="w-5 h-5" /> Shield Assets</>
+          <><ShieldIcon className="w-5 h-5" /> Deposit Assets</>
         )}
       </button>
     </div>

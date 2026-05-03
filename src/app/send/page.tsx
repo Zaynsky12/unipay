@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { Settings, ArrowDown, Send, CheckCircle2, Loader2, Info, Shield } from 'lucide-react';
 import { AppKit } from "@circle-fin/app-kit";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
+import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 type Status = 'idle' | 'sending' | 'success';
@@ -17,13 +18,18 @@ export default function PrivateSendPage() {
   const [status, setStatus] = useState<Status>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
 
-  // Fetch real balance (Shielded Vault Balance)
-  // In a real scenario, this would fetch from the privacy pool contract
-  const { data: balanceData, isLoading: isBalanceLoading } = useBalance({
-    address: address,
+  // Fetch real shielded balance (Vault)
+  const { data: shieldedRaw, isLoading: isBalanceLoading } = useReadContract({
+    address: VAULT_ADDRESS as `0x${string}`,
+    abi: VAULT_ABI,
+    functionName: 'balances',
+    args: address ? [address as `0x${string}`, USDC_ADDRESS as `0x${string}`] : undefined,
+    query: {
+      enabled: !!address,
+    }
   });
 
-  const vaultBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
+  const vaultBalance = shieldedRaw ? formatUnits(shieldedRaw as bigint, 6) : '0.00';
 
   const handleSend = async () => {
     if (!recipient || !amount || status !== 'idle' || !isConnected) return;

@@ -8,9 +8,9 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Shield',    href: '/shield',    icon: Shield },
+  { name: 'Deposit',   href: '/deposit',   icon: Shield },
   { name: 'Send',      href: '/send',      icon: Send },
-  { name: 'Unshield',  href: '/unshield',  icon: Unlock },
+  { name: 'Withdraw',  href: '/withdraw',  icon: Unlock },
   { name: 'History',   href: '/history',   icon: History },
 ];
 
@@ -58,9 +58,9 @@ export function Navbar() {
             </nav>
           )}
 
-          {/* Right — Network Badge + Wallet - Hidden on Landing Page */}
+          {/* Right — Network Badge + Wallet */}
           <div className="flex items-center gap-2 shrink-0">
-            {!isLandingPage && <appkit-button balance="hide" />}
+            <appkit-button balance="hide" />
           </div>
         </div>
       </header>

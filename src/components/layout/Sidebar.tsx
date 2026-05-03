@@ -12,9 +12,9 @@ export function cn(...inputs: ClassValue[]) {
 
 const navItems = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Shield', href: '/shield', icon: Shield },
+  { name: 'Deposit', href: '/deposit', icon: Shield },
   { name: 'Private Send', href: '/send', icon: Send },
-  { name: 'Unshield', href: '/unshield', icon: Unlock },
+  { name: 'Withdraw', href: '/withdraw', icon: Unlock },
   { name: 'Compliance', href: '/compliance', icon: ShieldAlert },
 ];
 
