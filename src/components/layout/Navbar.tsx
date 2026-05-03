@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Shield, Send, Unlock, History, LayoutDashboard } from 'lucide-react';
+import { Eye, Shield, Send, Unlock, History, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -31,7 +31,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <div className="w-8 h-8 rounded-xl bg-[#00E5FF] flex items-center justify-center shadow-[0_0_15px_rgba(0,229,255,0.4)]">
-              <Shield className="w-4 h-4 text-black" fill="currentColor" />
+              <Eye className="w-4 h-4 text-black" fill="currentColor" />
             </div>
             <span className="text-lg font-bold tracking-tight text-white">Morphic</span>
           </Link>
