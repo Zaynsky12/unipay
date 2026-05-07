@@ -10,7 +10,7 @@ export default function LandingPage() {
     <div className="flex flex-col gap-0 pb-20 animate-fade-in overflow-hidden">
       
       {/* ── Hero Section ── */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-4 pt-20">
+      <section className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-4 pt-32 md:pt-16">
         {/* Background Effects */}
         <div className="absolute top-0 -z-10 w-full h-full bg-[#030305]" />
         <div className="absolute top-1/4 -left-1/4 -z-10 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] opacity-50" />
@@ -24,8 +24,8 @@ export default function LandingPage() {
           Native Privacy on Arc Network
         </div>
         
-        <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-[0.9] mb-8 max-w-5xl animate-fade-in-up">
-          THE FUTURE OF <br />
+        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[0.95] mb-8 max-w-4xl animate-fade-in-up">
+          THE FUTURE <br className="md:hidden" /> OF <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-600">
             PRIVATE ASSETS
           </span>
@@ -35,17 +35,17 @@ export default function LandingPage() {
           Morphic is a high-performance privacy layer for the Arc Network. Shield your USDC and EURC, transfer them with zero trace, and maintain absolute financial sovereignty.
         </p>
         
-        <div className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto animate-fade-in-up delay-200">
+        <div className="flex flex-col sm:flex-row gap-5 w-full sm:w-auto animate-fade-in-up delay-200">
           <Link 
             href="/dashboard" 
-            className="group relative px-10 py-5 bg-white text-black font-black rounded-2xl hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.2)]"
+            className="group relative px-8 py-4 bg-white text-black font-black rounded-xl hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden shadow-[0_0_30px_rgba(255,255,255,0.15)]"
           >
             Launch Morphic App
-            <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
           <a 
             href="#how-it-works" 
-            className="px-10 py-5 bg-white/5 text-white font-bold rounded-2xl border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center backdrop-blur-xl"
+            className="px-8 py-4 bg-white/5 text-white font-bold rounded-xl border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center backdrop-blur-xl"
           >
             How it works
           </a>
@@ -53,10 +53,10 @@ export default function LandingPage() {
       </section>
 
       {/* ── How It Works Section ── */}
-      <section id="how-it-works" className="w-full max-w-6xl mx-auto px-6 py-32">
-        <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Three Steps to Freedom</h2>
-          <p className="text-gray-500 max-w-xl mx-auto">Our streamlined workflow ensures your assets are protected from end-to-end.</p>
+      <section id="how-it-works" className="w-full max-w-6xl mx-auto px-6 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Three Steps to Freedom</h2>
+          <p className="text-gray-500 max-w-lg mx-auto text-sm md:text-base">Our streamlined workflow ensures your assets are protected from end-to-end.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -108,7 +108,7 @@ export default function LandingPage() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20 text-xs font-bold text-violet-400 mb-6 uppercase tracking-widest">
               Multi-Asset Support
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
               Privacy for both <br />
               <span className="text-cyan-400">USDC</span> and <span className="text-emerald-400">EURC</span>
             </h2>
@@ -163,22 +163,22 @@ export default function LandingPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="pt-32 flex flex-col items-center text-center">
-        <h2 className="text-5xl md:text-7xl font-black text-white mb-10 tracking-tighter">
+      <footer className="pt-20 flex flex-col items-center text-center">
+        <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tighter">
           BECOME INVISIBLE.
         </h2>
         <Link 
           href="/dashboard" 
-          className="group relative px-12 py-6 bg-white text-black font-black text-xl rounded-full hover:scale-110 transition-all flex items-center justify-center gap-3 overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)]"
+          className="group relative px-10 py-5 bg-white text-black font-black text-lg rounded-full hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.15)]"
         >
           Enter the Platform
-          <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
         </Link>
         <div className="mt-20 flex gap-8 text-gray-600 font-bold uppercase tracking-tighter text-sm">
-          <a href="#" className="hover:text-white transition-colors">Twitter</a>
-          <a href="#" className="hover:text-white transition-colors">Discord</a>
-          <a href="#" className="hover:text-white transition-colors">Documentation</a>
-          <a href="#" className="hover:text-white transition-colors">Github</a>
+          <a href="https://x.com/owsnpidc" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Twitter</a>
+          <a href="https://discord.gg/buildonarc" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Discord</a>
+          <a href="https://docs.arc.network/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Documentation</a>
+          <a href="https://github.com/Zaynsky12/morphic-arc" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Github</a>
         </div>
         <p className="mt-10 text-gray-700 text-xs font-medium uppercase tracking-[0.2em]">
           &copy; 2026 Morphic Privacy Protocol. Built on Arc Network.
