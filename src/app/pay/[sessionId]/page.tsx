@@ -17,32 +17,7 @@ import {
   Check
 } from 'lucide-react';
 import Link from 'next/link';
-import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS } from '@/lib/constants';
-
-// Standar minimalis ERC20 ABI untuk keperluan otorisasi allowance & transfer
-const ERC20_ABI = [
-  {
-    "inputs": [{ "name": "owner", "type": "address" }, { "name": "spender", "type": "address" }],
-    "name": "allowance",
-    "outputs": [{ "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "name": "spender", "type": "address" }, { "name": "amount", "type": "uint256" }],
-    "name": "approve",
-    "outputs": [{ "name": "", "type": "bool" }],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "name": "account", "type": "address" }],
-    "name": "balanceOf",
-    "outputs": [{ "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
+import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
 
 export default function PaymentPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const resolvedParams = use(params);
@@ -90,7 +65,8 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
     query: { enabled: !!address && !!tokenAddr && tokenAddr !== '0x0000000000000000000000000000000000000000' }
   });
 
-  const hasSufficientAllowance = (currentAllowance || 0n) >= amountRaw;
+  const allowanceVal = typeof currentAllowance === 'bigint' ? currentAllowance : (currentAllowance ? BigInt(currentAllowance.toString()) : 0n);
+  const hasSufficientAllowance = allowanceVal >= amountRaw;
 
   // Hooks Penulisan Eksekusi Onchain
   const { writeContract, data: txHash, isPending: isWritePending, error: writeError } = useWriteContract();
