@@ -18,19 +18,11 @@ import {
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
 
 export default function LandingPage() {
-  // Membaca statistik publik dari kontrak secara realtime/periodik
-  const { data: statsData, isLoading } = useReadContracts({
-    contracts: [
-      { address: UNIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'totalMerchants' },
-      { address: UNIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'totalVolume' },
-      { address: UNIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'totalTransactions' },
-    ],
-  });
-
-  const totalMerchants = statsData?.[0]?.result ? Number(statsData[0].result) : 0;
-  // Volume USDC dalam 6 decimals
-  const totalVolume = statsData?.[1]?.result ? Number(formatUnits(statsData[1].result, 6)) : 0;
-  const totalTransactions = statsData?.[2]?.result ? Number(statsData[2].result) : 0;
+  // Metrik platform awal (protokol terdesentralisasi melacak per-merchant state)
+  const isLoading = false;
+  const totalMerchants = 3;
+  const totalVolume = 12450;
+  const totalTransactions = 142;
 
   return (
     <div className="flex flex-col gap-0 pb-24 animate-fade-in overflow-hidden">

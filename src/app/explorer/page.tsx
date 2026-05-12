@@ -28,14 +28,8 @@ export default function ExplorerPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMerchantAddr, setSelectedMerchantAddr] = useState<string>('');
 
-  // 1. Baca data metrik register utama
-  const { data: totalMerchantsRaw } = useReadContract({
-    address: UNIPAY_REGISTRY_ADDRESS,
-    abi: REGISTRY_ABI,
-    functionName: 'totalMerchants',
-  });
-
-  const totalRegisteredCount = totalMerchantsRaw ? Number(totalMerchantsRaw) : 0;
+  // 1. Metrik register utama didasarkan pada jumlah profil platform terverifikasi
+  const totalRegisteredCount = DISCOVERABLE_MERCHANTS.length;
 
   // 2. Jika pengguna melakukan pencarian berupa alamat spesifik, kita baca state merchants(address)
   const isSearchValidAddr = searchQuery.startsWith('0x') && searchQuery.length === 42;
