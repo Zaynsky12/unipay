@@ -1,359 +1,391 @@
 "use client";
 
-// Real-time balance integration for Morphic Privacy Platform
-
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useAccount, useBalance, useReadContract, usePublicClient } from 'wagmi';
-import { formatUnits, parseAbiItem } from 'viem';
-import { VAULT_ADDRESS, VAULT_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
-import {
-  Shield, Send, Unlock, Eye, EyeOff, ArrowUpRight,
-  ArrowDownRight, TrendingUp, Lock, Zap, ChevronRight, History, Loader2
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useWatchContractEvent } from 'wagmi';
+import { formatUnits } from 'viem';
+import { 
+  Building2, 
+  Wallet, 
+  Coins, 
+  ArrowUpRight, 
+  CheckCircle2, 
+  PlusCircle, 
+  AlertCircle,
+  Loader2,
+  RefreshCw,
+  ExternalLink,
+  Sparkles,
+  Layers,
+  ArrowUpRight as ArrowUpRightIcon
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
 
-const quickActions = [
-  {
-    label: 'Deposit',
-    description: 'Deposit to vault',
-    href: '/deposit',
-    icon: Shield,
-    color: 'from-violet-600 to-violet-800',
-    glow: 'shadow-violet-500/25',
-    bgHover: 'hover:border-violet-500/40',
-  },
-  {
-    label: 'Send',
-    description: 'Private transfer',
-    href: '/send',
-    icon: Send,
-    color: 'from-blue-600 to-blue-800',
-    glow: 'shadow-blue-500/25',
-    bgHover: 'hover:border-blue-500/40',
-  },
-  {
-    label: 'Withdraw',
-    description: 'Withdraw funds',
-    href: '/withdraw',
-    icon: Unlock,
-    color: 'from-emerald-600 to-emerald-800',
-    glow: 'shadow-emerald-500/25',
-    bgHover: 'hover:border-emerald-500/40',
-  },
-  {
-    label: 'History',
-    description: 'View activity',
-    href: '/history',
-    icon: History,
-    color: 'from-gray-600 to-gray-800',
-    glow: 'shadow-gray-500/25',
-    bgHover: 'hover:border-gray-500/40',
-  },
-];
+interface PaymentEvent {
+  sessionId: string;
+  payer: string;
+  txHash: string;
+  timestamp: number;
+}
 
-const typeConfig = {
-  shield: {
-    icon: Shield,
-    color: 'text-violet-400',
-    bg: 'bg-violet-500/10',
-    label: 'Deposit',
-  },
-  send: {
-    icon: Send,
-    color: 'text-blue-400',
-    bg: 'bg-blue-500/10',
-    label: 'Private Send',
-  },
-  unshield: {
-    icon: Unlock,
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-500/10',
-    label: 'Withdraw',
-  },
-};
-
-export default function HomePage() {
+export default function DashboardPage() {
   const { address, isConnected } = useAccount();
-  const [showBalance, setShowBalance] = useState(true);
-  const publicClient = usePublicClient();
-  const [activities, setActivities] = useState<any[]>([]);
-  const [isActivityLoading, setIsActivityLoading] = useState(true);
+  const [merchantName, setMerchantName] = useState('');
+  const [merchantMetadata, setMerchantMetadata] = useState('');
+  const [recentPayments, setRecentPayments] = useState<PaymentEvent[]>([]);
 
-  // Fetch Public Balance (USDC in wallet)
-  const { data: balanceData, isLoading: isBalanceLoading } = useBalance({
-    address: address,
+  // Membaca identitas merchant onchain
+  const { data: merchantData, isLoading: isLoadingRead, refetch: refetchMerchant } = useReadContract({
+    address: UNIPAY_REGISTRY_ADDRESS,
+    abi: REGISTRY_ABI,
+    functionName: 'merchants',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address }
   });
 
-  // Fetch Shielded Balance from Smart Contract
-  const { data: shieldedRaw, isLoading: isShieldedLoading } = useReadContract({
-    address: VAULT_ADDRESS as `0x${string}`,
-    abi: VAULT_ABI,
-    functionName: 'balances',
-    args: [address as `0x${string}`, USDC_ADDRESS as `0x${string}`],
-    query: {
-      enabled: !!address,
-    }
+  const isRegistered = merchantData ? merchantData[2] : false;
+  const name = merchantData?.[0] || '';
+  const metadata = merchantData?.[1] || '';
+  const totalReceivedRaw = merchantData?.[3] || 0n;
+  const totalTransactionsRaw = merchantData?.[4] || 0n;
+
+  // Menyiapkan fungsi pendaftaran
+  const { writeContract, data: txHash, isPending: isWritePending, error: writeError } = useWriteContract();
+  
+  const { isLoading: isTxConfirming, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({
+    hash: txHash,
   });
 
-  // Fetch Recent Activity On-Chain
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!merchantName || !address) return;
+    writeContract({
+      address: UNIPAY_REGISTRY_ADDRESS,
+      abi: REGISTRY_ABI,
+      functionName: 'registerMerchant',
+      args: [merchantName, merchantMetadata || 'UniPay Standard Merchant'],
+    });
+  };
+
   useEffect(() => {
-    const fetchOnChainRecent = async () => {
-      if (!address || !publicClient) {
-        setIsActivityLoading(false);
-        return;
-      }
-      try {
-        const currentBlock = await publicClient.getBlockNumber();
-        const toBlock = currentBlock;
-        const fromBlock = currentBlock > 4999n ? currentBlock - 4999n : 0n;
+    if (isTxSuccess) {
+      refetchMerchant();
+      setMerchantName('');
+      setMerchantMetadata('');
+    }
+  }, [isTxSuccess, refetchMerchant]);
 
-        const shieldedEvent = parseAbiItem('event Shielded(address indexed user, address indexed token, uint256 amount, string privateAddress)');
-        const unshieldedEvent = parseAbiItem('event Unshielded(address indexed user, address indexed token, uint256 amount)');
-        const transferEvent = parseAbiItem('event PrivateTransfer(address indexed from, address indexed to, address indexed token, uint256 amount)');
-
-        // Fetch logs one by one to avoid 429/Failed to fetch
-        let allLogs: any[] = [];
-        
-        try {
-          const sLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: shieldedEvent, args: { user: address as `0x${string}` }, fromBlock, toBlock });
-          allLogs = [...allLogs, ...sLogs];
-        } catch (e) { console.error("Shield logs failed", e); }
-
-        try {
-          const uLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: unshieldedEvent, args: { user: address as `0x${string}` }, fromBlock, toBlock });
-          allLogs = [...allLogs, ...uLogs];
-        } catch (e) { console.error("Unshield logs failed", e); }
-
-        try {
-          const sentLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { from: address as `0x${string}` }, fromBlock, toBlock });
-          allLogs = [...allLogs, ...sentLogs];
-        } catch (e) { console.error("Sent logs failed", e); }
-
-        try {
-          const rLogs = await publicClient.getLogs({ address: VAULT_ADDRESS as `0x${string}`, event: transferEvent, args: { to: address as `0x${string}` }, fromBlock, toBlock });
-          allLogs = [...allLogs, ...rLogs];
-        } catch (e) { console.error("Received logs failed", e); }
-
-        const uniqueLogs = allLogs.filter((log, index, self) =>
-          index === self.findIndex((t) => t.transactionHash === log.transactionHash)
-        );
-
-        // Sort by block number descending and take top 3
-        const recentLogs = uniqueLogs
-          .sort((a, b) => Number(b.blockNumber) - Number(a.blockNumber))
-          .slice(0, 3);
-
-        const logsWithTime = [];
-        for (const log of recentLogs) {
-          try {
-            const block = await publicClient.getBlock({ blockNumber: log.blockNumber! });
-            logsWithTime.push({ ...log, timestamp: Number(block.timestamp) * 1000 });
-          } catch (e) {
-            logsWithTime.push({ ...log, timestamp: Date.now() });
-          }
+  // Mengamati event pembayaran real-time
+  useWatchContractEvent({
+    address: UNIPAY_REGISTRY_ADDRESS,
+    abi: REGISTRY_ABI,
+    eventName: 'PaymentCompleted',
+    onLogs(logs) {
+      logs.forEach((log: any) => {
+        const { args, transactionHash } = log;
+        if (args && args.merchant?.toLowerCase() === address?.toLowerCase()) {
+          const newEvent: PaymentEvent = {
+            sessionId: args.sessionId || '0x...',
+            payer: args.payer || '0x...',
+            txHash: transactionHash || '',
+            timestamp: Date.now(),
+          };
+          setRecentPayments((prev) => [newEvent, ...prev].slice(0, 10));
+          refetchMerchant();
         }
+      });
+    },
+  });
 
-        setActivities(logsWithTime);
-      } catch (e) {
-        console.error("Failed to fetch recent activity", e);
-      } finally {
-        setIsActivityLoading(false);
-      }
-    };
-    fetchOnChainRecent();
-  }, [address, publicClient]);
+  // Tampilan terkunci (Locked state) saat belum konek dompet
+  // Mengarahkan pengguna untuk menggunakan tombol dompet di bilah navigasi atas
+  if (!isConnected) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 relative">
+        <div className="absolute w-[300px] h-[300px] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
+        
+        <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border border-violet-500/30 flex items-center justify-center mb-6 text-violet-400 relative shadow-[0_0_30px_rgba(124,58,237,0.15)] animate-pulse">
+          <Wallet className="w-8 h-8 relative z-10" />
+        </div>
+        
+        <h1 className="text-2xl sm:text-3xl font-black text-white mb-2 tracking-tight">Merchant Portal Access</h1>
+        <p className="text-gray-400 max-w-md text-xs sm:text-sm leading-relaxed mb-6">
+          Your decentralized enterprise dashboard state is directly keyed to your Web3 identity.
+        </p>
 
-  const shieldedBalance = shieldedRaw ? formatUnits(shieldedRaw as bigint, 6) : '0.00';
-  const publicBalance = balanceData ? formatUnits(balanceData.value, balanceData.decimals) : '0.00';
-  const totalValue = (parseFloat(publicBalance) + parseFloat(shieldedBalance)).toFixed(2);
-
-  const isLoading = isBalanceLoading || isShieldedLoading;
-
-  const balanceParts = parseFloat(shieldedBalance).toFixed(2).split('.');
-  const wholePart = balanceParts[0];
-  const decimalPart = balanceParts[1];
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.02] border border-white/5 text-xs text-violet-300 font-medium">
+          <span>Click the wallet button in the top right navbar</span>
+          <ArrowUpRightIcon className="w-3.5 h-3.5 text-violet-400" />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-5 mt-6 pb-4">
-
-      {/* ── Balance Card ── */}
-      <div className="glass-panel p-6 animate-fade-in-up" style={{ borderColor: 'rgba(124,58,237,0.2)', boxShadow: '0 0 40px rgba(124,58,237,0.08)' }}>
-        {/* Arc Network Badge */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/8 text-xs font-semibold text-gray-400">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Arc Testnet
-          </div>
-          <button
-            onClick={() => setShowBalance(!showBalance)}
-            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors"
-          >
-            {showBalance ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-            {showBalance ? 'Hide' : 'Show'}
-          </button>
-        </div>
-
-        {/* Private Balance */}
-        <div className="mb-6">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-            <Lock className="w-3 h-3" />
-            Shielded Balance
-          </p>
-          <div className="flex items-end gap-2">
-            {showBalance ? (
-              <>
-                <span className="text-5xl font-bold text-white tracking-tight">{isBalanceLoading ? '...' : wholePart}</span>
-                <span className="text-2xl font-semibold text-gray-400 mb-1">.{decimalPart}</span>
-                <span className="text-lg font-bold text-violet-400 mb-1 ml-1">USDC</span>
-              </>
-            ) : (
-              <span className="text-5xl font-bold text-white tracking-tight">••••••</span>
-            )}
-          </div>
-          {showBalance && (
-            <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-emerald-400 font-semibold">+0.0%</span>
-              <span>this month</span>
-            </p>
-          )}
-        </div>
-
-        {/* Divider */}
-        <div className="h-px bg-white/5 mb-5" />
-
-        {/* Public Balance Row */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Public Balance</p>
-            <p className="text-base font-bold text-gray-300">
-              {showBalance ? `${isBalanceLoading ? '...' : parseFloat(publicBalance).toLocaleString()} USDC` : '•••••••'}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-gray-500 mb-1">Total Value</p>
-            <p className="text-base font-bold text-gray-300">
-              {showBalance ? `${isBalanceLoading ? '...' : parseFloat(totalValue).toLocaleString()} USDC` : '•••••••'}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Quick Actions ── */}
-      <div className="animate-fade-in-up animate-delay-100">
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 px-1">Quick Actions</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {quickActions.map((action) => (
-            <Link
-              key={action.label}
-              href={action.href}
-              className={cn(
-                "stat-card p-3 flex flex-col items-center gap-2 text-center group transition-all duration-200",
-                action.bgHover
+    <div className="space-y-10 animate-fade-in pb-12">
+      
+      {/* ── Banner/Header Dashboard Premium ── */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-900/20 via-indigo-900/10 to-black border border-white/5 p-6 sm:p-8">
+        <div className="absolute -right-20 -top-20 w-60 h-60 bg-violet-500/10 rounded-full blur-3xl" />
+        
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-violet-400 uppercase tracking-wider bg-violet-500/10 px-2.5 py-1 rounded-md border border-violet-500/20">
+                Workspace Identity
+              </span>
+              <span className="flex items-center gap-1 text-[11px] text-gray-500">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Arc Testnet
+              </span>
+            </div>
+            
+            <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+              {isLoadingRead ? (
+                <span className="shimmer inline-block w-48 h-8 rounded" />
+              ) : isRegistered ? (
+                name
+              ) : (
+                'Unregistered Profile'
               )}
-            >
-              <div className={cn(
-                "w-10 h-10 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200",
-                action.color, action.glow
-              )}>
-                <action.icon className="w-4.5 h-4.5 text-white w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white">{action.label}</p>
-                <p className="text-[10px] text-gray-500 leading-tight hidden sm:block">{action.description}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
+            </h1>
 
-      {/* ── Privacy Status ── */}
-      <div className="animate-fade-in-up animate-delay-200">
-        <div className="stat-card p-4 flex items-center gap-4" style={{ borderColor: 'rgba(124,58,237,0.2)' }}>
-          <div className="w-10 h-10 rounded-2xl bg-violet-500/15 border border-violet-500/20 flex items-center justify-center shrink-0">
-            <Zap className="w-5 h-5 text-violet-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-white">Arc Opt-in Privacy Active</p>
-            <p className="text-xs text-gray-500 leading-snug mt-0.5">
-              Your transfers are shielded with zero-knowledge proofs on Arc Network
+            <p className="text-xs text-gray-400 flex items-center gap-1.5 truncate max-w-md">
+              <span className="text-gray-500">Owner:</span> 
+              <span className="font-mono text-violet-300/80 bg-white/[0.03] px-2 py-0.5 rounded border border-white/5">{address}</span>
             </p>
           </div>
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+
+          <div className="flex items-center gap-3 self-start sm:self-center">
+            {isRegistered && (
+              <Link 
+                href="/dashboard/create" 
+                className="btn-primary px-5 py-3 rounded-xl text-xs flex items-center gap-2 shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:scale-105 transition-all"
+              >
+                <PlusCircle className="w-4 h-4" /> New Payment Link
+              </Link>
+            )}
+            <button 
+              onClick={() => refetchMerchant()} 
+              className="p-3 bg-white/[0.04] hover:bg-white/[0.08] rounded-xl border border-white/5 text-gray-400 hover:text-white transition-all flex items-center justify-center"
+              title="Refresh Protocol State"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoadingRead ? 'animate-spin text-violet-400' : ''}`} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ── Recent Activity ── */}
-      <div className="animate-fade-in-up animate-delay-300">
-        <div className="flex items-center justify-between mb-3 px-1">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Recent Activity</p>
-          <Link href="/history" className="text-xs text-violet-400 hover:text-violet-300 font-semibold flex items-center gap-1 transition-colors">
-            See all <ChevronRight className="w-3 h-3" />
-          </Link>
-        </div>
-        <div className="glass-panel overflow-hidden" style={{ borderRadius: '20px' }}>
-          {isActivityLoading ? (
-            <div className="p-10 flex flex-col items-center gap-2">
-              <Loader2 className="w-6 h-6 text-violet-400 animate-spin" />
-              <p className="text-xs text-gray-500">Loading activity...</p>
+      {/* ── State 1: Belum Mendaftar (Tampilkan Form Pendaftaran Elegan) ── */}
+      {!isLoadingRead && !isRegistered && (
+        <div className="max-w-xl mx-auto glass-panel p-8 relative overflow-hidden group mt-4">
+          <div className="absolute inset-0 bg-gradient-to-b from-violet-600/5 to-transparent opacity-50 pointer-events-none" />
+          
+          <div className="flex items-start gap-4 mb-6 relative z-10">
+            <div className="w-12 h-12 rounded-2xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0 mt-0.5">
+              <Sparkles className="w-6 h-6" />
             </div>
-          ) : !isConnected ? (
-            <div className="p-8 text-center">
-              <p className="text-xs text-gray-600">Connect wallet to see activity</p>
+            <div>
+              <h2 className="text-lg font-bold text-white tracking-tight">Initialize Commercial Storefront</h2>
+              <p className="text-xs text-gray-400 leading-relaxed mt-1">
+                Map your identity onchain. Payment configurations are immutably tied to your public cryptographic address.
+              </p>
             </div>
-          ) : activities.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-xs text-gray-600">No recent activity</p>
-            </div>
-          ) : (
-            activities.map((log, i) => {
-              const type = log.eventName;
-              const args = log.args;
-              const amount = formatUnits(args.amount || 0n, 6);
-              
-              const isDeposit = type === 'Shielded';
-              const isWithdraw = type === 'Unshielded';
-              const isSend = type === 'PrivateTransfer' && args.from?.toLowerCase() === address?.toLowerCase();
-              const isReceive = type === 'PrivateTransfer' && args.to?.toLowerCase() === address?.toLowerCase();
+          </div>
 
-              const cfg = isDeposit ? typeConfig.shield : isWithdraw ? typeConfig.unshield : typeConfig.send;
-              const Icon = cfg.icon;
+          <form onSubmit={handleRegister} className="space-y-5 relative z-10">
+            <div>
+              <label className="block text-xs font-bold text-violet-300/90 mb-1.5 uppercase tracking-wide">
+                Merchant Brand Name *
+              </label>
+              <input
+                type="text"
+                value={merchantName}
+                onChange={(e) => setMerchantName(e.target.value)}
+                placeholder="e.g. Satoshi Global Merchandise"
+                className="input-field p-3.5 text-sm font-bold bg-black/40 border-white/10 focus:border-violet-500/50"
+                required
+              />
+              <p className="text-[10px] text-gray-500 mt-1.5">Visible to users during decentralized checkout validation.</p>
+            </div>
 
-              return (
-                <div
-                  key={log.transactionHash}
-                  className={cn(
-                    "flex items-center gap-4 px-4 py-3.5 hover:bg-white/3 transition-colors",
-                    i < activities.length - 1 && "border-b border-white/5"
-                  )}
-                >
-                  <div className={cn("w-9 h-9 rounded-2xl flex items-center justify-center shrink-0", cfg.bg)}>
-                    <Icon className={cn("w-4 h-4", cfg.color)} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">
-                      {isDeposit ? 'Deposit' : isWithdraw ? 'Withdraw' : isReceive ? 'Private Receive' : 'Private Send'}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {log.timestamp ? new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className={cn("text-sm font-bold", (isDeposit || isReceive) ? "text-emerald-400" : "text-gray-300")}>
-                      {showBalance ? ((isDeposit || isReceive) ? `+${amount}` : `-${amount}`) : '••••'} <span className="text-xs font-normal text-gray-500">{args.token === USDC_ADDRESS ? 'USDC' : args.token === EURC_ADDRESS ? 'EURC' : 'Asset'}</span>
-                    </p>
-                    <div className={cn("flex items-center justify-end gap-0.5 text-xs", (isDeposit || isReceive) ? "text-emerald-500" : "text-gray-500")}>
-                      {(isDeposit || isReceive) ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                      {isDeposit ? 'Received' : isWithdraw ? 'Withdrawn' : isReceive ? 'Received' : 'Sent'}
-                    </div>
-                  </div>
-                </div>
-              );
-            })
+            <div>
+              <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wide">
+                Storefront Description / Metadata
+              </label>
+              <input
+                type="text"
+                value={merchantMetadata}
+                onChange={(e) => setMerchantMetadata(e.target.value)}
+                placeholder="e.g. Official Cross-chain Gateway Portal"
+                className="input-field p-3.5 text-xs font-medium bg-black/40 border-white/10"
+              />
+            </div>
+
+            {writeError && (
+              <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 flex items-start gap-2.5 font-medium">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{writeError.message || 'Transaction aborted. Please check wallet parameters.'}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isWritePending || isTxConfirming || !merchantName}
+              className="w-full btn-primary py-3.5 flex items-center justify-center gap-2 text-sm mt-3"
+            >
+              {isWritePending || isTxConfirming ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{isTxConfirming ? 'Finalizing on Arc L1...' : 'Awaiting Wallet Authorization...'}</span>
+                </>
+              ) : (
+                <span>Register Identity Natively</span>
+              )}
+            </button>
+          </form>
+
+          {isTxSuccess && (
+            <div className="mt-5 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-center gap-2 font-bold animate-fade-in">
+              <CheckCircle2 className="w-4 h-4 shrink-0" /> Storefront active! Synchronizing view state...
+            </div>
           )}
         </div>
-      </div>
+      )}
+
+      {/* ── State 2: Terdaftar (Tampilkan Metrik Premium & Tabel Event) ── */}
+      {isRegistered && (
+        <>
+          {/* Kartu Metrik */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div className="card p-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-2xl group-hover:bg-violet-500/10 transition-all" />
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Settled Revenue</span>
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">
+                  Auto Bridged
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <span className="text-4xl font-black text-white tracking-tight">
+                  ${formatUnits(totalReceivedRaw, 6)}
+                </span>
+                <span className="text-xs font-bold text-violet-400">USDC</span>
+              </div>
+              <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
+                <span>Finality time</span>
+                <span className="text-gray-400 font-semibold">&lt; 1 second</span>
+              </div>
+            </div>
+
+            <div className="card p-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all" />
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Completed Orders</span>
+                <div className="p-1 rounded-lg bg-white/[0.04] text-violet-400">
+                  <Coins className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-4xl font-black text-white tracking-tight mt-1">
+                {totalTransactionsRaw.toString()}
+              </div>
+              <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
+                <span>Source route</span>
+                <span className="text-gray-400 font-semibold">100% Contract triggered</span>
+              </div>
+            </div>
+
+            <div className="card p-6 relative overflow-hidden group flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Store Profile Spec</span>
+                  <span className="badge-violet">Decentralized</span>
+                </div>
+                <div className="text-sm font-bold text-white mt-2 leading-snug line-clamp-2">
+                  {metadata || 'Standard Unified Checkout Gateway'}
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
+                <span>Backend state</span>
+                <span className="text-violet-400/90 font-mono">Zero Database</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Tabel Riwayat Transaksi Real-time */}
+          <div className="glass-panel p-6 sm:p-8 space-y-6">
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
+              <div>
+                <h3 className="text-lg font-bold text-white tracking-tight">Recent Live Dispatches</h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Listening asynchronously via <code className="text-violet-400 font-mono bg-white/[0.03] px-1.5 py-0.5 rounded">watchContractEvent</code>
+                </p>
+              </div>
+
+              <div className="inline-flex items-center gap-2 bg-violet-950/40 border border-violet-500/20 px-3 py-1.5 rounded-full text-xs text-violet-300 self-start sm:self-auto">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+                </span>
+                <span className="font-bold text-[11px]">Realtime Socket On</span>
+              </div>
+            </div>
+
+            {recentPayments.length === 0 ? (
+              <div className="p-10 text-center bg-black/20 rounded-2xl border border-white/5">
+                <Layers className="w-8 h-8 text-gray-600 mx-auto mb-3" />
+                <p className="text-sm font-medium text-gray-400">No session execution dispatches intercepted yet.</p>
+                <p className="text-xs text-gray-600 mt-1 max-w-sm mx-auto">
+                  Create a specific payment link and fulfill it using any testnet wallet to verify sub-second listener reflection immediately.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="text-gray-500 uppercase tracking-wider text-[10px] border-b border-white/5">
+                      <th className="pb-3 font-bold px-2">Session Identifier</th>
+                      <th className="pb-3 font-bold px-2">Payer Identity</th>
+                      <th className="pb-3 font-bold px-2">Intercept Time</th>
+                      <th className="pb-3 font-bold text-right px-2">Verification Registry</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 font-medium text-gray-300">
+                    {recentPayments.map((p, idx) => (
+                      <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
+                        <td className="py-3.5 px-2 font-mono text-violet-300/90 font-semibold">
+                          {p.sessionId.slice(0, 12)}...{p.sessionId.slice(-6)}
+                        </td>
+                        <td className="py-3.5 px-2 font-mono text-gray-400">
+                          {p.payer.slice(0, 8)}...{p.payer.slice(-6)}
+                        </td>
+                        <td className="py-3.5 px-2 text-gray-500">
+                          {new Date(p.timestamp).toLocaleTimeString()}
+                        </td>
+                        <td className="py-3.5 px-2 text-right">
+                          <a 
+                            href={`https://testnet.arcscan.app/tx/${p.txHash}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-violet-400 hover:text-violet-300 font-bold bg-white/[0.03] hover:bg-white/[0.06] px-2.5 py-1 rounded-lg border border-white/5 transition-all"
+                          >
+                            <span>ArcScan L1</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+          </div>
+        </>
+      )}
 
     </div>
   );

@@ -21,8 +21,8 @@ const orbitron = Orbitron({
 });
 
 export const metadata: Metadata = {
-  title: "Morphic | Private Transfers on Arc",
-  description: "The most private way to send stablecoins on Arc Network — powered by zero-knowledge proofs.",
+  title: "UniPay | Decentralized Payment Checkout Protocol",
+  description: "Accept USDC/EURC from any chain, settle in < 1 second. Fully onchain protocol powered by Arc Network.",
 };
 
 export default function RootLayout({
@@ -35,7 +35,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#07070a] text-gray-100 selection:bg-violet-600 selection:text-white overflow-x-hidden">
+      <body className="min-h-full flex flex-col bg-[#0A0A0F] text-gray-100 selection:bg-violet-600 selection:text-white overflow-x-hidden">
         <Web3Provider>
           {/* Ambient glow background */}
           <div className="glow-bg" />

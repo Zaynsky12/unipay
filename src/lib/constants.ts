@@ -1,85 +1,127 @@
-export const VAULT_ADDRESS = "0xdb550A1302a20907A6f086828c425e71e08F1D17";
+// ── UniPay Contract Address (UniPayRegistry) ──────────────────────────────────
+// Will be filled after deploy on Arc Testnet
+export const UNIPAY_REGISTRY_ADDRESS = "0x0000000000000000000000000000000000000000" as `0x${string}`;
 
-export const VAULT_ABI = [
+// ── Token Addresses ────────────────────────────────────────────────────────────
+export const USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as `0x${string}`;
+export const EURC_ADDRESS = "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as `0x${string}`;
+
+// ── UniPayRegistry ABI ─────────────────────────────────────────────────────────
+export const REGISTRY_ABI = [
+  // ── Read Functions ──────────────────────────────────────────────────────────
   {
-    "inputs": [
-      { "internalType": "address", "name": "user", "type": "address" },
-      { "internalType": "address", "name": "token", "type": "address" }
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "merchants",
+    "outputs": [
+      { "internalType": "string", "name": "name", "type": "string" },
+      { "internalType": "string", "name": "metadata", "type": "string" },
+      { "internalType": "bool", "name": "active", "type": "bool" },
+      { "internalType": "uint256", "name": "totalReceived", "type": "uint256" },
+      { "internalType": "uint256", "name": "totalTransactions", "type": "uint256" }
     ],
-    "name": "balances",
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "name": "sessions",
+    "outputs": [
+      { "internalType": "address", "name": "merchant", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" },
+      { "internalType": "address", "name": "token", "type": "address" },
+      { "internalType": "string", "name": "description", "type": "string" },
+      { "internalType": "uint256", "name": "expiry", "type": "uint256" },
+      { "internalType": "bool", "name": "paid", "type": "bool" },
+      { "internalType": "address", "name": "payer", "type": "address" },
+      { "internalType": "bytes32", "name": "txHash", "type": "bytes32" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalMerchants",
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "totalVolume",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalTransactions",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  // ── Write Functions ─────────────────────────────────────────────────────────
+  {
     "inputs": [
-      { "internalType": "address", "name": "token", "type": "address" },
+      { "internalType": "string", "name": "name", "type": "string" },
+      { "internalType": "string", "name": "metadata", "type": "string" }
+    ],
+    "name": "registerMerchant",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
       { "internalType": "uint256", "name": "amount", "type": "uint256" },
-      { "internalType": "string", "name": "privateAddress", "type": "string" }
+      { "internalType": "address", "name": "token", "type": "address" },
+      { "internalType": "string", "name": "description", "type": "string" },
+      { "internalType": "uint256", "name": "expiry", "type": "uint256" }
     ],
-    "name": "deposit",
-    "outputs": [],
+    "name": "createSession",
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "token", "type": "address" },
-      { "internalType": "uint256", "name": "amount", "type": "uint256" }
-    ],
-    "name": "withdraw",
+    "inputs": [{ "internalType": "bytes32", "name": "sessionId", "type": "bytes32" }],
+    "name": "pay",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "token", "type": "address" },
-      { "internalType": "address", "name": "to", "type": "address" },
-      { "internalType": "uint256", "name": "amount", "type": "uint256" }
-    ],
-    "name": "privateTransfer",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
+  // ── Events ──────────────────────────────────────────────────────────────────
   {
     "anonymous": false,
     "inputs": [
-      { "indexed": true, "internalType": "address", "name": "user", "type": "address" },
-      { "indexed": true, "internalType": "address", "name": "token", "type": "address" },
-      { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" },
-      { "indexed": false, "internalType": "string", "name": "privateAddress", "type": "string" }
+      { "indexed": true, "internalType": "address", "name": "merchant", "type": "address" },
+      { "indexed": false, "internalType": "string", "name": "name", "type": "string" }
     ],
-    "name": "Shielded",
+    "name": "MerchantRegistered",
     "type": "event"
   },
   {
     "anonymous": false,
     "inputs": [
-      { "indexed": true, "internalType": "address", "name": "user", "type": "address" },
-      { "indexed": true, "internalType": "address", "name": "token", "type": "address" },
+      { "indexed": true, "internalType": "bytes32", "name": "sessionId", "type": "bytes32" },
+      { "indexed": true, "internalType": "address", "name": "merchant", "type": "address" },
       { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }
     ],
-    "name": "Unshielded",
+    "name": "PaymentCreated",
     "type": "event"
   },
   {
     "anonymous": false,
     "inputs": [
-      { "indexed": true, "internalType": "address", "name": "from", "type": "address" },
-      { "indexed": true, "internalType": "address", "name": "to", "type": "address" },
-      { "indexed": true, "internalType": "address", "name": "token", "type": "address" },
-      { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }
+      { "indexed": true, "internalType": "bytes32", "name": "sessionId", "type": "bytes32" },
+      { "indexed": true, "internalType": "address", "name": "payer", "type": "address" },
+      { "indexed": true, "internalType": "address", "name": "merchant", "type": "address" }
     ],
-    "name": "PrivateTransfer",
+    "name": "PaymentCompleted",
     "type": "event"
   }
 ] as const;
 
-export const USDC_ADDRESS = "0x3600000000000000000000000000000000000000";
-export const EURC_ADDRESS = "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a";
-
+// ── ERC20 ABI (minimal for approval + balance) ─────────────────────────────────
 export const ERC20_ABI = [
   {
     "inputs": [
@@ -90,5 +132,37 @@ export const ERC20_ABI = [
     "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
+    "name": "balanceOf",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "owner", "type": "address" },
+      { "internalType": "address", "name": "spender", "type": "address" }
+    ],
+    "name": "allowance",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "decimals",
+    "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }],
+    "stateMutability": "view",
+    "type": "function"
   }
 ] as const;
+
+// ── Supported tokens list ──────────────────────────────────────────────────────
+export const SUPPORTED_TOKENS = [
+  { symbol: "USDC", address: USDC_ADDRESS, decimals: 6 },
+  { symbol: "EURC", address: EURC_ADDRESS, decimals: 6 },
+] as const;
+
+export type SupportedToken = "USDC" | "EURC";
