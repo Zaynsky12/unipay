@@ -73,16 +73,24 @@ export default function CreatePaymentPage() {
       abi: REGISTRY_ABI,
       functionName: 'createSession',
       args: [amountUnits, tokenObj.address, description || `Checkout Dispatch — ${merchantName}`, BigInt(expiryTimestamp)],
+      gas: 500000n, // Memaksa batas gas L1 super longgar
     });
   };
 
+  // Tangkap ID Sesi dan catat secara persisten ke LocalStorage agar langsung muncul di List Dashboard
   useEffect(() => {
     if (isSuccess && txReceipt) {
       let extractedId = '';
-      for (const log of txReceipt.logs) {
-        if (log.topics && log.topics.length > 1) {
-          extractedId = log.topics[1] as string;
-          break;
+      
+      if (txReceipt.logs && Array.isArray(txReceipt.logs)) {
+        for (const log of txReceipt.logs) {
+          if (log.topics && log.topics.length > 1) {
+            const candidate = log.topics[1] as string;
+            if (candidate && candidate.length === 66) {
+              extractedId = candidate;
+              break;
+            }
+          }
         }
       }
       
@@ -91,8 +99,37 @@ export default function CreatePaymentPage() {
       }
 
       setCreatedSessionId(extractedId);
+
+      // Simpan rincian sesi ini ke LocalStorage untuk konsumsi Daftar Halaman Dashboard
+      if (address && typeof window !== 'undefined') {
+        try {
+          const storageKey = `unipay_sessions_${address.toLowerCase()}`;
+          const existing = localStorage.getItem(storageKey);
+          const sessionsArray = existing ? JSON.parse(existing) : [];
+          
+          // Hindari duplikasi jika sesi dengan ID yang sama sudah tercatat
+          if (!sessionsArray.some((s: any) => s.sessionId === extractedId)) {
+            const expiryTimestamp = Math.floor(Date.now() / 1000) + Number(expiryDays) * 86400;
+            const newSessionObj = {
+              sessionId: extractedId,
+              amount: amount || '0.00',
+              token: selectedToken,
+              description: description || `Checkout Dispatch — ${merchantName}`,
+              expiryTimestamp: expiryTimestamp,
+              createdAt: Date.now(),
+              isPaid: false
+            };
+            
+            // Simpan di posisi teratas
+            localStorage.setItem(storageKey, JSON.stringify([newSessionObj, ...sessionsArray]));
+          }
+        } catch (err) {
+          console.error("Gagal mencatat sesi persisten ke localStorage:", err);
+        }
+      }
+
     }
-  }, [isSuccess, txReceipt, txHash]);
+  }, [isSuccess, txReceipt, txHash, address, amount, selectedToken, description, merchantName, expiryDays]);
 
   const paymentLink = typeof window !== 'undefined' 
     ? `${window.location.origin}/pay/${createdSessionId || 'preview_id'}` 
@@ -118,8 +155,6 @@ export default function CreatePaymentPage() {
     }
   };
 
-  // Tampilan terkunci (Locked state) saat belum konek dompet
-  // Mengarahkan pengguna untuk menggunakan tombol dompet di bilah navigasi atas
   if (!isConnected) {
     return (
       <div className="glass-panel p-8 text-center max-w-md mx-auto mt-12 animate-fade-in shadow-2xl relative overflow-hidden">
@@ -295,6 +330,27 @@ export default function CreatePaymentPage() {
         {/* ── Sisi Kanan: Output Tautan Pintar & Sematan Widget (5 Kolom) ── */}
         <div className="lg:col-span-5 space-y-6">
           
+          {/* Spanduk Pemberitahuan Sukses Terintegrasi */}
+          {createdSessionId && (
+            <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-3 animate-fade-in shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                <h3 className="text-sm font-black text-emerald-300 tracking-tight">Endpoint Minted Immutably ✓</h3>
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                This digital billing specification has been recorded directly to the L1 chain. It is now actively mapped inside your <span className="text-white font-bold">Active Payment Endpoints</span> matrix on the main dashboard view.
+              </p>
+              <div className="pt-1">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 rounded-xl border border-emerald-500/20 transition-all"
+                >
+                  <span>← View on Dashboard Matrix</span>
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* Card Output 1: Payment Link */}
           <div className="glass-panel p-6 space-y-4 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-violet-600" />

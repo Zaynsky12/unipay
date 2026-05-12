@@ -3,18 +3,21 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Eye, LayoutDashboard, PlusCircle, Globe, History } from 'lucide-react';
+import { Eye, LayoutDashboard, PlusCircle, Globe, History, Wallet } from 'lucide-react';
+import { useAccount } from 'wagmi';
+import { useAppKit } from '@reown/appkit/react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Create Payment', href: '/dashboard/create', icon: PlusCircle },
   { name: 'History', href: '/dashboard/history', icon: History },
-  { name: 'Explorer', href: '/explorer', icon: Globe },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
+  const { isConnected, address } = useAccount();
+  const { open } = useAppKit();
   
   // Deteksi apakah pengguna berada di Halaman Awal / Beranda (Landing Page)
   const isLandingPage = pathname === '/';
@@ -71,9 +74,19 @@ export function Navbar() {
             </nav>
           )}
 
-          {/* Sisi Kanan: Tombol Dompet Web3 */}
+          {/* Sisi Kanan: Tombol Dompet Kustom Berwarna Ungu (Violet) Premium */}
           <div className="flex items-center gap-2 shrink-0">
-            <appkit-button balance="hide" />
+            <button
+              onClick={() => open()}
+              className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-xs sm:text-sm font-bold rounded-xl flex items-center gap-2 border border-violet-500/30 shadow-[0_0_20px_rgba(124,58,237,0.4)] transition-all group"
+            >
+              <Wallet className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span>
+                {isConnected && address 
+                  ? `${address.slice(0, 6)}...${address.slice(-4)}`
+                  : 'Connect Wallet'}
+              </span>
+            </button>
           </div>
         </div>
       </header>

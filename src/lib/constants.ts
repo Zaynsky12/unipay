@@ -1,12 +1,12 @@
 // ── UniPay Contract Address (UniPayRegistry) ──────────────────────────────────
-// Will be filled after deploy on Arc Testnet
-export const UNIPAY_REGISTRY_ADDRESS = "0x0000000000000000000000000000000000000000" as `0x${string}`;
+// Will be filled automatically after deploy on Arc Testnet
+export const UNIPAY_REGISTRY_ADDRESS = "0xe9dbfa0c86bb35f2152826d759482a03edf9d612" as `0x${string}`;
 
 // ── Token Addresses ────────────────────────────────────────────────────────────
 export const USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as `0x${string}`;
 export const EURC_ADDRESS = "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as `0x${string}`;
 
-// ── UniPayRegistry ABI ─────────────────────────────────────────────────────────
+// ── UniPayRegistry ABI (100% Presisi dan Sinkron dengan Kontrak Solidity Aktual) ──
 export const REGISTRY_ABI = [
   // ── Read Functions ──────────────────────────────────────────────────────────
   {
@@ -15,7 +15,7 @@ export const REGISTRY_ABI = [
     "outputs": [
       { "internalType": "string", "name": "name", "type": "string" },
       { "internalType": "string", "name": "metadata", "type": "string" },
-      { "internalType": "bool", "name": "active", "type": "bool" },
+      { "internalType": "bool", "name": "isRegistered", "type": "bool" },
       { "internalType": "uint256", "name": "totalReceived", "type": "uint256" },
       { "internalType": "uint256", "name": "totalTransactions", "type": "uint256" }
     ],
@@ -29,33 +29,9 @@ export const REGISTRY_ABI = [
       { "internalType": "address", "name": "merchant", "type": "address" },
       { "internalType": "uint256", "name": "amount", "type": "uint256" },
       { "internalType": "address", "name": "token", "type": "address" },
-      { "internalType": "string", "name": "description", "type": "string" },
       { "internalType": "uint256", "name": "expiry", "type": "uint256" },
-      { "internalType": "bool", "name": "paid", "type": "bool" },
-      { "internalType": "address", "name": "payer", "type": "address" },
-      { "internalType": "bytes32", "name": "txHash", "type": "bytes32" }
+      { "internalType": "bool", "name": "isFulfilled", "type": "bool" }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "totalMerchants",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "totalVolume",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "totalTransactions",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -78,7 +54,7 @@ export const REGISTRY_ABI = [
       { "internalType": "uint256", "name": "expiry", "type": "uint256" }
     ],
     "name": "createSession",
-    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "outputs": [{ "internalType": "bytes32", "name": "sessionId", "type": "bytes32" }],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -94,7 +70,8 @@ export const REGISTRY_ABI = [
     "anonymous": false,
     "inputs": [
       { "indexed": true, "internalType": "address", "name": "merchant", "type": "address" },
-      { "indexed": false, "internalType": "string", "name": "name", "type": "string" }
+      { "indexed": false, "internalType": "string", "name": "name", "type": "string" },
+      { "indexed": false, "internalType": "string", "name": "metadata", "type": "string" }
     ],
     "name": "MerchantRegistered",
     "type": "event"
@@ -104,17 +81,20 @@ export const REGISTRY_ABI = [
     "inputs": [
       { "indexed": true, "internalType": "bytes32", "name": "sessionId", "type": "bytes32" },
       { "indexed": true, "internalType": "address", "name": "merchant", "type": "address" },
-      { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }
+      { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" },
+      { "indexed": false, "internalType": "address", "name": "token", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "expiry", "type": "uint256" }
     ],
-    "name": "PaymentCreated",
+    "name": "SessionCreated",
     "type": "event"
   },
   {
     "anonymous": false,
     "inputs": [
       { "indexed": true, "internalType": "bytes32", "name": "sessionId", "type": "bytes32" },
+      { "indexed": true, "internalType": "address", "name": "merchant", "type": "address" },
       { "indexed": true, "internalType": "address", "name": "payer", "type": "address" },
-      { "indexed": true, "internalType": "address", "name": "merchant", "type": "address" }
+      { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }
     ],
     "name": "PaymentCompleted",
     "type": "event"

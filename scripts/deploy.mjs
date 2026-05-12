@@ -2,6 +2,7 @@ import { createWalletClient, http, publicActions } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { defineChain } from 'viem';
 import fs from 'fs';
+import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -25,48 +26,27 @@ const arcTestnet = defineChain({
   },
 });
 
-// ABI Kontrak Inti UniPay Registry
-const REGISTRY_ABI = [
-  {
-    "inputs": [
-      {"internalType": "string","name": "name","type": "string"},
-      {"internalType": "string","name": "metadata","type": "string"}
-    ],
-    "name": "registerMerchant",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {"internalType": "uint256","name": "amount","type": "uint256"},
-      {"internalType": "address","name": "token","type": "address"},
-      {"internalType": "string","name": "description","type": "string"},
-      {"internalType": "uint256","name": "expiry","type": "uint256"}
-    ],
-    "name": "createSession",
-    "outputs": [{"internalType": "bytes32","name": "sessionId","type": "bytes32"}],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "bytes32","name": "sessionId","type": "bytes32"}],
-    "name": "pay",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
-];
-
-// Pre-compiled EVM Bytecode standar untuk logika UniPayRegistry.sol
-const REGISTRY_BYTECODE = "0x608060405234801561001057600080fd5b50610300806100206000396000f3fe608060405234801561001057600080fd5b50600436106100505760003560e01c80631ba95e5a14610060578063462f837314610080578063b4bca4eb146100a0575b600080fd5b6100706100c0565b005b610090610100565b005b6100b0610180565b005b50565b50565b5056";
-
 async function main() {
   console.log("==================================================");
-  console.log("🚀 MENGINISIALISASI PENYEBARAN UNIPAY REGISTRY");
+  console.log("🚀 MENGINISIALISASI PENYEBARAN UNIPAY REGISTRY RIIL");
   console.log("==================================================");
 
-  // Mendukung pembacaan variasi penamaan variabel kunci dari file .env secara cerdas
+  // 1. Membaca Artifact Segar Hasil Kompilasi Hardhat Aktual
+  const artifactPath = path.resolve('./artifacts/contracts/UniPayRegistry.sol/UniPayRegistry.json');
+  
+  if (!fs.existsSync(artifactPath)) {
+    console.log("❌ Galat Kritis: Artifact Smart Contract belum ditemukan!");
+    console.log("Silakan jalankan perintah kompilasi terlebih dahulu di terminal Anda:");
+    console.log("👉 npx hardhat compile\n");
+    process.exit(1);
+  }
+
+  console.log("📦 Membaca ABI dan Bytecode segar dari Hardhat Artifacts...");
+  const artifact = JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
+  const REGISTRY_ABI = artifact.abi;
+  const REGISTRY_BYTECODE = artifact.bytecode;
+
+  // 2. Menyiapkan Kunci Pribadi
   let pKey = process.env.DEPLOYER_PRIVATE_KEY || process.env.PRIVATE_KEY;
   
   if (!pKey) {
@@ -108,21 +88,24 @@ async function main() {
     const receipt = await client.waitForTransactionReceipt({ hash });
     const contractAddress = receipt.contractAddress;
 
-    console.log("\n🎉 SELAMAT! SMART CONTRACT BERHASIL DI-DEPLOY!");
+    console.log("\n🎉 SELAMAT! SMART CONTRACT RIIL BERHASIL DI-DEPLOY!");
     console.log("==================================================");
-    console.log(`📍 Alamat Kontrak Asli: ${contractAddress}`);
+    console.log(`📍 Alamat Kontrak Segar: ${contractAddress}`);
     console.log("==================================================");
 
-    // Otomatis memperbarui file src/lib/constants.ts dengan alamat baru
-    const constantsPath = './src/lib/constants.ts';
+    // 3. Otomatis memperbarui file src/lib/constants.ts dengan alamat baru secara presisi
+    const constantsPath = path.resolve('./src/lib/constants.ts');
     if (fs.existsSync(constantsPath)) {
       let content = fs.readFileSync(constantsPath, 'utf8');
+      
+      // Menimpa alamat lama dengan aman dan presisi
       content = content.replace(
-        /export const UNIPAY_REGISTRY_ADDRESS = "0x[a-fA-F0-9]{40}";/,
-        `export const UNIPAY_REGISTRY_ADDRESS = "${contractAddress}";`
+        /export const UNIPAY_REGISTRY_ADDRESS = "0x[a-fA-F0-9]{40}".*/,
+        `export const UNIPAY_REGISTRY_ADDRESS = "${contractAddress}" as \`0x\${string}\`;`
       );
+      
       fs.writeFileSync(constantsPath, content, 'utf8');
-      console.log("✅ File src/lib/constants.ts otomatis diperbarui dengan alamat baru.");
+      console.log("✅ File src/lib/constants.ts otomatis diperbarui dengan alamat kontrak baru yang sah.");
     }
 
   } catch (error) {
