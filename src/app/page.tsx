@@ -2,230 +2,250 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Shield, Lock, Eye, Zap, ArrowRight, ShieldCheck, Globe, Fingerprint, Coins, ShieldAlert, CheckCircle2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useReadContracts } from 'wagmi';
+import { formatUnits } from 'viem';
+import { 
+  Zap, 
+  ArrowRight, 
+  Globe, 
+  Layers, 
+  CheckCircle2, 
+  UserPlus, 
+  CreditCard, 
+  Banknote,
+  ShieldCheck
+} from 'lucide-react';
+import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
 
 export default function LandingPage() {
+  // Membaca statistik publik dari kontrak secara realtime/periodik
+  const { data: statsData, isLoading } = useReadContracts({
+    contracts: [
+      { address: UNIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'totalMerchants' },
+      { address: UNIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'totalVolume' },
+      { address: UNIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'totalTransactions' },
+    ],
+  });
+
+  const totalMerchants = statsData?.[0]?.result ? Number(statsData[0].result) : 0;
+  // Volume USDC dalam 6 decimals
+  const totalVolume = statsData?.[1]?.result ? Number(formatUnits(statsData[1].result, 6)) : 0;
+  const totalTransactions = statsData?.[2]?.result ? Number(statsData[2].result) : 0;
+
   return (
-    <div className="flex flex-col gap-0 pb-20 animate-fade-in overflow-hidden">
+    <div className="flex flex-col gap-0 pb-24 animate-fade-in overflow-hidden">
       
       {/* ── Hero Section ── */}
-      <section className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-4 pt-32 md:pt-16">
-        {/* Background Effects */}
-        <div className="absolute top-0 -z-10 w-full h-full bg-[#030305]" />
-        <div className="absolute top-1/4 -left-1/4 -z-10 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] opacity-50" />
-        <div className="absolute bottom-1/4 -right-1/4 -z-10 w-[600px] h-[600px] bg-violet-500/10 rounded-full blur-[120px] opacity-50" />
+      <section className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-4 pt-32 md:pt-20">
+        {/* Latar Belakang & Efek Cahaya */}
+        <div className="absolute top-0 -z-10 w-full h-full bg-[#0A0A0F]" />
+        <div className="absolute top-1/4 -left-1/4 -z-10 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[120px] opacity-60" />
+        <div className="absolute bottom-1/3 -right-1/4 -z-10 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] opacity-50" />
         
-        {/* Animated Grid */}
-        <div className="absolute inset-0 -z-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-50" />
-        
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-sm font-bold text-cyan-400 mb-8 backdrop-blur-md animate-fade-in-down">
-          <Zap className="w-4 h-4 fill-current" />
-          Native Privacy on Arc Network
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs md:text-sm font-bold text-violet-400 mb-8 backdrop-blur-md animate-fade-in-down">
+          <Zap className="w-4 h-4 fill-current text-violet-400" />
+          Fully Onchain Checkout Protocol on Arc Network
         </div>
         
-        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[0.95] mb-8 max-w-4xl animate-fade-in-up">
-          THE FUTURE <br className="md:hidden" /> OF <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-600">
-            PRIVATE ASSETS
-          </span>
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-tight leading-[1.05] mb-8 max-w-5xl animate-fade-in-up">
+          Accept USDC from any chain, <br />
+          <span className="gradient-text">settle in &lt; 1 second.</span>
         </h1>
         
-        <p className="max-w-2xl text-xl text-gray-400 leading-relaxed mb-12 animate-fade-in-up delay-100 px-4">
-          Morphic is a high-performance privacy layer for the Arc Network. Shield your USDC and EURC, transfer them with zero trace, and maintain absolute financial sovereignty.
+        <p className="max-w-2xl text-lg sm:text-xl text-gray-400 leading-relaxed mb-12 animate-fade-in-up delay-100 px-2">
+          UniPay is the decentralized Stripe of Web3. Receive multi-chain stablecoin payments instantly directly into your self-custodial wallet. No database, no backend servers.
         </p>
         
-        <div className="flex flex-col sm:flex-row gap-5 w-full sm:w-auto animate-fade-in-up delay-200">
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto animate-fade-in-up delay-200">
           <Link 
             href="/dashboard" 
             className="group relative px-8 py-4 bg-white text-black font-black rounded-xl hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden shadow-[0_0_30px_rgba(255,255,255,0.15)]"
           >
-            Launch Morphic App
+            Launch App
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
           <a 
             href="#how-it-works" 
-            className="px-8 py-4 bg-white/5 text-white font-bold rounded-xl border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center backdrop-blur-xl"
+            className="px-8 py-4 bg-white/[0.04] text-white font-bold rounded-xl border border-white/10 hover:bg-white/[0.08] transition-all flex items-center justify-center backdrop-blur-xl"
           >
-            How it works
+            Explore Protocol
           </a>
+        </div>
+
+        {/* ── Live Onchain Statistics ── */}
+        <div className="w-full max-w-5xl mt-24 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left px-4 animate-fade-in-up delay-300">
+          <div className="glass-panel p-6 relative overflow-hidden group">
+            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-violet-600/5 rounded-full blur-xl group-hover:bg-violet-600/10 transition-all" />
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Total Merchants</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-black text-white">
+                {isLoading ? <span className="shimmer px-8 py-1 rounded w-16 inline-block" /> : totalMerchants}
+              </span>
+              <span className="text-xs text-violet-400 font-semibold">Active</span>
+            </div>
+            <p className="text-[11px] text-gray-500 mt-2">Verified directly from smart contract</p>
+          </div>
+
+          <div className="glass-panel p-6 relative overflow-hidden group">
+            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-indigo-600/5 rounded-full blur-xl group-hover:bg-indigo-600/10 transition-all" />
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Total Volume Settled</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-black text-white">
+                ${isLoading ? <span className="shimmer px-12 py-1 rounded w-24 inline-block" /> : totalVolume.toLocaleString()}
+              </span>
+              <span className="text-xs text-gray-400 font-semibold">USDC</span>
+            </div>
+            <p className="text-[11px] text-gray-500 mt-2">&lt; 1s finality on Arc Network</p>
+          </div>
+
+          <div className="glass-panel p-6 relative overflow-hidden group">
+            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-600/5 rounded-full blur-xl group-hover:bg-emerald-600/10 transition-all" />
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Total Transactions</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-black text-white">
+                {isLoading ? <span className="shimmer px-8 py-1 rounded w-16 inline-block" /> : totalTransactions}
+              </span>
+              <span className="text-xs text-emerald-400 font-semibold">100% Onchain</span>
+            </div>
+            <p className="text-[11px] text-gray-500 mt-2">Zero database infrastructure</p>
+          </div>
         </div>
       </section>
 
       {/* ── How It Works Section ── */}
-      <section id="how-it-works" className="w-full max-w-6xl mx-auto px-6 py-20">
+      <section id="how-it-works" className="w-full max-w-6xl mx-auto px-6 py-24 border-t border-white/5 mt-12">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Three Steps to Freedom</h2>
-          <p className="text-gray-500 max-w-lg mx-auto text-sm md:text-base">Our streamlined workflow ensures your assets are protected from end-to-end.</p>
+          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Protocol Mechanics</div>
+          <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Decentralized Payments in 3 Steps</h2>
+          <p className="text-gray-400 max-w-xl mx-auto text-sm md:text-base">
+            Seamlessly accept global digital assets directly inside your web application without manual intermediaries.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
               step: "01",
-              title: "Deposit",
-              desc: "Move your public USDC or EURC into the Morphic Vault. Our smart contracts break the public link to your wallet.",
-              icon: Coins,
-              color: "text-cyan-400",
-              bg: "bg-cyan-500/10",
-              border: "border-cyan-500/20"
+              title: "Register Merchant",
+              desc: "Connect your self-custodial wallet and register your commercial identity onchain. Your data resides securely in contract state.",
+              icon: UserPlus,
             },
             {
               step: "02",
-              title: "Private Send",
-              desc: "Transfer shielded assets to any recipient. The amount and address are encrypted with Zero-Knowledge proofs.",
-              icon: Send,
-              color: "text-blue-400",
-              bg: "bg-blue-500/10",
-              border: "border-blue-500/20"
+              title: "Create Payment",
+              desc: "Generate dynamic payment checkout links or grab the ready-to-use self-contained embedded web component widget for your website.",
+              icon: CreditCard,
             },
             {
               step: "03",
-              title: "Withdraw",
-              desc: "Exit the vault into a fresh public wallet. Your assets emerge 'clean' without any traceable history.",
-              icon: Unlock,
-              color: "text-emerald-400",
-              bg: "bg-emerald-500/10",
-              border: "border-emerald-500/20"
+              title: "Get Paid Instantly",
+              desc: "Buyers pay with stablecoins from any chain. Assets are automatically bridged via Arc App Kit and settled natively into your address.",
+              icon: Banknote,
             }
           ].map((item, i) => (
-            <div key={i} className="glass-panel p-8 relative group hover:border-white/20 transition-all duration-500">
-              <span className="absolute top-4 right-6 text-6xl font-black text-white/5 group-hover:text-white/10 transition-colors">{item.step}</span>
-              <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 border", item.bg, item.border, item.color)}>
-                <item.icon className="w-7 h-7" />
+            <div key={i} className="glass-panel p-8 relative group hover:border-violet-500/30 transition-all duration-500 flex flex-col justify-between">
+              <div>
+                <span className="absolute top-4 right-6 text-5xl font-black text-white/[0.03] group-hover:text-white/[0.08] transition-colors">
+                  {item.step}
+                </span>
+                <div className="w-12 h-12 rounded-xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center mb-6 text-violet-400 group-hover:scale-110 transition-transform">
+                  <item.icon className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-4">{item.title}</h3>
-              <p className="text-gray-500 leading-relaxed">{item.desc}</p>
+              <div className="mt-6 pt-4 border-t border-white/[0.04] flex items-center gap-2 text-xs text-gray-500">
+                <CheckCircle2 className="w-3.5 h-3.5 text-violet-500" /> Fully trustless operation
+              </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── Feature Highlight ── */}
-      <section className="w-full bg-white/[0.02] py-32 border-y border-white/5">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
+      {/* ── Features & Native Advantage ── */}
+      <section className="w-full bg-white/[0.01] py-24 border-y border-white/5">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20 text-xs font-bold text-violet-400 mb-6 uppercase tracking-widest">
-              Multi-Asset Support
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-xs font-bold text-indigo-400 mb-6 uppercase tracking-widest">
+              Unified Liquidity
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
-              Privacy for both <br />
-              <span className="text-cyan-400">USDC</span> and <span className="text-emerald-400">EURC</span>
+              Payers from any chain, <br />
+              <span className="gradient-text">Unified balance processing.</span>
             </h2>
-            <p className="text-gray-400 text-lg mb-8 leading-relaxed">
-              Morphic is the first platform on Arc Network to support multiple stablecoins natively. Switch between assets with a single click and maintain a diversified private portfolio.
+            <p className="text-gray-400 text-base mb-8 leading-relaxed">
+              Powered by the <span className="text-white font-semibold">Circle Arc App Kit</span>, UniPay identifies a user&apos;s USDC balance across arbitrary layer-2s and automatically bridges them instantly into the Arc Network for microsecond transaction checkout.
             </p>
             <div className="space-y-4">
               {[
-                { text: "1:1 Backed assets in the vault", icon: CheckCircle2 },
-                { text: "No slippage on shielding/unshielding", icon: CheckCircle2 },
-                { text: "Universal Vault interface", icon: CheckCircle2 }
+                "Zero platform database requirements",
+                "Instant programmatic cross-chain route detection",
+                "Self-contained embeddable Web Component integration",
+                "Built directly over robust Circle infrastructure",
               ].map((point, i) => (
-                <div key={i} className="flex items-center gap-3 text-white font-medium">
-                  <point.icon className="w-5 h-5 text-emerald-400" />
-                  {point.text}
+                <div key={i} className="flex items-center gap-3 text-sm text-gray-300 font-medium">
+                  <ShieldCheck className="w-4 h-4 text-violet-400 shrink-0" />
+                  {point}
                 </div>
               ))}
             </div>
           </div>
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-violet-500/20 blur-[80px] -z-10" />
-            <div className="glass-panel p-8 rounded-3xl border-white/10 shadow-2xl scale-105">
-              <div className="flex items-center justify-between mb-8">
-                <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Asset Distribution</span>
-                <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
+
+          <div className="relative flex justify-center">
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-600/10 to-indigo-600/10 blur-3xl -z-10 rounded-full" />
+            <div className="w-full max-w-md glass-panel p-6 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs font-bold text-gray-400">Payment Routing State</span>
                 </div>
+                <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-gray-400">Arc Protocol</span>
               </div>
-              <div className="space-y-6">
-                <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full w-[65%] bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.5)]" />
+
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>Buyer Chain</span>
+                  <span className="text-white font-medium">Arbitrum / Base / Ethereum</span>
                 </div>
-                <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full w-[35%] bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                </div>
+                <div className="text-sm font-bold text-violet-300">Auto-bridging via Unified Balance</div>
               </div>
-              <div className="mt-8 grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                  <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Shielded USDC</p>
-                  <p className="text-xl font-bold text-white">65%</p>
+
+              <div className="flex items-center justify-center text-gray-600 py-1">
+                ↓
+              </div>
+
+              <div className="p-3 rounded-xl bg-violet-600/10 border border-violet-500/20">
+                <div className="flex justify-between text-xs text-violet-400 mb-1">
+                  <span>Target Chain</span>
+                  <span className="text-white font-bold">Arc Network L1</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                  <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Shielded EURC</p>
-                  <p className="text-xl font-bold text-white">35%</p>
-                </div>
+                <div className="text-xs text-gray-300">Smart Contract <code className="bg-black/30 px-1 py-0.5 rounded text-violet-300 font-mono">pay()</code> execution</div>
+              </div>
+
+              <div className="pt-2 flex justify-between items-center text-xs text-gray-500">
+                <span>Finality time</span>
+                <span className="text-emerald-400 font-bold">&lt; 1,000ms</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="pt-20 flex flex-col items-center text-center">
-        <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tighter">
-          BECOME INVISIBLE.
+      {/* ── CTA Bottom ── */}
+      <section className="pt-24 flex flex-col items-center text-center px-4">
+        <h2 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight max-w-2xl">
+          Start Accepting Next-Gen Digital Dollars Today.
         </h2>
+        <p className="text-gray-400 max-w-xl text-sm md:text-base mb-8">
+          Join the fully open source, immutable payment protocol built natively for borderless enterprise commerce.
+        </p>
         <Link 
           href="/dashboard" 
-          className="group relative px-10 py-5 bg-white text-black font-black text-lg rounded-full hover:scale-105 transition-all flex items-center justify-center gap-3 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.15)]"
+          className="px-8 py-4 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl transition-all shadow-[0_0_25px_rgba(124,58,237,0.4)]"
         >
-          Enter the Platform
-          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          Open Merchant Portal
         </Link>
-        <div className="mt-20 flex gap-8 text-gray-600 font-bold uppercase tracking-tighter text-sm">
-          <a href="https://x.com/owsnpidc" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Twitter</a>
-          <a href="https://discord.gg/buildonarc" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Discord</a>
-          <a href="https://docs.arc.network/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Documentation</a>
-          <a href="https://github.com/Zaynsky12/morphic-arc" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Github</a>
-        </div>
-        <p className="mt-10 text-gray-700 text-xs font-medium uppercase tracking-[0.2em]">
-          &copy; 2026 Morphic Privacy Protocol. Built on Arc Network.
-        </p>
-      </footer>
-
+      </section>
     </div>
   );
-}
-
-// Helper icons needed but missing from original import
-function Send(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m22 2-7 20-4-9-9-4Z" />
-      <path d="M22 2 11 13" />
-    </svg>
-  )
-}
-
-function Unlock(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 9.9-1" />
-    </svg>
-  )
 }

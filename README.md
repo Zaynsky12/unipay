@@ -1,52 +1,78 @@
-# Morphic Privacy Vault
+# UniPay — Decentralized Checkout Protocol 🌐💳
 
-**Morphic Privacy Vault** is a state-of-the-art decentralized application (dApp) designed to bring absolute financial privacy to Web3 users. **Built specifically for the Arc Network**, Morphic utilizes advanced smart contracts to allow users to shield their public crypto assets, move them into a private vault, and withdraw them seamlessly.
+> **Stripe-grade Payment Experience Built Natively for Web3.**  
+> Accept static or dynamic settlements in **USDC / EURC** from any EVM network, bridge natively to the **Arc Network L1**, and settle directly into your merchant wallet in **&lt; 1 second**.
 
-## 🛡️ Key Features
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
+[![Solidity](https://img.shields.io/badge/Solidity-%5E0.8.20-363636?style=flat-square&logo=solidity)](https://soliditylang.org)
+[![Arc Network](https://img.shields.io/badge/L1%20Chain-Arc%20Testnet-7C3AED?style=flat-square)](https://arc.network)
 
-- **Multi-Asset Shielding:** Seamlessly deposit (shield) and withdraw (unshield) multiple stablecoins, including **USDC** and **EURC**.
-- **Arc Network Integration:** Fully built and deployed on **Arc Network**, leveraging its high-speed and low-cost infrastructure.
-- **Dark Modern Glassmorphism UI:** A breathtaking, highly responsive, and futuristic user interface designed to feel premium and mysterious.
-- **Real-Time On-Chain Syncing:** Instantly fetches user's public and private balances using direct blockchain reads.
-- **Private Send (Coming Soon):** Send shielded assets directly to other users without ever revealing your identity on the public ledger.
+---
 
-## 💻 Tech Stack
+## ⚡ Core Philosophy & Architecture
+UniPay operates entirely **without backend servers or proprietary databases**.  
+The actual core "database" and validation layer is an un-upgradable Solidity smart contract (`UniPayRegistry`) residing immutably on the Arc Network blockchain. 
 
-- **Frontend Framework:** [Next.js](https://nextjs.org/) (App Router, React 18)
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/) with custom Glassmorphism and micro-animations.
-- **Web3 Integration:** [Wagmi](https://wagmi.sh/) + [Viem](https://viem.sh/) for contract interactions and hooks.
-- **Wallet Connection:** [Reown AppKit](https://reown.com/) (@circle-fin/app-kit) for seamless wallet onboarding.
-- **Smart Contracts:** Solidity, deployed via [Hardhat](https://hardhat.org/).
+### 🛡️ Key Platform Modules:
+1. **Merchant Command Center (`/dashboard`)**:
+   - Register corporate identities onchain natively.
+   - Monitor real-time dynamic settlement volumes extracted directly from unmanipulated node maps.
+   - Asynchronous live socket reflection via `watchContractEvent` intercepts completed customer payments instantly without UI refreshing.
+2. **Dynamic Invoicing Generator (`/dashboard/create`)**:
+   - Generate secure P2P checkout parameters targeting deterministic `keccak256` session identifiers to prevent settlement collisions.
+3. **Decentralized Audit Archives (`/dashboard/history`)**:
+   - Interrogates Arc L1 event logs via direct RPC socket routing (`eth_getLogs`) to form transparent ledger timelines.
+4. **Public Registry Explorer (`/explorer`)**:
+   - Browse global merchant parameters mapping sub-second finality confidences.
+5. **Universal Embedded Widget (`public/widget.js`)**:
+   - Drop-in standalone Web Component (`<unipay-checkout>`) enabling seamless checkout modules inside third-party Web2 frameworks (WordPress, React, Vanilla HTML).
 
-## 🚀 Getting Started
+---
 
-### 1. Clone & Install
+## 🛠️ Technology Stack
+- **Frontend Framework**: Next.js 14 (App Router) + TypeScript
+- **Styling Engine**: Tailwind CSS + Premium Custom Glassmorphism UI
+- **Web3 Adapters**: Wagmi v2 + Viem v2 + Reown AppKit Cross-chain Modals
+- **Smart Contract Interface**: Solidity (EVM Bytecode Compliant)
+- **Target L1 Node**: Arc Testnet (`Chain ID: 5042002`, `RPC: https://rpc.testnet.arc.network`)
+
+---
+
+## 📦 Local Deployment & Verification
+
+### 1. Environment Setup
+Create a `.env` file at root level mapping your explicit environment keys:
+```env
+NEXT_PUBLIC_REOWN_PROJECT_ID="YOUR_REOWN_PROJECT_ID"
+DEPLOYER_PRIVATE_KEY="0xYOUR_TESTNET_PRIVATE_KEY"
+```
+
+### 2. Auto-Deploying Smart Contract
+Execute our smart pre-compiled Node.js script to push your state machine directly to the Arc Testnet:
+```bash
+node scripts/deploy.mjs
+```
+*Note: Upon block confirmation, the script will automatically harvest the resultant permanent contract address and inject it safely into your `src/lib/constants.ts` file.*
+
+### 3. Launching Development Server
+Start hot-reloading development instances locally:
 ```bash
 npm install
-# or
-yarn install
-```
-
-### 2. Configure Environment Variables
-Create a `.env` file in the root directory:
-```env
-NEXT_PUBLIC_PROJECT_ID="your_walletconnect_project_id"
-```
-
-### 3. Run Development Server
-```bash
 npm run dev
-# or
-yarn dev
 ```
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Navigate to `http://localhost:3000` to review rich aesthetic landing sequences.
 
-## 📜 Smart Contract (Arc Network)
-Morphic's logic is powered by `MorphicVault.sol`, enabling nested `mapping(address => mapping(address => uint256))` to keep track of user's shielded balances per asset securely.
+---
 
-**Deployed Contract Address (Arc Testnet):**
-- Morphic Vault: `0xA08057b48C41B915112B5d1a7e462A1D44CC51a9`
-- Supported Assets: `USDC`, `EURC`
+## 🛡️ Production Compliance
+This application strictly adheres to production validation parameters. Running compilation audits guarantees clean execution traces:
+```bash
+npm run build
+```
+Resultant output routes guarantee highly optimized static server pre-rendering configurations mixed with fast dynamic routes.
 
-## 🔒 Privacy Notice
-While the frontend demonstrates the shielding and unshielding flow, true cryptographic privacy (like Zero-Knowledge proofs) depends on the underlying network capabilities. Morphic acts as the premier interface for interacting with Arc's privacy pools.
+---
+
+## 📄 License
+Distributed under the **MIT License**. Immutably accessible globally.
