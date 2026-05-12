@@ -65,7 +65,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
     query: { enabled: !!address && !!tokenAddr && tokenAddr !== '0x0000000000000000000000000000000000000000' }
   });
 
-  const allowanceVal = typeof currentAllowance === 'bigint' ? currentAllowance : (currentAllowance ? BigInt(currentAllowance.toString()) : 0n);
+  const allowanceVal = currentAllowance ?? 0n;
   const hasSufficientAllowance = allowanceVal >= amountRaw;
 
   // Hooks Penulisan Eksekusi Onchain
