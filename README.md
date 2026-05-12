@@ -10,23 +10,57 @@
 
 ---
 
-## ⚡ Core Philosophy & Architecture
-UniPay operates entirely **without backend servers or proprietary databases**.  
-The actual core "database" and validation layer is an un-upgradable Solidity smart contract (`UniPayRegistry`) residing immutably on the Arc Network blockchain. 
+## ⚡ System Architecture & Protocol Mechanics
+
+UniPay operates entirely **without backend servers or centralized proprietary databases**.  
+The core verification state machine is a highly optimized, un-upgradable Solidity smart contract (`UniPayRegistry`) deployed natively on the Arc Network blockchain.
+
+### 🏛️ High-Level Component Flow Diagram
+
+```mermaid
+graph TD
+    %% Entities
+    Buyer["Payer / Buyer (Arbitrum, Base, Ethereum L2s)"]
+    AppKit["Circle Arc AppKit (Unified Cross-Chain Router)"]
+    Registry["UniPayRegistry.sol (Stateless Dispatcher on Arc L1)"]
+    Merchant["Merchant Sovereign Wallet (Self-Custody L1 Target)"]
+    Wagmi["Next.js / Wagmi Event Engine (Stateless Interceptor)"]
+    Storage["Client Storage Buffer (Hybrid UI Sync)"]
+
+    %% Process Flow
+    Merchant -->|"1. registerMerchant() / createSession()"| Registry
+    Buyer -->|"2. Initiates Checkout URL / Widget"| AppKit
+    AppKit -->|"3. Detects Liquidity & Auto-bridges Assets"| Registry
+    Buyer -->|"4. Invokes EVM pay(sessionId)"| Registry
+    Registry -->|"5. Executes P2P stablecoin transferFrom()"| Merchant
+    Registry -->|"6. Broadcasts PaymentCompleted Event Log"| Wagmi
+    Wagmi -->|"7. Instantly Reflects Live UI / Local Memory"| Storage
+```
+
+### ⚙️ Protocol Architecture Lifecycle
+
+1. **Stateless Immutable Execution**:
+   - Zero centralized database footprint. Commercial state variables (`merchants` profiles and `sessions` lifecycle structs) reside entirely within contract L1 memory slots.
+2. **Deterministic Hash Invoicing**:
+   - Bill payloads generate unique session keys derived securely via `keccak256` hashing of target amounts, dynamic tokens, descriptions, and strict expiry interval integers.
+3. **Unified Liquidity & Cross-Chain Routing**:
+   - Integrated over native **Circle Arc AppKit** channels, allowing seamless user stablecoin abstraction. Buyers hold assets on any standard Layer-2, while payments flow seamlessly to settle directly into the Arc L1 base architecture.
+4. **Sub-second P2P Handshake**:
+   - Orders trigger trustless atomic dispatch execution (`pay()`). Funds are deducted and wired directly to the destination merchant self-custodial wallet instantly without platform fees or withholding accounts.
+5. **Hybrid Client-State Synchronization Engine**:
+   - Next.js dashboards track L1 socket updates (`useWatchContractEvent`) coupled with an optimized local persistent layer (`localStorage`) to guarantee blazing-fast web-grade responsiveness while maintaining absolute cryptographical verification.
 
 ### 🛡️ Key Platform Modules:
 1. **Merchant Command Center (`/dashboard`)**:
-   - Register corporate identities onchain natively.
-   - Monitor real-time dynamic settlement volumes extracted directly from unmanipulated node maps.
-   - Asynchronous live socket reflection via `watchContractEvent` intercepts completed customer payments instantly without UI refreshing.
+   - Self-custodial namespace deployment with auto-refreshing real-time ledger verification logs.
 2. **Dynamic Invoicing Generator (`/dashboard/create`)**:
-   - Generate secure P2P checkout parameters targeting deterministic `keccak256` session identifiers to prevent settlement collisions.
+   - Publish tamper-proof payment specification links mapped directly with custom expiry lifecycles.
 3. **Decentralized Audit Archives (`/dashboard/history`)**:
-   - Interrogates Arc L1 event logs via direct RPC socket routing (`eth_getLogs`) to form transparent ledger timelines.
+   - Interrogates EVM historical RPC nodes (`eth_getLogs`) to form tamper-evident accounting tables.
 4. **Public Registry Explorer (`/explorer`)**:
-   - Browse global merchant parameters mapping sub-second finality confidences.
+   - Query decentralized commercial state mapping active validation statuses.
 5. **Universal Embedded Widget (`public/widget.js`)**:
-   - Drop-in standalone Web Component (`<unipay-checkout>`) enabling seamless checkout modules inside third-party Web2 frameworks (WordPress, React, Vanilla HTML).
+   - Drop-in standalone Web Component (`<unipay-checkout>`) enabling zero-dependency multi-chain embedded frames inside external ecosystems (WordPress, React, Vanilla Web).
 
 ---
 
