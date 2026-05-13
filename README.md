@@ -24,8 +24,8 @@ graph TD
     AppKit["Circle Arc AppKit (Unified Cross-Chain Router)"]
     Registry["UniPayRegistry.sol (Stateless Dispatcher on Arc L1)"]
     Merchant["Merchant Sovereign Wallet (Self-Custody L1 Target)"]
-    Wagmi["Next.js / Wagmi Event Engine (Stateless Interceptor)"]
-    Storage["Client Storage Buffer (Hybrid UI Sync)"]
+    Indexer["Goldsky Subgraph Indexer (Real-time P2P Indexer)"]
+    Storage["Client Memory Engine (Hybrid UI Sync)"]
 
     %% Process Flow
     Merchant -->|"1. registerMerchant() / createSession()"| Registry
@@ -33,8 +33,8 @@ graph TD
     AppKit -->|"3. Detects Liquidity & Auto-bridges Assets"| Registry
     Buyer -->|"4. Invokes EVM pay(sessionId)"| Registry
     Registry -->|"5. Executes P2P stablecoin transferFrom()"| Merchant
-    Registry -->|"6. Broadcasts PaymentCompleted Event Log"| Wagmi
-    Wagmi -->|"7. Instantly Reflects Live UI / Local Memory"| Storage
+    Registry -->|"6. Emits Event Logs"| Indexer
+    Indexer -->|"7. GraphQL Subgraph Response"| Storage
 ```
 
 ### ⚙️ Protocol Architecture Lifecycle

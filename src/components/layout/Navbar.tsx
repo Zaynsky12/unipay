@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Eye, LayoutDashboard, PlusCircle, Globe, History, Wallet } from 'lucide-react';
+import { Eye, LayoutDashboard, PlusCircle, Globe, History, Wallet, UserCheck } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useAppKit } from '@reown/appkit/react';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,7 @@ const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Create Payment', href: '/dashboard/create', icon: PlusCircle },
   { name: 'History', href: '/dashboard/history', icon: History },
+  { name: 'Account', href: '/dashboard/account', icon: UserCheck },
 ];
 
 export function Navbar() {

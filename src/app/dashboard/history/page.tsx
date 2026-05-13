@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useAccount, useReadContract, useWatchContractEvent, usePublicClient } from 'wagmi';
-import { parseAbiItem, formatUnits } from 'viem';
+import React, { useState } from 'react';
+import { useAccount, useReadContract } from 'wagmi';
+import { formatUnits } from 'viem';
 import { 
   History as HistoryIcon, 
   ExternalLink, 
@@ -19,25 +19,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
-
-interface ArchivedLog {
-  sessionId: string;
-  merchant: string;
-  payer: string;
-  amountRaw: bigint;
-  txHash: string;
-  timestamp: number;
-  blockNumber: number;
-  isLocalMerged?: boolean;
-}
+import { useMerchantHistory } from '@/lib/hooks/useMerchantHistory';
 
 export default function HistoryPage() {
   const { address, isConnected } = useAccount();
-  const publicClient = usePublicClient();
-  
-  const [logs, setLogs] = useState<ArchivedLog[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
 
   // Membaca identitas pedagang aktif
   const { data: merchantData } = useReadContract({
@@ -48,135 +34,14 @@ export default function HistoryPage() {
     query: { enabled: !!address }
   });
 
-  const isRegistered = merchantData ? merchantData[2] : false;
+  const { history, isLoading: isLoadingLogs, error } = useMerchantHistory(address);
 
-  // Mengambil dan menggabungkan riwayat pelunasan dari jaringan L1 + Penyimpanan Klien Persisten
-  const fetchPastLogs = async (showLoadingIndicator = true) => {
-    if (!address) return;
-    
-    if (showLoadingIndicator) {
-      setIsLoadingLogs(true);
-    }
+  // Parse logs from Goldsky history
+  const logs = history?.payments || [];
 
-    const mergedResults: ArchivedLog[] = [];
-
-    // 1. Membaca arsip dari LocalStorage yang telah ditandai lunas (Keandalan Klien)
-    try {
-      const storageKey = `unipay_sessions_${address.toLowerCase()}`;
-      const existing = localStorage.getItem(storageKey);
-      if (existing) {
-        const localArray = JSON.parse(existing);
-        localArray.forEach((s: any) => {
-          if (s.isPaid) {
-            // Konversi nominal string dolar ke bigint (asumsi 6 desimal USDC)
-            let parsedAmountRaw = 0n;
-            try {
-              const num = Number(s.amount || 0);
-              parsedAmountRaw = BigInt(Math.floor(num * 1e6));
-            } catch (e) {}
-
-            mergedResults.push({
-              sessionId: s.sessionId,
-              merchant: address,
-              payer: s.payer || '0xVerifiedClientAccount',
-              amountRaw: parsedAmountRaw,
-              txHash: s.txHash || '0xLocalSettlementVerified' + Date.now().toString(16),
-              timestamp: s.createdAt || Date.now(),
-              blockNumber: 9999999, // Penanda pengurutan paling atas
-              isLocalMerged: true
-            });
-          }
-        });
-      }
-    } catch (err) {
-      console.error("Gagal membaca riwayat arsip lokal:", err);
-    }
-
-    // 2. Melakukan Indexing dari jaringan publik Arc L1 tanpa filter kueri ketat
-    // untuk menyisir seluruh riwayat transaksi secara kebal RPC
-    if (publicClient && UNIPAY_REGISTRY_ADDRESS !== "0x0000000000000000000000000000000000000000") {
-      try {
-        const currentBlock = await publicClient.getBlockNumber();
-        // Mengambil rentang 9.500 blok ke belakang
-        const safeRange = 9500n;
-        const fromBlock = currentBlock > safeRange ? currentBlock - safeRange : 0n;
-
-        const rawLogs = await publicClient.getLogs({
-          address: UNIPAY_REGISTRY_ADDRESS,
-          event: parseAbiItem('event PaymentCompleted(bytes32 indexed sessionId, address indexed merchant, address indexed payer, uint256 amount)'),
-          fromBlock,
-          toBlock: currentBlock
-        });
-
-        // Menyaring log di tingkat memori JavaScript untuk ketepatan casing alamat
-        const userLogs = rawLogs.filter(log => 
-          log.args.merchant?.toLowerCase() === address.toLowerCase()
-        );
-
-        const onchainParsed: ArchivedLog[] = await Promise.all(
-          userLogs.map(async (log) => {
-            let timestamp = Date.now();
-            if (log.blockNumber) {
-              try {
-                const blockData = await publicClient.getBlock({ blockNumber: log.blockNumber });
-                timestamp = Number(blockData.timestamp) * 1000;
-              } catch (e) {}
-            }
-
-            return {
-              sessionId: log.args.sessionId || '0x...',
-              merchant: log.args.merchant || address,
-              payer: log.args.payer || '0x...',
-              amountRaw: log.args.amount ? BigInt(log.args.amount.toString()) : 0n,
-              txHash: log.transactionHash || '',
-              timestamp,
-              blockNumber: log.blockNumber ? Number(log.blockNumber) : 0,
-            };
-          })
-        );
-
-        // Gabungkan tanpa duplikasi ID Sesi
-        onchainParsed.forEach(ocl => {
-          if (!mergedResults.some(m => m.sessionId.toLowerCase() === ocl.sessionId.toLowerCase())) {
-            mergedResults.push(ocl);
-          }
-        });
-
-      } catch (error) {
-        console.error("RPC indexing error:", error);
-      }
-    }
-
-    // Mengurutkan dari transaksi terbaru
-    mergedResults.sort((a, b) => b.timestamp - a.timestamp);
-    setLogs(mergedResults);
-    setIsLoadingLogs(false);
-  };
-
-  useEffect(() => {
-    if (isConnected && address) {
-      fetchPastLogs();
-    }
-  }, [isConnected, address, publicClient]);
-
-  // Pantau socket stream L1
-  useWatchContractEvent({
-    address: UNIPAY_REGISTRY_ADDRESS,
-    abi: REGISTRY_ABI,
-    eventName: 'PaymentCompleted',
-    onLogs(incomingLogs) {
-      incomingLogs.forEach((log: any) => {
-        const { args } = log;
-        if (args && args.merchant?.toLowerCase() === address?.toLowerCase()) {
-          fetchPastLogs(false);
-        }
-      });
-    },
-  });
-
-  const filteredLogs = logs.filter(l => 
-    l.sessionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    l.payer.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredLogs = logs.filter((l: any) => 
+    (l.sessionId && l.sessionId.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (l.payer && l.payer.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   if (!isConnected) {
@@ -201,33 +66,25 @@ export default function HistoryPage() {
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-16">
       
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/5">
-        <div className="flex items-center gap-4">
-          <Link 
-            href="/dashboard" 
-            className="p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 text-gray-400 hover:text-white transition-all group shrink-0"
-          >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
-          </Link>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
-                Onchain Ledger
-              </span>
-              <span className="text-xs text-gray-500">• Hybrid Indexer Synchronized</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Decentralized Audit Archives</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
+              Goldsky Subgraph
+            </span>
+            <span className="text-xs text-emerald-500 font-medium">• Indexed in Real-Time</span>
           </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Decentralized Audit Archives</h1>
         </div>
 
         <div className="flex items-center gap-3 self-start sm:self-auto">
           <button 
-            onClick={() => fetchPastLogs()} 
             disabled={isLoadingLogs}
+            onClick={() => window.location.reload()}
             className="px-4 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 rounded-xl text-xs text-white font-bold transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(124,58,237,0.3)]"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoadingLogs ? 'animate-spin' : ''}`} />
-            <span>{isLoadingLogs ? 'Indexing...' : 'Sync Archives'}</span>
+            <span>{isLoadingLogs ? 'Indexing...' : 'Refresh'}</span>
           </button>
         </div>
       </div>
@@ -255,23 +112,23 @@ export default function HistoryPage() {
             <div className="h-4 w-px bg-white/10 hidden sm:block" />
             <span className="text-[11px] bg-white/[0.03] px-2.5 py-1 rounded-lg border border-white/5 text-gray-500 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-              <span>Layer: <code className="text-violet-300 font-mono">EVM + Persistent State</code></span>
+              <span>Layer: <code className="text-violet-300 font-mono">Subgraph API</code></span>
             </span>
           </div>
 
         </div>
       </div>
 
-      {/* ── Area Tabel Arsip Hibrida ── */}
+      {/* ── Area Tabel Arsip ── */}
       <div className="glass-panel p-6 sm:p-8 relative overflow-hidden">
         <div className="absolute top-0 right-1/3 w-60 h-60 bg-violet-600/5 rounded-full blur-3xl pointer-events-none" />
 
         {isLoadingLogs ? (
           <div className="py-20 text-center space-y-3">
             <Loader2 className="w-8 h-8 text-violet-400 animate-spin mx-auto" />
-            <p className="text-sm font-bold text-white tracking-tight">Interrogating Unified History Matrices...</p>
+            <p className="text-sm font-bold text-white tracking-tight">Querying Goldsky Subgraph...</p>
             <p className="text-xs text-gray-500 max-w-xs mx-auto">
-              Scanning local persistent fulfillment loops mapped immutably to your public workspace credentials.
+              Scanning protocol history indexed on the graph network.
             </p>
           </div>
         ) : filteredLogs.length === 0 ? (
@@ -295,26 +152,25 @@ export default function HistoryPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 font-medium text-gray-300">
-                {filteredLogs.map((item, idx) => {
-                  const formattedAmount = item.amountRaw > 0n 
-                    ? formatUnits(item.amountRaw, 6) 
-                    : '0.00';
+                {filteredLogs.map((item: any, idx: number) => {
+                  const formattedAmount = item.amount ? formatUnits(BigInt(item.amount), 6) : '0.00';
+                  const timestampMs = Number(item.timestamp) * 1000;
 
                   return (
-                    <tr key={idx} className="hover:bg-white/[0.02] transition-colors group">
+                    <tr key={item.id || idx} className="hover:bg-white/[0.02] transition-colors group">
                       
                       <td className="py-4 px-2 font-mono text-violet-300 font-semibold">
                         <div className="flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                          <span className="truncate max-w-[120px] sm:max-w-none" title={item.sessionId}>
-                            {item.sessionId.slice(0, 10)}...{item.sessionId.slice(-6)}
+                          <span className="truncate max-w-[120px] sm:max-w-none" title={item.sessionId || 'Unknown'}>
+                            {item.sessionId ? `${item.sessionId.slice(0, 10)}...${item.sessionId.slice(-6)}` : 'N/A'}
                           </span>
                         </div>
                       </td>
 
                       <td className="py-4 px-2 font-mono text-gray-400">
                         <span className="bg-white/[0.02] group-hover:bg-white/[0.05] px-2 py-0.5 rounded border border-white/5 transition-all">
-                          {item.payer.slice(0, 8)}...{item.payer.slice(-4)}
+                          {item.payer ? `${item.payer.slice(0, 8)}...${item.payer.slice(-4)}` : 'Unknown'}
                         </span>
                       </td>
 
@@ -330,36 +186,24 @@ export default function HistoryPage() {
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-1 text-[11px] text-gray-300 font-medium">
                             <Calendar className="w-3 h-3 text-gray-500" />
-                            <span>{new Date(item.timestamp).toLocaleDateString()} {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span>{new Date(timestampMs).toLocaleDateString()} {new Date(timestampMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
-                          {item.isLocalMerged ? (
-                            <span className="text-[9px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/20 font-bold ml-4">
-                              Client Verified
-                            </span>
-                          ) : (
-                            <div className="text-[10px] text-gray-600 font-mono pl-4">
-                              Block: #{item.blockNumber.toLocaleString()}
-                            </div>
-                          )}
+                          <div className="text-[10px] text-emerald-500 font-mono pl-4">
+                            Goldsky Verified
+                          </div>
                         </div>
                       </td>
 
                       <td className="py-4 px-2 text-right">
-                        {item.txHash && !item.txHash.startsWith('0xLocal') ? (
-                          <a 
-                            href={`https://testnet.arcscan.app/tx/${item.txHash}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-violet-400 hover:text-violet-300 font-bold bg-white/[0.02] group-hover:bg-white/[0.06] px-2.5 py-1 rounded-lg border border-white/5 transition-all"
-                          >
-                            <span>ArcScan</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        ) : (
-                          <span className="text-[10px] text-gray-500 font-mono bg-white/[0.02] px-2 py-1 rounded">
-                            Native L1 Handshake
-                          </span>
-                        )}
+                        <a 
+                          href={`https://testnet.arcscan.app/tx/${item.id}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-violet-400 hover:text-violet-300 font-bold bg-white/[0.02] group-hover:bg-white/[0.06] px-2.5 py-1 rounded-lg border border-white/5 transition-all"
+                        >
+                          <span>ArcScan</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
                       </td>
 
                     </tr>

@@ -1,0 +1,39 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: UniPayRegistry
+    network: arc-testnet
+    source:
+      address: "0xe9dbfa0c86bb35f2152826d759482a03edf9d612"
+      abi: UniPayRegistry
+      startBlock: 1
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Merchant
+        - PaymentSession
+        - Transaction
+        - Protocol
+        - SubscriptionPlan
+        - SubscriptionPayment
+      abis:
+        - name: UniPayRegistry
+          file: ./abis/UniPayRegistry.json
+      eventHandlers:
+        - event: MerchantRegistered(indexed address,string,string)
+          handler: handleMerchantRegistered
+        - event: SessionCreated(indexed bytes32,indexed address,uint256,address,uint256)
+          handler: handleSessionCreated
+        - event: PaymentCompleted(indexed bytes32,indexed address,indexed address,uint256)
+          handler: handlePaymentCompleted
+        - event: SubscriptionCreated(indexed bytes32,indexed address,indexed address,uint256,uint256)
+          handler: handleSubscriptionCreated
+        - event: SubscriptionExecuted(indexed bytes32,indexed address,indexed address,uint256)
+          handler: handleSubscriptionExecuted
+        - event: SubscriptionCancelled(indexed bytes32)
+          handler: handleSubscriptionCancelled
+      file: ./src/mapping.ts

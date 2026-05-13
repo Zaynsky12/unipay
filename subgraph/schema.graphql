@@ -1,0 +1,64 @@
+type Merchant @entity {
+  id: ID!                    # wallet address
+  name: String!
+  metadata: String
+  totalReceived: BigInt!
+  totalSessions: BigInt!
+  registeredAt: BigInt!
+  active: Boolean!
+  sessions: [PaymentSession!]! @derivedFrom(field: "merchant")
+  payments: [Transaction!]! @derivedFrom(field: "merchant")
+  subscriptions: [SubscriptionPlan!]! @derivedFrom(field: "merchant")
+}
+
+type PaymentSession @entity {
+  id: ID!                    # sessionId bytes32
+  merchant: Merchant!
+  amount: BigInt!
+  token: String!
+  expiresAt: BigInt!
+  paid: Boolean!
+  payer: String
+  paidAt: BigInt
+  createdAt: BigInt!
+  transaction: Transaction
+}
+
+type Transaction @entity {
+  id: ID!                    # tx hash
+  sessionId: Bytes!
+  payer: String!
+  merchant: Merchant!
+  amount: BigInt!
+  token: String!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}
+
+type SubscriptionPlan @entity {
+  id: ID!                    # subId bytes32
+  merchant: Merchant!
+  subscriber: String!
+  amount: BigInt!
+  token: String!
+  interval: BigInt!
+  isActive: Boolean!
+  createdAt: BigInt!
+}
+
+type SubscriptionPayment @entity {
+  id: ID!                    # tx hash
+  subId: Bytes!
+  merchant: Merchant!
+  subscriber: String!
+  amount: BigInt!
+  timestamp: BigInt!
+}
+
+type Protocol @entity {
+  id: ID!                    # "protocol"
+  totalMerchants: BigInt!
+  totalVolume: BigInt!
+  totalTransactions: BigInt!
+  updatedAt: BigInt!
+}

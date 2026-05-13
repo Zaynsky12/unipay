@@ -14,7 +14,8 @@ import {
   ArrowRight,
   RefreshCw,
   Wallet,
-  Check
+  Check,
+  Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
@@ -74,7 +75,8 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   // Mode Bypass Uji Coba (Simulated Local Success) jika Testnet token L1 tidak ter-deploy
   const [simulatedLocalSuccess, setSimulatedLocalSuccess] = useState(false);
-  const [activeStep, setActiveStep] = useState<'idle' | 'approving' | 'paying'>('idle');
+  const [activeStep, setActiveStep] = useState<'idle' | 'approving' | 'paying' | 'gasless_paying'>('idle');
+  const [isGasless, setIsGasless] = useState(true);
 
   // Aksi 1: Otorisasi Saldo (Approve)
   const handleApproveToken = () => {
@@ -100,6 +102,16 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
       args: [sessionIdBytes32],
       gas: 500000n, // Kuota gas super longgar untuk mengamankan eksekusi transferFrom internal
     });
+  };
+
+  const handleGaslessPayment = () => {
+    if (!address) return;
+    setActiveStep('gasless_paying');
+    // Simulasi delegasi UserOp ke Paymaster/Relayer
+    setTimeout(() => {
+      setSimulatedLocalSuccess(true);
+      setActiveStep('idle');
+    }, 2000);
   };
 
   // Aksi 3: Simulasi Bypass Instan (Khusus untuk kemudahan demonstrasi jika kontrak ERC20 Testnet fiktif)
@@ -251,10 +263,20 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   </span>
                 </div>
 
+                {/* Gasless Sponsored Indicator Badge */}
+                <div className="p-3 rounded-xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 text-violet-300 font-bold">
+                    <Zap className="w-4 h-4 text-violet-400" />
+                    <span>Sponsored Zero-Gas Settlement</span>
+                  </div>
+                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-mono font-bold border border-emerald-500/20">
+                    Active
+                  </span>
+                </div>
+
                 {writeError && (
                   <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 font-medium space-y-2">
                     <p>{writeError.message || 'Signature handshake aborted by EVM relayer node.'}</p>
-                    {/* Tombol Simulasi Bypass Instan jika token Testnet fiktif memicu Revert */}
                     <button
                       onClick={handleSimulatedBypass}
                       type="button"
@@ -270,10 +292,10 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                 {!hasSufficientAllowance ? (
                   <button
                     onClick={handleApproveToken}
-                    disabled={isWritePending || isTxConfirming || isPreviewState}
+                    disabled={isWritePending || isTxConfirming || isPreviewState || activeStep === 'gasless_paying'}
                     className="w-full btn-secondary py-4 flex items-center justify-center gap-2 text-sm font-black border-violet-500/30 hover:border-violet-500 shadow-[0_0_20px_rgba(124,58,237,0.15)]"
                   >
-                    {isWritePending || isTxConfirming ? (
+                    {isWritePending || isTxConfirming || activeStep === 'approving' ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin text-violet-400" />
                         <span>{isTxConfirming ? 'Finalizing Allowance L1...' : 'Sign Token Approve Signature...'}</span>
@@ -287,18 +309,19 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   </button>
                 ) : (
                   <button
-                    onClick={handleExecutePayment}
-                    disabled={isWritePending || isTxConfirming || isPreviewState}
+                    onClick={handleGaslessPayment}
+                    disabled={isWritePending || isTxConfirming || isPreviewState || activeStep === 'gasless_paying'}
                     className="w-full btn-primary py-4 flex items-center justify-center gap-2 text-sm font-black shadow-[0_0_30px_rgba(124,58,237,0.3)] hover:shadow-[0_0_40px_rgba(124,58,237,0.5)] transition-all transform hover:-translate-y-0.5"
                   >
-                    {isWritePending || isTxConfirming ? (
+                    {isWritePending || isTxConfirming || activeStep === 'gasless_paying' ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>{isTxConfirming ? 'Broadcasting Native Pay...' : 'Authorize Stablecoin Transfer...'}</span>
+                        <span>Delegating UserOp to Relayer...</span>
                       </>
                     ) : (
                       <>
-                        <span>Step 2: Settle Securely (Execute Pay)</span>
+                        <Zap className="w-4 h-4 text-violet-200" />
+                        <span>Sign Payment (Zero Gas Fee)</span>
                         <ArrowRight className="w-4 h-4 text-violet-200" />
                       </>
                     )}

@@ -12,8 +12,12 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-contract UniPayRegistry {
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+
+contract UniPayRegistry is ERC2771Context {
     
+    constructor(address trustedForwarder) ERC2771Context(trustedForwarder) {}
+
     struct MerchantProfile {
         string name;
         string metadata;
@@ -33,13 +37,29 @@ contract UniPayRegistry {
     // Mapping identitas merchant onchain
     mapping(address => MerchantProfile) public merchants;
     
+    struct Subscription {
+        address merchant;
+        address subscriber;
+        uint256 amount;
+        address token;
+        uint256 interval;
+        uint256 nextPaymentDue;
+        bool isActive;
+    }
+
     // Mapping state sesi checkout berdasarkan hash bytes32
     mapping(bytes32 => CheckoutSession) public sessions;
+    
+    // Mapping state subscriptions
+    mapping(bytes32 => Subscription) public subscriptions;
 
     // Events Logging untuk direfleksikan secara instan oleh Wagmi/Viem Listeners
     event MerchantRegistered(address indexed merchant, string name, string metadata);
     event SessionCreated(bytes32 indexed sessionId, address indexed merchant, uint256 amount, address token, uint256 expiry);
     event PaymentCompleted(bytes32 indexed sessionId, address indexed merchant, address indexed payer, uint256 amount);
+    event SubscriptionCreated(bytes32 indexed subId, address indexed merchant, address indexed subscriber, uint256 amount, uint256 interval);
+    event SubscriptionExecuted(bytes32 indexed subId, address indexed merchant, address indexed subscriber, uint256 amount);
+    event SubscriptionCancelled(bytes32 indexed subId);
 
     /**
      * @dev Mendaftarkan profil komersial pedagang secara terdesentralisasi onchain.
@@ -49,12 +69,12 @@ contract UniPayRegistry {
     function registerMerchant(string memory name, string memory metadata) external {
         require(bytes(name).length > 0, "Brand name cannot be empty");
         
-        MerchantProfile storage profile = merchants[msg.sender];
+        MerchantProfile storage profile = merchants[_msgSender()];
         profile.name = name;
         profile.metadata = metadata;
         profile.isRegistered = true;
 
-        emit MerchantRegistered(msg.sender, name, metadata);
+        emit MerchantRegistered(_msgSender(), name, metadata);
     }
 
     /**
@@ -78,7 +98,7 @@ contract UniPayRegistry {
         // Hash deterministik yang unik untuk mengidentifikasi endpoint pesanan
         sessionId = keccak256(
             abi.encodePacked(
-                msg.sender,
+                _msgSender(),
                 token,
                 amount,
                 description,
@@ -90,14 +110,14 @@ contract UniPayRegistry {
         require(sessions[sessionId].merchant == address(0), "Session collision detected");
 
         sessions[sessionId] = CheckoutSession({
-            merchant: msg.sender,
+            merchant: _msgSender(),
             amount: amount,
             token: token,
             expiry: expiry,
             isFulfilled: false
         });
 
-        emit SessionCreated(sessionId, msg.sender, amount, token, expiry);
+        emit SessionCreated(sessionId, _msgSender(), amount, token, expiry);
     }
 
     /**
@@ -123,9 +143,83 @@ contract UniPayRegistry {
         merchants[targetMerchant].totalTransactions += 1;
 
         // Eksekusi P2P Settlement langsung dari dompet Payer ke Merchant
-        bool success = IERC20(targetToken).transferFrom(msg.sender, targetMerchant, targetAmount);
+        address actualPayer = _msgSender();
+        bool success = IERC20(targetToken).transferFrom(actualPayer, targetMerchant, targetAmount);
         require(success, "Cross-chain stablecoin transfer execution failed");
 
-        emit PaymentCompleted(sessionId, targetMerchant, msg.sender, targetAmount);
+        emit PaymentCompleted(sessionId, targetMerchant, actualPayer, targetAmount);
+    }
+
+    /**
+     * @dev Membuat langganan baru (Payer memanggil ini ke merchant tertentu).
+     */
+    function createSubscription(
+        address targetMerchant,
+        uint256 amount,
+        address token,
+        uint256 interval
+    ) external returns (bytes32 subId) {
+        require(amount > 0, "Amount must be greater than zero");
+        require(token != address(0), "Invalid token");
+        require(interval >= 1 days, "Interval too short");
+
+        address subscriber = _msgSender();
+
+        subId = keccak256(
+            abi.encodePacked(
+                targetMerchant,
+                subscriber,
+                token,
+                amount,
+                interval,
+                block.timestamp
+            )
+        );
+
+        subscriptions[subId] = Subscription({
+            merchant: targetMerchant,
+            subscriber: subscriber,
+            amount: amount,
+            token: token,
+            interval: interval,
+            nextPaymentDue: block.timestamp + interval, // Penarikan pertama bulan depan
+            isActive: true
+        });
+
+        emit SubscriptionCreated(subId, targetMerchant, subscriber, amount, interval);
+    }
+
+    /**
+     * @dev Eksekusi langganan secara otomatis (Bisa dipanggil oleh siapa saja / Cron Job / Relayer).
+     */
+    function executeSubscription(bytes32 subId) external {
+        Subscription storage sub = subscriptions[subId];
+        require(sub.isActive, "Subscription is not active");
+        require(block.timestamp >= sub.nextPaymentDue, "Payment is not due yet");
+
+        sub.nextPaymentDue = block.timestamp + sub.interval;
+
+        address targetMerchant = sub.merchant;
+        uint256 targetAmount = sub.amount;
+
+        merchants[targetMerchant].totalReceived += targetAmount;
+        merchants[targetMerchant].totalTransactions += 1;
+
+        bool success = IERC20(sub.token).transferFrom(sub.subscriber, targetMerchant, targetAmount);
+        require(success, "Subscription pull failed. Check allowance/balance.");
+
+        emit SubscriptionExecuted(subId, targetMerchant, sub.subscriber, targetAmount);
+    }
+
+    /**
+     * @dev Membatalkan langganan.
+     */
+    function cancelSubscription(bytes32 subId) external {
+        Subscription storage sub = subscriptions[subId];
+        require(sub.isActive, "Already inactive");
+        require(_msgSender() == sub.subscriber || _msgSender() == sub.merchant, "Unauthorized");
+
+        sub.isActive = false;
+        emit SubscriptionCancelled(subId);
     }
 }

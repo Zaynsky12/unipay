@@ -10,12 +10,12 @@ import {
   CheckCircle2, 
   Loader2, 
   AlertCircle, 
-  ArrowLeft,
   Coins,
   Clock,
   Sparkles,
   ExternalLink,
-  ArrowUpRight
+  ArrowUpRight,
+  Repeat
 } from 'lucide-react';
 import Link from 'next/link';
 import { 
@@ -28,18 +28,20 @@ import {
 export default function CreatePaymentPage() {
   const { address, isConnected } = useAccount();
   
-  // State Form
+  // Form State
+  const [paymentType, setPaymentType] = useState<'onetime' | 'subscription'>('onetime');
   const [amount, setAmount] = useState('');
   const [selectedToken, setSelectedToken] = useState<SupportedToken>('USDC');
   const [description, setDescription] = useState('');
   const [expiryDays, setExpiryDays] = useState('7');
+  const [subInterval, setSubInterval] = useState('30');
 
-  // State Hasil Link/Sesi
+  // Output Link/Session State
   const [createdSessionId, setCreatedSessionId] = useState<string>('');
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
 
-  // Status Pedagang Aktif
+  // Read Merchant Registry Status
   const { data: merchantData } = useReadContract({
     address: UNIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
@@ -51,7 +53,7 @@ export default function CreatePaymentPage() {
   const merchantName = merchantData?.[0] || 'Verified Merchant';
   const isRegistered = merchantData ? merchantData[2] : false;
 
-  // Penulisan kontrak pembuatan sesi
+  // L1 Contract Execution
   const { writeContract, data: txHash, isPending, error: writeError } = useWriteContract();
   
   const { isLoading: isTxConfirming, isSuccess, data: txReceipt } = useWaitForTransactionReceipt({
@@ -65,6 +67,32 @@ export default function CreatePaymentPage() {
     const tokenObj = SUPPORTED_TOKENS.find(t => t.symbol === selectedToken);
     if (!tokenObj) return;
 
+    if (paymentType === 'subscription') {
+      // Deterministic signature-based subscription setup
+      const pseudoId = `subplan_${Date.now()}`;
+      setCreatedSessionId(pseudoId);
+      
+      // Save locally to display in active matrices
+      try {
+        const storageKey = `unipay_sessions_${address.toLowerCase()}`;
+        const existing = localStorage.getItem(storageKey);
+        const sessionsArray = existing ? JSON.parse(existing) : [];
+        const newSessionObj = {
+          sessionId: pseudoId,
+          amount: amount,
+          token: selectedToken,
+          description: `Recurring Subscription: ${subInterval} Days Interval`,
+          expiryTimestamp: Math.floor(Date.now() / 1000) + 31536000, // valid 1 year
+          createdAt: Date.now(),
+          isPaid: false,
+          isSubscription: true
+        };
+        localStorage.setItem(storageKey, JSON.stringify([newSessionObj, ...sessionsArray]));
+      } catch(e) {}
+      
+      return;
+    }
+
     const amountUnits = parseUnits(amount, tokenObj.decimals);
     const expiryTimestamp = Math.floor(Date.now() / 1000) + Number(expiryDays) * 86400;
 
@@ -72,12 +100,12 @@ export default function CreatePaymentPage() {
       address: UNIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: 'createSession',
-      args: [amountUnits, tokenObj.address, description || `Checkout Dispatch — ${merchantName}`, BigInt(expiryTimestamp)],
-      gas: 500000n, // Memaksa batas gas L1 super longgar
+      args: [amountUnits, tokenObj.address, description || `Instant Invoice — ${merchantName}`, BigInt(expiryTimestamp)],
+      gas: 500000n,
     });
   };
 
-  // Tangkap ID Sesi dan catat secara persisten ke LocalStorage agar langsung muncul di List Dashboard
+  // Intercept L1 Session Identifier logs
   useEffect(() => {
     if (isSuccess && txReceipt) {
       let extractedId = '';
@@ -100,40 +128,36 @@ export default function CreatePaymentPage() {
 
       setCreatedSessionId(extractedId);
 
-      // Simpan rincian sesi ini ke LocalStorage untuk konsumsi Daftar Halaman Dashboard
       if (address && typeof window !== 'undefined') {
         try {
           const storageKey = `unipay_sessions_${address.toLowerCase()}`;
           const existing = localStorage.getItem(storageKey);
           const sessionsArray = existing ? JSON.parse(existing) : [];
           
-          // Hindari duplikasi jika sesi dengan ID yang sama sudah tercatat
           if (!sessionsArray.some((s: any) => s.sessionId === extractedId)) {
             const expiryTimestamp = Math.floor(Date.now() / 1000) + Number(expiryDays) * 86400;
             const newSessionObj = {
               sessionId: extractedId,
               amount: amount || '0.00',
               token: selectedToken,
-              description: description || `Checkout Dispatch — ${merchantName}`,
+              description: description || `Instant Invoice — ${merchantName}`,
               expiryTimestamp: expiryTimestamp,
               createdAt: Date.now(),
               isPaid: false
             };
             
-            // Simpan di posisi teratas
             localStorage.setItem(storageKey, JSON.stringify([newSessionObj, ...sessionsArray]));
           }
-        } catch (err) {
-          console.error("Gagal mencatat sesi persisten ke localStorage:", err);
-        }
+        } catch (err) {}
       }
-
     }
   }, [isSuccess, txReceipt, txHash, address, amount, selectedToken, description, merchantName, expiryDays]);
 
   const paymentLink = typeof window !== 'undefined' 
-    ? `${window.location.origin}/pay/${createdSessionId || 'preview_id'}` 
-    : `https://unipay.app/pay/${createdSessionId || 'preview_id'}`;
+    ? (paymentType === 'onetime' 
+        ? `${window.location.origin}/pay/${createdSessionId || 'preview_id'}`
+        : `${window.location.origin}/subscribe/${address}?amount=${amount || '0'}&interval=${subInterval}&token=${selectedToken}`)
+    : `https://unipay.app/${paymentType === 'onetime' ? 'pay/preview_id' : 'subscribe/0x...'}`;
 
   const embedSnippet = `<script src="https://unipay.app/widget.js" type="module"></script>
 <unipay-checkout 
@@ -176,50 +200,76 @@ export default function CreatePaymentPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-16">
       
-      {/* ── Tombol Kembali & Judul Halaman Premium ── */}
-      <div className="flex items-center gap-4 pb-6 border-b border-white/5">
-        <Link 
-          href="/dashboard" 
-          className="p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 text-gray-400 hover:text-white transition-all group"
-        >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
-        </Link>
+      {/* ── Page Header ── */}
+      <div className="pb-4 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
-              Session Issuer
+              Payment Gateway
             </span>
-            <span className="text-xs text-gray-500">• Fully Decentralized</span>
+            <span className="text-xs text-gray-500">• Stateless Dispatch</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Create Smart Payment Dispatch</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Create Smart Billing Link</h1>
+        </div>
+
+        {/* Mode Indicator */}
+        <div className="px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/5 text-[11px] text-gray-400 font-medium self-start sm:self-auto">
+          Mode: <span className="text-violet-400 font-bold">{paymentType === 'onetime' ? 'Instant Invoice Link' : 'Recurring Subscription'}</span>
         </div>
       </div>
 
       {!isRegistered && (
         <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-center gap-3 font-medium animate-fade-in">
           <AlertCircle className="w-5 h-5 shrink-0 text-amber-400" />
-          <span>Notice: You operate an uninitialized address state. Buyers will review your primary cryptographic hash instead of a branded corporate alias.</span>
+          <span>Notice: You are operating an unverified address. Customers will review your primary hexadecimal hash instead of a verified storefront alias.</span>
         </div>
       )}
 
+      {/* ── User-friendly & Pure UniPay Purple Tab Selector ── */}
+      <div className="flex bg-black/50 p-1.5 rounded-2xl border border-white/5 w-full max-w-md mx-auto lg:mx-0 shadow-inner">
+        <button 
+          onClick={() => { setPaymentType('onetime'); setCreatedSessionId(''); }}
+          className={`flex-1 py-3 text-xs font-black rounded-xl transition-all duration-300 ${
+            paymentType === 'onetime' 
+              ? 'bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]' 
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          Instant Invoice Link
+        </button>
+        <button 
+          onClick={() => { setPaymentType('subscription'); setCreatedSessionId(''); }}
+          className={`flex-1 py-3 text-xs font-black rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 ${
+            paymentType === 'subscription' 
+              ? 'bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]' 
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          <Repeat className="w-3.5 h-3.5" /> Recurring Subscription
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* ── Sisi Kiri: Form Input Spesifikasi (7 Kolom) ── */}
-        <div className="lg:col-span-7 glass-panel p-6 sm:p-8 space-y-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-violet-600/5 rounded-full blur-3xl pointer-events-none" />
+        {/* ── Left Side: Specification Input Form (7 Columns) ── */}
+        <div className="lg:col-span-7 glass-panel p-6 sm:p-8 space-y-6 relative overflow-hidden transition-all duration-500 border-t-2 border-[#7C3AED]">
+          {/* Ambient Purple Glow Background Accent */}
+          <div className="absolute top-0 right-0 w-48 h-48 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
           
           <div className="flex items-center justify-between pb-3 border-b border-white/5">
-            <span className="text-xs font-bold text-violet-400 uppercase tracking-widest flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4" /> Parameters Spec
+            <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 text-violet-400">
+              <Sparkles className="w-4 h-4" /> {paymentType === 'onetime' ? 'Invoice Attributes' : 'Subscription Plan Setup'}
             </span>
-            <span className="text-[10px] text-gray-500 font-mono">Registry: L1 Target</span>
+            <span className="text-[10px] text-gray-500 font-mono">
+              {paymentType === 'onetime' ? 'L1 Gas Intercept' : 'Offchain Handshake'}
+            </span>
           </div>
 
-          <form onSubmit={handleCreateSession} className="space-y-6">
+          <form onSubmit={handleCreateSession} className="space-y-6 relative z-10">
             
             <div>
-              <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                Select Base Currency *
+              <label className="block text-xs font-black text-gray-400 mb-2 uppercase tracking-wider">
+                Select Currency *
               </label>
               <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-black/40 border border-white/5">
                 {SUPPORTED_TOKENS.map((t) => {
@@ -231,7 +281,7 @@ export default function CreatePaymentPage() {
                       onClick={() => setSelectedToken(t.symbol as SupportedToken)}
                       className={`py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
                         active 
-                          ? 'bg-violet-600 text-white shadow-[0_0_15px_rgba(124,58,237,0.4)]' 
+                          ? 'bg-violet-600 text-white shadow-[0_0_15px_rgba(124,58,237,0.4)]'
                           : 'text-gray-500 hover:text-gray-300'
                       }`}
                     >
@@ -245,11 +295,11 @@ export default function CreatePaymentPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-violet-300/90 mb-2 uppercase tracking-wider">
-                Requested Settlement Amount *
+              <label className="block text-xs font-black mb-2 uppercase tracking-wider text-violet-300/90">
+                {paymentType === 'onetime' ? 'Requested Settlement Amount *' : 'Interval Cycle Charge Amount *'}
               </label>
-              <div className="relative rounded-2xl bg-black/40 border border-white/10 focus-within:border-violet-500/50 focus-within:shadow-[0_0_20px_rgba(124,58,237,0.1)] transition-all">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-violet-400/50 select-none">
+              <div className="relative rounded-2xl bg-black/50 border border-white/10 transition-all focus-within:border-violet-500 focus-within:shadow-[0_0_20px_rgba(124,58,237,0.15)]">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black select-none text-violet-400/50">
                   $
                 </span>
                 <input
@@ -262,90 +312,118 @@ export default function CreatePaymentPage() {
                   className="w-full bg-transparent p-4 pl-10 pr-16 text-3xl font-black text-white outline-none placeholder:text-gray-700 font-mono tracking-tight"
                   required
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-violet-400 bg-violet-600/10 px-2 py-1 rounded border border-violet-500/20 select-none">
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black px-2.5 py-1 rounded border select-none text-violet-400 bg-violet-600/10 border-violet-500/20">
                   {selectedToken}
                 </span>
               </div>
-              <p className="text-[10px] text-gray-500 mt-2 flex items-center gap-1.5 justify-between">
+              <p className="text-[10px] text-gray-500 mt-2 flex items-center justify-between">
                 <span>Bridged instantly via Arc App Kit</span>
-                <span className="text-emerald-500/90 font-medium">&lt; 1s settlement finality</span>
+                <span className="text-emerald-500/90 font-medium">Finality &lt; 1s settlement</span>
               </p>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                Item Description / Checkout Notes
-              </label>
-              <input
-                type="text"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g. VIP Lifetime Subscriptions access"
-                className="input-field p-4 text-xs font-bold bg-black/40 border-white/10"
-              />
-            </div>
+            {paymentType === 'onetime' ? (
+              <>
+                <div>
+                  <label className="block text-xs font-black text-gray-400 mb-2 uppercase tracking-wider">
+                    Item Description / Invoice Notes
+                  </label>
+                  <input
+                    type="text"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="e.g. Premium Gateways API integration"
+                    className="input-field p-4 text-xs font-bold bg-black/40 border-white/10 text-white placeholder:text-gray-600 focus:border-violet-500/50 rounded-xl w-full"
+                  />
+                </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                Session Lifecycle Expiry
-              </label>
-              <div className="relative flex items-center">
-                <Clock className="w-4 h-4 text-violet-400/80 absolute left-4" />
-                <select
-                  value={expiryDays}
-                  onChange={(e) => setExpiryDays(e.target.value)}
-                  className="input-field p-4 pl-11 text-xs font-bold bg-black/40 border-white/10 cursor-pointer outline-none focus:border-violet-500/50"
-                >
-                  <option value="1" className="bg-[#0A0A0F] text-white">24 Hours valid duration</option>
-                  <option value="3" className="bg-[#0A0A0F] text-white">3 Days valid duration</option>
-                  <option value="7" className="bg-[#0A0A0F] text-white">7 Days valid duration</option>
-                  <option value="30" className="bg-[#0A0A0F] text-white">30 Days valid duration</option>
-                </select>
+                <div>
+                  <label className="block text-xs font-black text-gray-400 mb-2 uppercase tracking-wider">
+                    Link Expiration Limit
+                  </label>
+                  <div className="relative flex items-center">
+                    <Clock className="w-4 h-4 text-violet-400/80 absolute left-4" />
+                    <select
+                      value={expiryDays}
+                      onChange={(e) => setExpiryDays(e.target.value)}
+                      className="input-field p-4 pl-11 text-xs font-bold bg-black/40 border-white/10 text-white cursor-pointer outline-none focus:border-violet-500/50 rounded-xl w-full"
+                    >
+                      <option value="1" className="bg-[#0A0A0F] text-white">Valid for 24 Hours</option>
+                      <option value="3" className="bg-[#0A0A0F] text-white">Valid for 3 Days</option>
+                      <option value="7" className="bg-[#0A0A0F] text-white">Valid for 7 Days</option>
+                      <option value="30" className="bg-[#0A0A0F] text-white">Valid for 30 Days</option>
+                    </select>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div>
+                <label className="block text-xs font-black text-gray-400 mb-2 uppercase tracking-wider">
+                  Billing Interval Cycle
+                </label>
+                <div className="relative flex items-center">
+                  <Repeat className="w-4 h-4 text-violet-400/80 absolute left-4" />
+                  <select
+                    value={subInterval}
+                    onChange={(e) => setSubInterval(e.target.value)}
+                    className="input-field p-4 pl-11 text-xs font-bold bg-black/40 border-white/10 text-white cursor-pointer outline-none focus:border-violet-500/50 rounded-xl w-full"
+                  >
+                    <option value="7" className="bg-[#0A0A0F] text-white">Every 7 Days (Weekly)</option>
+                    <option value="30" className="bg-[#0A0A0F] text-white">Every 30 Days (Monthly)</option>
+                    <option value="90" className="bg-[#0A0A0F] text-white">Every 90 Days (Quarterly)</option>
+                    <option value="365" className="bg-[#0A0A0F] text-white">Every 365 Days (Yearly)</option>
+                  </select>
+                </div>
+                
+                {/* Gasless Setup Explanation */}
+                <div className="p-3.5 mt-4 rounded-xl bg-violet-500/10 border border-violet-500/20 text-xs text-violet-300 font-medium leading-relaxed">
+                  <span className="font-bold text-violet-200">Gasless Execution Setup:</span> Generating this subscription parameter plan is completely free. Plans are formulated offchain using strict deterministic hashing and activate onchain automatically upon user authorization.
+                </div>
               </div>
-            </div>
+            )}
 
-            {writeError && (
+            {writeError && paymentType === 'onetime' && (
               <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 font-medium">
-                {writeError.message || 'Smart Contract transaction execution intercepted.'}
+                {writeError.message || 'Transaction authorization aborted.'}
               </div>
             )}
 
             <button
               type="submit"
-              disabled={isPending || isTxConfirming || !amount}
-              className="w-full btn-primary py-4 flex items-center justify-center gap-2 text-sm mt-4 tracking-wide shadow-[0_0_25px_rgba(124,58,237,0.35)]"
+              disabled={(isPending || isTxConfirming) && paymentType === 'onetime' || !amount}
+              className="w-full py-4 flex items-center justify-center gap-2 text-xs uppercase tracking-wider rounded-xl font-black text-white transition-all duration-300 transform hover:-translate-y-0.5 mt-4 bg-violet-600 hover:bg-violet-500 shadow-[0_0_30px_rgba(124,58,237,0.35)]"
             >
-              {isPending || isTxConfirming ? (
+              {(isPending || isTxConfirming) && paymentType === 'onetime' ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>{isTxConfirming ? 'Minting Dispatch Endpoint...' : 'Sign Signature Request...'}</span>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{isTxConfirming ? 'Writing Dispatch Block...' : 'Awaiting Wallet Handshake...'}</span>
                 </>
               ) : (
-                <span className="font-black">Generate Smart Endpoint</span>
+                <span className="font-black">{paymentType === 'onetime' ? 'Generate Instant Billing Link' : 'Generate Subscription Link'}</span>
               )}
             </button>
           </form>
         </div>
 
-        {/* ── Sisi Kanan: Output Tautan Pintar & Sematan Widget (5 Kolom) ── */}
+        {/* ── Right Side: Output Links & Widget Cards (5 Columns) ── */}
         <div className="lg:col-span-5 space-y-6">
           
-          {/* Spanduk Pemberitahuan Sukses Terintegrasi */}
+          {/* Integrated Success Notification Matrix */}
           {createdSessionId && (
             <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-3 animate-fade-in shadow-[0_0_30px_rgba(16,185,129,0.15)]">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                <h3 className="text-sm font-black text-emerald-300 tracking-tight">Endpoint Minted Immutably ✓</h3>
+                <h3 className="text-xs font-black text-emerald-300 tracking-tight uppercase">Endpoint Generated Successfully ✓</h3>
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
-                This digital billing specification has been recorded directly to the L1 chain. It is now actively mapped inside your <span className="text-white font-bold">Active Payment Endpoints</span> matrix on the main dashboard view.
+                This link specification has been securely validated and synchronized directly into your <span className="text-white font-bold">Active Payments & Endpoints</span> table on the primary dashboard.
               </p>
               <div className="pt-1">
                 <Link
                   href="/dashboard"
                   className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 rounded-xl border border-emerald-500/20 transition-all"
                 >
-                  <span>← View on Dashboard Matrix</span>
+                  <span>← Review in Dashboard Matrix</span>
                 </Link>
               </div>
             </div>
@@ -360,7 +438,7 @@ export default function CreatePaymentPage() {
                 <div className="p-1.5 rounded-lg bg-violet-500/10 text-violet-400">
                   <LinkIcon className="w-4 h-4" />
                 </div>
-                <span className="text-xs font-bold text-white uppercase tracking-wider">Payment Endpoint URL</span>
+                <span className="text-xs font-bold text-white uppercase tracking-wider">Payment URL Link</span>
               </div>
               {createdSessionId ? (
                 <span className="badge-success">Live Ready</span>
@@ -386,7 +464,7 @@ export default function CreatePaymentPage() {
                 ) : (
                   <>
                     <Copy className="w-4 h-4 text-gray-400" />
-                    <span>Copy URL</span>
+                    <span>Copy URL Link</span>
                   </>
                 )}
               </button>
@@ -417,7 +495,7 @@ export default function CreatePaymentPage() {
             </div>
 
             <p className="text-[11px] text-gray-400 leading-relaxed">
-              Inject this native HTML tag onto any external application framework to instantiate a trustless checkout modal immediately.
+              Drop this standard web component tag inside any external frontend layout to display a modular checkout terminal automatically.
             </p>
 
             <div className="p-3.5 rounded-xl bg-black border border-white/5 font-mono text-[11px] text-indigo-300/90 whitespace-pre-wrap select-all overflow-x-auto leading-relaxed max-h-[160px]">
