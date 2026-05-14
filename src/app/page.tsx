@@ -71,79 +71,6 @@ export default function LandingPage() {
             Explore System Architecture
           </a>
         </div>
-
-        {/* ── Live Onchain Statistics Matrix (Dirombak Total Presisi Datanya) ── */}
-        <div className="w-full max-w-5xl mt-24 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left px-4 animate-fade-in-up delay-300">
-          
-          {/* Card 1: Merchants */}
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/5 relative overflow-hidden group hover:border-violet-500/30 transition-all duration-500 bg-gradient-to-b from-white/[0.02] to-transparent">
-            <div className="absolute top-0 left-0 w-full h-1 bg-violet-600/40 group-hover:bg-violet-600 transition-colors" />
-            <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-violet-600/5 rounded-full blur-2xl group-hover:bg-violet-600/10 transition-all" />
-            
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-black text-gray-500 uppercase tracking-widest">Total Merchants</span>
-              <span className="px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 font-mono text-[10px] font-bold">L1 Matrix</span>
-            </div>
-            
-            <div className="flex items-baseline gap-2.5">
-              <span className="text-4xl sm:text-5xl font-black text-white tracking-tight font-mono">
-                {isLoading ? <span className="shimmer px-6 py-1 rounded w-12 inline-block" /> : totalMerchants}
-              </span>
-              <span className="text-xs text-violet-400 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active
-              </span>
-            </div>
-            
-            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              Verified directly via <code className="text-violet-300 font-mono text-[11px]">UniPayRegistry.sol</code> string mapping.
-            </p>
-          </div>
-
-          {/* Card 2: Volume Settled */}
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/5 relative overflow-hidden group hover:border-indigo-500/30 transition-all duration-500 bg-gradient-to-b from-white/[0.02] to-transparent">
-            <div className="absolute top-0 left-0 w-full h-1 bg-indigo-600/40 group-hover:bg-indigo-600 transition-colors" />
-            <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-indigo-600/5 rounded-full blur-2xl group-hover:bg-indigo-600/10 transition-all" />
-            
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-black text-gray-500 uppercase tracking-widest">Total Volume Settled</span>
-              <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 font-mono text-[10px] font-bold">USDC</span>
-            </div>
-            
-            <div className="flex items-baseline gap-1">
-              <span className="text-xl sm:text-2xl font-bold text-gray-500 select-none">$</span>
-              <span className="text-3xl sm:text-4xl font-black text-white tracking-tight font-mono">
-                {isLoading ? <span className="shimmer px-12 py-1 rounded w-24 inline-block" /> : formattedVolume}
-              </span>
-            </div>
-            
-            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              Intercepted directly with <span className="text-white font-bold">&lt; 1s finality</span> processing over Arc L1 blocks.
-            </p>
-          </div>
-
-          {/* Card 3: Transactions */}
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/5 relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-500 bg-gradient-to-b from-white/[0.02] to-transparent">
-            <div className="absolute top-0 left-0 w-full h-1 bg-emerald-600/40 group-hover:bg-emerald-600 transition-colors" />
-            <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-emerald-600/5 rounded-full blur-2xl group-hover:bg-emerald-600/10 transition-all" />
-            
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-black text-gray-500 uppercase tracking-widest">Total Transactions</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono text-[10px] font-bold">100% Trustless</span>
-            </div>
-            
-            <div className="flex items-baseline gap-2.5">
-              <span className="text-4xl sm:text-5xl font-black text-white tracking-tight font-mono">
-                {isLoading ? <span className="shimmer px-6 py-1 rounded w-12 inline-block" /> : totalTransactions}
-              </span>
-              <span className="text-xs text-emerald-400 font-bold">Indexed</span>
-            </div>
-            
-            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              Zero traditional backend interceptors. Authenticated natively via Goldsky GraphQL.
-            </p>
-          </div>
-
-        </div>
       </section>
 
       {/* ── How It Works Section ── */}
@@ -339,6 +266,80 @@ export default function LandingPage() {
           Access Unified Dashboard Console
         </Link>
       </section>
+
+      {/* ── Ultra-Premium Precision Footer ── */}
+      <footer className="w-full max-w-6xl mx-auto mt-32 pt-14 pb-10 border-t border-white/5 px-6 relative z-10">
+        {/* Ambient background glow inside footer */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[150px] bg-gradient-to-r from-violet-600/5 via-indigo-600/10 to-violet-600/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
+
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center justify-between">
+          
+          {/* Brand Info */}
+          <div className="md:col-span-5 flex flex-col items-center md:items-start text-center md:text-left space-y-3.5">
+            <div className="inline-flex items-center gap-3 px-3 py-1.5 rounded-2xl bg-white/[0.01] border border-white/5 backdrop-blur-md shadow-inner">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-[0_0_20px_rgba(124,58,237,0.4)] shrink-0 animate-pulse">
+                <Zap className="w-4 h-4 text-white fill-white" />
+              </div>
+              <span className="font-orbitron font-bold tracking-widest text-white bg-gradient-to-r from-white via-violet-100 to-violet-300 bg-clip-text text-transparent text-base">
+                UNIPAY
+              </span>
+            </div>
+            
+            <p className="text-xs text-gray-400 max-w-sm mx-auto md:mx-0 leading-relaxed font-medium">
+              Stateless stablecoin processing engine. Direct peer-to-peer liquidity finality optimized natively for sovereign Web3 applications.
+            </p>
+          </div>
+
+          {/* Social Navigation Links as Tactile Micro-interactive Buttons */}
+          <div className="md:col-span-7 w-full md:w-auto flex items-center justify-center md:justify-end gap-2 sm:gap-4 text-[11px] sm:text-xs font-bold uppercase tracking-wider mt-4 md:mt-0">
+            <a 
+              href="https://x.com/owsnpidc" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white/[0.02] hover:bg-violet-600/10 border border-white/5 hover:border-violet-500/30 transition-all duration-300 text-gray-400 hover:text-white hover:shadow-[0_0_15px_rgba(124,58,237,0.15)] flex items-center gap-1 group"
+            >
+              <span>Twitter</span>
+              <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-violet-400 hidden sm:inline-block shrink-0" />
+            </a>
+            <a 
+              href="https://discord.gg/buildonarc" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white/[0.02] hover:bg-violet-600/10 border border-white/5 hover:border-violet-500/30 transition-all duration-300 text-gray-400 hover:text-white hover:shadow-[0_0_15px_rgba(124,58,237,0.15)] flex items-center gap-1 group"
+            >
+              <span>Discord</span>
+              <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-violet-400 hidden sm:inline-block shrink-0" />
+            </a>
+            <a 
+              href="https://docs.arc.network/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white/[0.02] hover:bg-violet-600/10 border border-white/5 hover:border-violet-500/30 transition-all duration-300 text-gray-400 hover:text-white hover:shadow-[0_0_15px_rgba(124,58,237,0.15)] flex items-center gap-1 group"
+            >
+              <span className="sm:hidden">Docs</span>
+              <span className="hidden sm:inline">Documentation</span>
+              <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-violet-400 hidden sm:inline-block shrink-0" />
+            </a>
+            <a 
+              href="https://github.com/Zaynsky12/unipay" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white/[0.02] hover:bg-violet-600/10 border border-white/5 hover:border-violet-500/30 transition-all duration-300 text-gray-400 hover:text-white hover:shadow-[0_0_15px_rgba(124,58,237,0.15)] flex items-center gap-1 group"
+            >
+              <span>GitHub</span>
+              <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-violet-400 hidden sm:inline-block shrink-0" />
+            </a>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="mt-12 pt-6 border-t border-white/[0.03] flex flex-col items-center justify-center gap-2 text-center">
+          <p className="text-[11px] text-gray-600 font-medium tracking-widest uppercase">
+            &copy; 2026 UniPay Protocol. Built natively on Arc Network.
+          </p>
+          <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-violet-500/30 to-transparent mt-1" />
+        </div>
+      </footer>
     </div>
   );
 }

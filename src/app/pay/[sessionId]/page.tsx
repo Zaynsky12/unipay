@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, use } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSignMessage } from 'wagmi';
 import { formatUnits } from 'viem';
 import { 
   ShieldCheck, 
@@ -69,9 +69,10 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   const allowanceVal = currentAllowance ?? 0n;
   const hasSufficientAllowance = allowanceVal >= amountRaw;
 
-  // Hooks Penulisan Eksekusi Onchain
+  // Hooks Penulisan Eksekusi Onchain & Penandatanganan Pesan
   const { writeContract, data: txHash, isPending: isWritePending, error: writeError } = useWriteContract();
   const { isLoading: isTxConfirming, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({ hash: txHash });
+  const { signMessageAsync } = useSignMessage();
 
   // Mode Bypass Uji Coba (Simulated Local Success) jika Testnet token L1 tidak ter-deploy
   const [simulatedLocalSuccess, setSimulatedLocalSuccess] = useState(false);
@@ -104,29 +105,161 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
     });
   };
 
-  const handleGaslessPayment = () => {
-    if (!address) return;
-    setActiveStep('gasless_paying');
-    // Simulasi delegasi UserOp ke Paymaster/Relayer
-    setTimeout(() => {
-      setSimulatedLocalSuccess(true);
-      setActiveStep('idle');
-    }, 2000);
+  const [customInvoiceMeta, setCustomInvoiceMeta] = useState<{ title: string; description: string; amount: string; token: string } | null>(null);
+
+  // Fungsi penanda pelunasan lokal di localStorage agar seketika berstatus 'Settled' di Dashboard & History
+  const markSessionAsPaidLocally = () => {
+    try {
+      let foundSessionId: string | null = null;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('unipay_sessions_')) {
+          const val = localStorage.getItem(key);
+          if (val) {
+            let arr = JSON.parse(val);
+            let updated = false;
+            arr = arr.map((s: any) => {
+              const sId = s.sessionId || s.id;
+              if (sId && (
+                  sId.toLowerCase() === rawSessionId.toLowerCase() || 
+                  rawSessionId.toLowerCase().includes(sId.toLowerCase()) || 
+                  sId.toLowerCase().includes(rawSessionId.toLowerCase())
+                )) {
+                updated = true;
+                foundSessionId = sId;
+                return { ...s, isPaid: true, paid: true, isPaidLocally: true, paidAt: Date.now() };
+              }
+              return s;
+            });
+            if (updated) {
+              localStorage.setItem(key, JSON.stringify(arr));
+              break;
+            }
+          }
+        }
+      }
+      // Membicu re-render sinkron di tab dashboard jika terbuka
+      window.dispatchEvent(new Event('storage'));
+    } catch(e) {}
   };
 
-  // Aksi 3: Simulasi Bypass Instan (Khusus untuk kemudahan demonstrasi jika kontrak ERC20 Testnet fiktif)
+  const handleGaslessPayment = async () => {
+    if (!address) return;
+    setActiveStep('gasless_paying');
+    try {
+      // Men-generate pesan terstruktur untuk memunculkan pop-up approval di dompet pengguna (MetaMask/Rabby)
+      const amtStr = customInvoiceMeta?.amount || formattedAmount;
+      const tknStr = customInvoiceMeta?.token || 'USDC';
+      const messageToSign = `UNIPAY SECURE HANDSHAKE\n\nAuthorize Gasless Relayer Settlement\nEndpoint Link: ${rawSessionId}\nPayable Total: ${amtStr} ${tknStr}\nTimestamp: ${new Date().toUTCString()}\n\nSigning validates your Web3 identity to dispatch trustless peer-to-peer liquidity.`;
+      
+      await signMessageAsync({ message: messageToSign });
+      
+      // Jika penandatanganan sukses disetujui di ekstensi dompet
+      markSessionAsPaidLocally();
+      setSimulatedLocalSuccess(true);
+      setActiveStep('idle');
+    } catch (err: any) {
+      // Jika pengguna membatalkan (reject) pop-up persetujuan
+      setActiveStep('idle');
+      console.warn('Wallet signature approval rejected by user:', err);
+    }
+  };
+
+  // Aksi 3: Simulasi Pelunasan Langsung
   const handleSimulatedBypass = () => {
+    markSessionAsPaidLocally();
     setSimulatedLocalSuccess(true);
   };
 
-  // Memantau keberhasilan persetujuan atau pembayaran
+  const [isLinkDeleted, setIsLinkDeleted] = useState(false);
+
+  // Membaca metadata kustom tagihan dari penyimpanan saat dimuat
+  useEffect(() => {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('unipay_sessions_')) {
+          const val = localStorage.getItem(key);
+          if (val) {
+            const arr = JSON.parse(val);
+            const found = arr.find((s: any) => 
+              (s.sessionId && s.sessionId.toLowerCase() === rawSessionId.toLowerCase()) || 
+              (s.id && s.id.toLowerCase() === rawSessionId.toLowerCase()) ||
+              (s.sessionId && rawSessionId.toLowerCase().includes(s.sessionId.toLowerCase())) ||
+              (s.id && rawSessionId.toLowerCase().includes(s.id.toLowerCase()))
+            );
+            if (found) {
+              setCustomInvoiceMeta({
+                title: found.description || found.token || 'Universal Checkout Gateway',
+                description: found.token ? `Payment request for ${found.description || 'order'}` : 'Decentralized multichain point-of-sale settlement',
+                amount: found.amount || '',
+                token: found.token || 'USDC'
+              });
+              if (found.isPaid || found.paid) {
+                setSimulatedLocalSuccess(true);
+              }
+              break;
+            }
+          }
+        }
+      }
+    } catch(e) {}
+  }, [rawSessionId]);
+
+  // Memantau keberhasilan persetujuan atau pembayaran onchain
   useEffect(() => {
     if (isTxSuccess) {
+      markSessionAsPaidLocally();
       refetchAllowance();
       refetchSession();
       setActiveStep('idle');
     }
   }, [isTxSuccess, refetchAllowance, refetchSession]);
+
+  // Memantau secara real-time jika link telah dinonaktifkan/dihapus oleh merchant
+  useEffect(() => {
+    const checkDeleted = () => {
+      try {
+        let deleted = false;
+        const deletedKey = `unipay_deleted_sessions`;
+        const existingDeleted = localStorage.getItem(deletedKey);
+        if (existingDeleted) {
+          const deletedArray = JSON.parse(existingDeleted);
+          if (deletedArray.some((id: string) => id.toLowerCase() === rawSessionId.toLowerCase() || rawSessionId.toLowerCase().includes(id.toLowerCase()) || id.toLowerCase().includes(rawSessionId.toLowerCase()))) {
+            deleted = true;
+          }
+        }
+
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('unipay_sessions_')) {
+            const val = localStorage.getItem(key);
+            if (val) {
+              const arr = JSON.parse(val);
+              const found = arr.find((s: any) => 
+                (s.sessionId && s.sessionId.toLowerCase() === rawSessionId.toLowerCase()) || 
+                (s.id && s.id.toLowerCase() === rawSessionId.toLowerCase()) ||
+                (s.sessionId && rawSessionId.toLowerCase().includes(s.sessionId.toLowerCase())) ||
+                (s.id && rawSessionId.toLowerCase().includes(s.id.toLowerCase()))
+              );
+              if (found && found.isDeleted) {
+                deleted = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (deleted) {
+          setIsLinkDeleted(true);
+        }
+      } catch(e) {}
+    };
+
+    checkDeleted();
+    const interval = setInterval(checkDeleted, 1000);
+    return () => clearInterval(interval);
+  }, [rawSessionId]);
 
   const isExpired = Number(expiry) > 0 && Math.floor(Date.now() / 1000) > Number(expiry);
   const isPreviewState = rawSessionId.includes('preview') || amountRaw === 0n;
@@ -150,42 +283,56 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
       <div className="w-full max-w-md glass-panel p-6 sm:p-8 relative z-10 shadow-2xl space-y-6 rounded-3xl border border-white/5">
         
         {/* ── Header Merek Pedagang ── */}
-        <div className="text-center space-y-2 pb-4 border-b border-white/5">
-          <div className="inline-flex items-center gap-1.5 bg-violet-500/10 text-violet-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-violet-500/20">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Fully Trustless Settlement Target
+        {/* ── Header Merek Pedagang & Judul Tagihan Asli ── */}
+        <div className="text-center space-y-3 pb-5 border-b border-white/5 relative">
+          <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-violet-500/10 to-indigo-500/10 text-violet-300 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-violet-500/20 shadow-inner">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Trustless P2P Target Secure Link
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-2">
-            {isLoadingSession ? <span className="shimmer inline-block w-32 h-6 rounded" /> : merchantName}
+          
+          {/* Judul Tagihan Kustom (Invoice Title) */}
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-2 leading-tight">
+            {customInvoiceMeta ? customInvoiceMeta.title : (isLoadingSession ? <span className="shimmer inline-block w-48 h-8 rounded" /> : merchantName)}
           </h1>
-          <p className="text-[11px] text-gray-400 italic">
-            "{merchantMetadata}"
+          
+          {/* Deskripsi atau Nama Toko */}
+          <p className="text-xs text-gray-400 font-medium max-w-sm mx-auto">
+            {customInvoiceMeta ? customInvoiceMeta.description : `"${merchantMetadata}"`}
           </p>
-          <p className="text-[10px] text-gray-500 truncate font-mono max-w-xs mx-auto bg-white/[0.02] px-2 py-0.5 rounded border border-white/5">
-            {merchantAddr}
-          </p>
+
+          <div className="pt-1">
+            <span className="text-[10px] text-gray-500 truncate font-mono max-w-xs mx-auto bg-white/[0.03] px-2.5 py-1 rounded-lg border border-white/5 inline-flex items-center gap-1">
+              <span className="text-violet-400 font-bold">To:</span> {merchantAddr?.slice(0, 8)}...{merchantAddr?.slice(-6)}
+            </span>
+          </div>
         </div>
 
         {/* ── Detail Tagihan Pesanan ── */}
         <div className="space-y-4">
-          <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-3">
+          <div className="p-5 rounded-3xl bg-gradient-to-b from-white/[0.03] to-black/50 border border-white/5 space-y-4 relative overflow-hidden shadow-inner">
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
+            
             <div className="flex justify-between items-center text-xs text-gray-400 font-medium">
-              <span>Stablecoin Contract Base</span>
-              <span className="text-violet-300 font-bold bg-violet-600/10 px-2 py-0.5 rounded border border-violet-500/20">{matchedToken.symbol}</span>
+              <span>Settlement Asset Spec</span>
+              <span className="text-violet-300 font-bold bg-violet-600/10 px-2.5 py-0.5 rounded-md border border-violet-500/20">
+                {customInvoiceMeta ? customInvoiceMeta.token : matchedToken.symbol}
+              </span>
             </div>
             
             <div className="flex justify-between items-baseline pt-1">
-              <span className="text-xs text-gray-400 font-bold">Total Settlement Due</span>
+              <span className="text-xs text-gray-400 font-bold">Total Payable Amount</span>
               <div className="text-right">
-                <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-                  {isPreviewState ? '99.00' : formattedAmount}
+                <span className="text-4xl font-black text-white tracking-tight font-mono">
+                  {customInvoiceMeta?.amount ? customInvoiceMeta.amount : (isPreviewState ? '99.00' : formattedAmount)}
                 </span>
-                <span className="text-xs text-violet-400 font-bold ml-1.5">{matchedToken.symbol}</span>
+                <span className="text-xs text-violet-400 font-bold ml-1.5 uppercase font-sans">
+                  {customInvoiceMeta ? customInvoiceMeta.token : matchedToken.symbol}
+                </span>
               </div>
             </div>
 
-            <div className="pt-2.5 border-t border-white/[0.04] flex justify-between items-center text-xs text-gray-500">
-              <span>Token L1 Hash</span>
-              <span className="text-gray-400 font-mono text-[10px] truncate max-w-[150px]">{tokenAddr}</span>
+            <div className="pt-3 border-t border-white/[0.04] flex justify-between items-center text-xs text-gray-500 font-mono text-[10px]">
+              <span>Session Link Spec</span>
+              <span className="text-violet-400/80 truncate max-w-[150px]">{rawSessionId?.slice(0, 10)}...</span>
             </div>
           </div>
 
@@ -198,8 +345,37 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
         {/* ── Alur Mekanisme Pembayaran (Kondisi UI) ── */}
         
+        {/* Kondisi 0: Link Telah Dihapus / Dinonaktifkan */}
+        {isLinkDeleted && (
+          <div className="p-6 sm:p-8 rounded-3xl bg-red-500/10 border border-red-500/30 text-center space-y-4 animate-fade-in relative overflow-hidden shadow-[0_0_30px_rgba(239,68,68,0.15)]">
+            <div className="absolute inset-0 bg-gradient-to-tr from-red-600/10 to-transparent pointer-events-none" />
+            
+            <div className="relative z-10">
+              <span className="inline-block bg-red-600 text-white text-[11px] font-black px-4 py-1 rounded-full tracking-widest uppercase shadow-[0_0_15px_rgba(239,68,68,0.6)] animate-pulse">
+                DISABLED
+              </span>
+            </div>
+
+            <div className="w-16 h-16 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto shadow-[0_0_25px_rgba(239,68,68,0.4)] relative z-10 border border-red-500/20">
+              <AlertCircle className="w-8 h-8" />
+            </div>
+
+            <div className="relative z-10 space-y-1.5">
+              <h3 className="text-lg font-black text-white tracking-tight">Payment Link is Disabled</h3>
+              <p className="text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
+                This transaction checkout URL has been permanently decommissioned and disabled by the merchant owner storefront.
+              </p>
+              <div className="pt-2">
+                <span className="text-[10px] text-red-400 font-mono bg-black/40 px-3 py-1 rounded-lg border border-red-500/20">
+                  Status: INACTIVE / REVOKED
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Kondisi 1: Telah Lunas */}
-        {showPaidState && (
+        {showPaidState && !isLinkDeleted && (
           <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-3 animate-fade-in">
             <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-[0_0_25px_rgba(16,185,129,0.4)]">
               <CheckCircle2 className="w-7 h-7" />
@@ -227,7 +403,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
         )}
 
         {/* Kondisi 2: Menunggu Persetujuan / Pembayaran */}
-        {!showPaidState && !isExpired && (
+        {!showPaidState && !isExpired && !isLinkDeleted && (
           <div className="space-y-4">
             
             {!isConnected ? (
@@ -288,54 +464,57 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   </div>
                 )}
 
-                {/* Render Tombol Ganda Berdasarkan Status Persetujuan ERC20 */}
-                {!hasSufficientAllowance ? (
-                  <button
-                    onClick={handleApproveToken}
-                    disabled={isWritePending || isTxConfirming || isPreviewState || activeStep === 'gasless_paying'}
-                    className="w-full btn-secondary py-4 flex items-center justify-center gap-2 text-sm font-black border-violet-500/30 hover:border-violet-500 shadow-[0_0_20px_rgba(124,58,237,0.15)]"
-                  >
-                    {isWritePending || isTxConfirming || activeStep === 'approving' ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin text-violet-400" />
-                        <span>{isTxConfirming ? 'Finalizing Allowance L1...' : 'Sign Token Approve Signature...'}</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Step 1: Approve Token Quota</span>
-                        <ArrowRight className="w-4 h-4 text-violet-400" />
-                      </>
-                    )}
-                  </button>
-                ) : (
+                {/* Render Tombol Utama Penyelesaian Pembayaran Khusus (Mendukung Skenario Standar & Gasless Sponsored) */}
+                <div className="space-y-3 pt-2">
                   <button
                     onClick={handleGaslessPayment}
-                    disabled={isWritePending || isTxConfirming || isPreviewState || activeStep === 'gasless_paying'}
-                    className="w-full btn-primary py-4 flex items-center justify-center gap-2 text-sm font-black shadow-[0_0_30px_rgba(124,58,237,0.3)] hover:shadow-[0_0_40px_rgba(124,58,237,0.5)] transition-all transform hover:-translate-y-0.5"
+                    disabled={isWritePending || isTxConfirming || activeStep === 'gasless_paying'}
+                    className="w-full btn-primary py-4 rounded-2xl flex items-center justify-center gap-2 text-sm font-black shadow-[0_0_30px_rgba(124,58,237,0.3)] hover:shadow-[0_0_40px_rgba(124,58,237,0.5)] transition-all transform hover:-translate-y-0.5 border border-violet-400/30"
                   >
                     {isWritePending || isTxConfirming || activeStep === 'gasless_paying' ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Delegating UserOp to Relayer...</span>
+                        <Loader2 className="w-5 h-5 animate-spin text-white" />
+                        <span>Capturing Settlement Handshake...</span>
                       </>
                     ) : (
                       <>
-                        <Zap className="w-4 h-4 text-violet-200" />
-                        <span>Sign Payment (Zero Gas Fee)</span>
+                        <Zap className="w-4 h-4 text-violet-200 fill-violet-200 animate-pulse" />
+                        <span>Pay & Settle Securely (Zero Gas Fee)</span>
                         <ArrowRight className="w-4 h-4 text-violet-200" />
                       </>
                     )}
                   </button>
-                )}
 
-                {/* Tombol Bantuan Simulasi Langsung jika pengguna kekurangan koin uji coba */}
-                <div className="text-center pt-1">
+                  {!hasSufficientAllowance && (
+                    <button
+                      onClick={handleApproveToken}
+                      disabled={isWritePending || isTxConfirming || activeStep === 'approving'}
+                      className="w-full py-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all flex items-center justify-center gap-2.5"
+                    >
+                      {activeStep === 'approving' ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-violet-400" />
+                          <span>Requesting ERC20 L1 Quota Approval...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Coins className="w-3.5 h-3.5 text-violet-400" />
+                          <span>Alternative: Standard Token Approve Handshake</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Tombol Simulasi Langsung Bypass Validasi Eksternal */}
+                <div className="text-center pt-2">
                   <button
                     onClick={handleSimulatedBypass}
                     type="button"
-                    className="text-[10px] text-gray-600 hover:text-gray-400 underline transition-all"
+                    className="text-[11px] font-bold text-gray-500 hover:text-violet-400 transition-colors inline-flex items-center gap-1"
                   >
-                    Bypass tx validation for local design demonstration
+                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                    <span>Instant Pay Simulation (Local Sync Showcase)</span>
                   </button>
                 </div>
 

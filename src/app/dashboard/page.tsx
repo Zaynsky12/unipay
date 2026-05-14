@@ -18,15 +18,23 @@ import {
   Clock,
   ArrowUpRight as ArrowUpRightIcon,
   UserCheck,
-  ShieldAlert
+  ShieldAlert,
+  Trash2
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
 import { useMerchantHistory } from '@/lib/hooks/useMerchantHistory';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { address, isConnected } = useAccount();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deletedSessionIds, setDeletedSessionIds] = useState<Set<string>>(new Set());
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [statsTab, setStatsTab] = useState('7 Days');
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [localCachedSessions, setLocalCachedSessions] = useState<any[]>([]);
 
   // Membaca identitas merchant onchain
   const { data: merchantData, isLoading: isLoadingRead, refetch: refetchMerchant } = useReadContract({
@@ -45,8 +53,132 @@ export default function DashboardPage() {
 
   // Goldsky Subgraph hook
   const { history, isLoading: isLoadingHistory } = useMerchantHistory(address);
-  const createdSessions = history?.sessions || [];
+  const rawCreatedSessions = history?.sessions || [];
   const recentPayments = history?.payments || [];
+
+  // Sinkronisasi status penghapusan link dari LocalStorage (Unconditional on mount)
+  React.useEffect(() => {
+    try {
+      const deletedKey = `unipay_deleted_sessions`;
+      const existingDeleted = localStorage.getItem(deletedKey);
+      if (existingDeleted) {
+        setDeletedSessionIds(new Set(JSON.parse(existingDeleted)));
+      }
+    } catch(e) {}
+  }, []);
+
+  // Sinkronisasi cache deskripsi lokal dari LocalStorage
+  React.useEffect(() => {
+    if (!address) return;
+    try {
+      const storageKey = `unipay_sessions_${address.toLowerCase()}`;
+      const existingSessions = localStorage.getItem(storageKey);
+      if (existingSessions) {
+        setLocalCachedSessions(JSON.parse(existingSessions));
+      }
+    } catch(e) {}
+  }, [address]);
+
+  // Handler penghapusan link mutlak (Erase dari storage & filter multi-parameter aktif)
+  const handleDeleteSession = (sessionId: string) => {
+    if (!sessionId) return;
+    const lowerTargetId = sessionId.toLowerCase().trim();
+    try {
+      if (address) {
+        // 1. Hapus fisik secara absolut dari memori array sesi lokal berdasarkan ID atau Deskripsi
+        const storageKey = `unipay_sessions_${address.toLowerCase()}`;
+        const existing = localStorage.getItem(storageKey);
+        if (existing) {
+          let sessionsArray = JSON.parse(existing);
+          sessionsArray = sessionsArray.filter((s: any) => {
+            const actId = s.sessionId || s.id;
+            const matchId = actId && actId.toLowerCase().trim() === lowerTargetId;
+            const matchDesc = s.description && s.description.toLowerCase().trim() === lowerTargetId;
+            return !matchId && !matchDesc;
+          });
+          localStorage.setItem(storageKey, JSON.stringify(sessionsArray));
+          setLocalCachedSessions(sessionsArray);
+        }
+      }
+
+      // 2. Masukkan ke dalam daftar global deleted link IDs jika belum ada
+      const deletedKey = `unipay_deleted_sessions`;
+      const existingDeleted = localStorage.getItem(deletedKey);
+      const deletedArray: string[] = existingDeleted ? JSON.parse(existingDeleted) : [];
+      if (!deletedArray.some(id => id?.toLowerCase().trim() === lowerTargetId)) {
+        localStorage.setItem(deletedKey, JSON.stringify([...deletedArray, sessionId.trim()]));
+      }
+
+      // 3. Update React state untuk seketika menyembunyikannya dari antarmuka
+      setDeletedSessionIds(prev => new Set([...Array.from(prev), sessionId.trim()]));
+    } catch(e) {}
+  };
+
+  // ── GABUNGKAN SESI SUBGRAPH & CACHE LOKAL AGAR DESKRIPSI & LINK BARU TERISI SEMPURNA ──
+  const mergedSessionsMap = new Map<string, any>();
+
+  // 1. Masukkan data dasar dari Goldsky Subgraph terlebih dahulu
+  rawCreatedSessions.forEach((s: any, idx: number) => {
+    const actId = s.id || s.sessionId || `subgraph_link_${idx}`;
+    mergedSessionsMap.set(actId.toLowerCase(), { ...s, id: actId, sessionId: actId });
+  });
+
+  // 2. Perkaya dengan cache deskripsi lokal dari localStorage saat pembuatan
+  localCachedSessions.forEach((s: any, idx: number) => {
+    const actId = s.sessionId || s.id || `local_link_${idx}`;
+    const existing = mergedSessionsMap.get(actId.toLowerCase());
+    if (existing) {
+      // Terapkan deskripsi kustom jika onchain kosong
+      existing.description = s.description || existing.description;
+      // Tandai status terhapus jika tersimpan di cache
+      if (s.isDeleted) existing.isDeleted = true;
+    } else {
+      // Sesi yang baru saja dibuat & belum diindeks Subgraph
+      mergedSessionsMap.set(actId.toLowerCase(), {
+        id: actId,
+        sessionId: actId,
+        // Ubah format amount desimal dari localStorage ke satuan onchain string (e.g. "15" -> "15000000")
+        amount: s.amount ? (Number(s.amount.replace('$', '')) * 1e6).toString() : '0',
+        token: s.token || 'USDC',
+        description: s.description || 'Paylink',
+        createdAt: s.createdAt ? Math.floor(s.createdAt / 1000) : Math.floor(Date.now() / 1000),
+        isDeleted: s.isDeleted || false
+      });
+    }
+  });
+
+  const allCombinedSessions = Array.from(mergedSessionsMap.values());
+
+  // Himpunan penampung seluruh ID yang terhapus dalam format huruf kecil (case-insensitive)
+  const lowercasedDeletedIds = new Set(Array.from(deletedSessionIds).map(id => id?.toLowerCase().trim()));
+
+  // Filter out link yang telah dihapus atau sampah
+  const createdSessions = allCombinedSessions.filter((s: any) => {
+    if (s.isDeleted) return false;
+    const actId = s.id || s.sessionId;
+    if (!actId || typeof actId !== 'string') return false;
+    const cleanId = actId.trim();
+    
+    // Periksa pencocokan ID mutlak terhadap daftar hapus
+    if (lowercasedDeletedIds.has(cleanId.toLowerCase())) return false;
+    // Periksa juga jika deskripsinya bertindak sebagai pseudo-ID yang dihapus pengguna
+    if (s.description && lowercasedDeletedIds.has(s.description.toLowerCase().trim())) return false;
+    
+    // Izinkan jika merupakan link otentik (0x atau subplan_) ATAU link custom buatan user yang belum dihapus
+    return true;
+  });
+
+  // Filter out receipts/payments yang terikat pada link yang telah dihapus
+  const filteredRecentPayments = recentPayments.filter((p: any) => {
+    if (!p.sessionId) return true;
+    if (lowercasedDeletedIds.has(p.sessionId.toLowerCase())) return false;
+    const matchedSession = allCombinedSessions.find((s: any) => 
+      s.id?.toLowerCase() === p.sessionId.toLowerCase() || 
+      s.sessionId?.toLowerCase() === p.sessionId.toLowerCase()
+    );
+    if (matchedSession?.isDeleted) return false;
+    return true;
+  });
 
   // Tombol penyalinan tautan
   const copySessionUrl = (sessionId: string) => {
@@ -79,9 +211,18 @@ export default function DashboardPage() {
     );
   }
 
-  // Kalkulasi total murni berbasis data onchain aktual L1
-  const displayTotalReceived = Number(formatUnits(totalReceivedRaw, 6));
-  const displayTotalTx = Number(totalTransactionsRaw);
+  // Kalkulasi total murni menggabungkan baseline onchain L1 dengan akumulasi pelunasan sinkronisasi lokal/gasless
+  const localRevenueSum = filteredRecentPayments.reduce((sum: number, p: any) => {
+    try {
+      const amtNum = p.amount ? Number(formatUnits(BigInt(p.amount), 6)) : 0;
+      return sum + amtNum;
+    } catch(e) {
+      return sum;
+    }
+  }, 0);
+
+  const displayTotalReceived = Number(formatUnits(totalReceivedRaw, 6)) + localRevenueSum;
+  const displayTotalTx = Number(totalTransactionsRaw) + filteredRecentPayments.length;
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
@@ -167,270 +308,428 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── State Terdaftar / Metrik Operasional ── */}
-      <div className="space-y-8 animate-fade-in">
+      {/* ── State Terdaftar / Metrik Operasional (Dirombak Sempurna Sesuai Mockup UI Premium) ── */}
+      <div className="space-y-6 animate-fade-in">
         
-        {/* Kartu Metrik Utama */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* UPPER PANE: Wadah Tunggal Etalase Payments */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          <div className="card p-6 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-2xl group-hover:bg-violet-500/10 transition-all" />
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Settled Revenue</span>
-              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">
-                Auto Bridged
-              </span>
-            </div>
-            <div className="flex items-baseline gap-1.5 mt-1">
-              <span className="text-4xl font-black text-white tracking-tight">
-                ${displayTotalReceived.toFixed(2)}
-              </span>
-              <span className="text-xs font-bold text-violet-400">USDC</span>
-            </div>
-            <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
-              <span>Finality routing</span>
-              <span className="text-gray-400 font-semibold">&lt; 1s settlement</span>
-            </div>
-          </div>
-
-          <div className="card p-6 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all" />
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Completed Orders</span>
-              <div className="p-1 rounded-lg bg-white/[0.04] text-violet-400">
-                <Coins className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-4xl font-black text-white tracking-tight mt-1">
-              {displayTotalTx}
-            </div>
-            <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
-              <span>Verification source</span>
-              <span className="text-gray-400 font-semibold">Contract Intercepted</span>
-            </div>
-          </div>
-
-          <div className="card p-6 relative overflow-hidden group flex flex-col justify-between">
+          {/* Kolom Penuh: Payments Card */}
+          <div className="lg:col-span-12 glass-panel p-6 rounded-3xl border border-white/5 flex flex-col justify-between relative bg-gradient-to-b from-white/[0.03] via-[#0A0A0F] to-[#0A0A0F]">
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Store Profile Spec</span>
-                <span className="badge-violet">Decentralized</span>
-              </div>
-              <div className="text-sm font-bold text-white mt-2 leading-snug line-clamp-2">
-                {metadata || 'Standard Unified Checkout Gateway'}
-              </div>
-            </div>
-            
-            <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
-              <span>Memory layer</span>
-              <span className="text-violet-400/90 font-mono">Goldsky Subgraph</span>
-            </div>
-          </div>
+              <h2 className="text-lg font-black text-white tracking-tight mb-4">Payments</h2>
+              
+              {/* DESKTOP & TABLET VIEW: 12-Column Grid Table */}
+              <div className="hidden md:block overflow-visible">
+                {/* Header Kolom Mini */}
+                <div className="grid grid-cols-12 text-[9px] font-black text-gray-500 uppercase tracking-widest pb-2 border-b border-white/5">
+                  <span className="col-span-5">PAYMENTS</span>
+                  <span className="col-span-2 text-center">PRICE</span>
+                  <span className="col-span-2 text-center">VOLUME</span>
+                  <span className="col-span-2 text-center">SALES</span>
+                  <span className="col-span-1 text-right">MANAGE</span>
+                </div>
 
-        </div>
-
-        {/* ── ETALASE DAFTAR SESI PEMBAYARAN YANG DIBUAT (CREATION HISTORY) ── */}
-        <div className="glass-panel p-6 sm:p-8 space-y-6">
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold text-white tracking-tight">Active Payment Endpoints</h3>
-                <span className="text-xs font-bold bg-violet-600/20 text-violet-300 px-2 py-0.5 rounded-full border border-violet-500/30">
-                  {createdSessions.length} Endpoints
-                </span>
-              </div>
-              <p className="text-xs text-gray-400 mt-1">
-                Issued smart dispatches dynamically indexed from Goldsky Subgraph.
-              </p>
-            </div>
-
-            {isRegistered && (
-              <Link 
-                href="/dashboard/create"
-                className="btn-secondary py-2 px-3.5 text-xs flex items-center gap-1.5 self-start sm:self-auto font-bold"
-              >
-                <PlusCircle className="w-3.5 h-3.5 text-violet-400" /> Issue Smart Endpoint
-              </Link>
-            )}
-          </div>
-
-          {isLoadingHistory ? (
-            <div className="py-12 text-center">
-              <Loader2 className="w-8 h-8 text-violet-400 animate-spin mx-auto mb-3" />
-              <p className="text-sm font-bold text-gray-400">Loading indexed endpoints...</p>
-            </div>
-          ) : createdSessions.length === 0 ? (
-            <div className="p-8 text-center bg-black/30 rounded-2xl border border-white/5">
-              <LinkIcon className="w-8 h-8 text-gray-600 mx-auto mb-3" />
-              <p className="text-sm font-bold text-gray-400">No payment link endpoints instantiated yet.</p>
-              <p className="text-xs text-gray-600 mt-1 max-w-md mx-auto">
-                {isRegistered ? (
-                  <>Click <span className="text-violet-400 font-semibold">Issue Smart Endpoint</span> above to publish decentralized billings.</>
-                ) : (
-                  <>Verify your account first to generate active dispatch URLs.</>
-                )}
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {createdSessions.map((s: any, idx: number) => {
-                const amtFormatted = s.amount ? formatUnits(BigInt(s.amount), 6) : '0.00';
-                
-                return (
-                  <div 
-                    key={s.id || idx} 
-                    className={`p-4 rounded-2xl bg-black/40 border transition-all relative overflow-hidden flex flex-col justify-between space-y-3 ${
-                      s.paid 
-                        ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/[0.02] to-transparent' 
-                        : 'border-white/5 hover:border-violet-500/30'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <span className="text-xs font-black text-white tracking-tight flex items-center gap-1.5">
-                          <span>${amtFormatted}</span>
-                          <span className="text-[10px] text-violet-400 font-bold">USDC</span>
-                        </span>
-                        <p className="text-[11px] text-gray-400 truncate font-medium mt-0.5">
-                          Decentralized Gateway Order
-                        </p>
-                      </div>
-
-                      <div className="shrink-0">
-                        {s.paid ? (
-                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1">
-                            <CheckCircle2 className="w-2.5 h-2.5" /> Settled ✓
-                          </span>
-                        ) : (
-                          <span className="bg-white/[0.03] text-gray-400 border border-white/5 px-2 py-0.5 rounded text-[10px] font-mono inline-flex items-center gap-1">
-                            <Clock className="w-2.5 h-2.5 text-violet-400" /> Active
-                          </span>
-                        )}
-                      </div>
+                {/* Daftar Tautan Pembayaran Lengkap */}
+                <div className="space-y-3 pt-3">
+                  {createdSessions.length === 0 ? (
+                    <div className="py-6 text-center text-xs text-gray-500">
+                      No active payment endpoints created yet.
                     </div>
+                  ) : (
+                    createdSessions.map((s: any, idx: number) => {
+                      const actualId = s.id || s.sessionId;
+                      const linkBuyers = filteredRecentPayments.filter((p: any) => 
+                        p.sessionId && actualId && (
+                          p.sessionId.toLowerCase() === actualId.toLowerCase() ||
+                          p.sessionId.toLowerCase().includes(actualId.toLowerCase()) ||
+                          actualId.toLowerCase().includes(p.sessionId.toLowerCase())
+                        )
+                      );
+                      const salesSum = linkBuyers.reduce((acc: number, p: any) => acc + (p.amount ? Number(formatUnits(BigInt(p.amount), 6)) : 0), 0);
+                      const isNakedAmt = s.amount ? `$${formatUnits(BigInt(s.amount), 6)}` : 'N/A';
 
-                    <div className="pt-2 border-t border-white/[0.02] flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-mono text-gray-600 truncate max-w-[150px]" title={s.id}>
-                        ID: {s.id ? `${s.id.slice(0, 10)}...` : '0x...'}
-                      </span>
+                      return (
+                        <div key={actualId || idx} className={`grid grid-cols-12 items-center gap-2 group py-1.5 border-b border-white/[0.02] last:border-0 relative ${activeDropdown === actualId ? 'z-50' : 'z-10'}`}>
+                          {/* 1. PAYMENTS */}
+                          <Link 
+                            href={`/dashboard/history?filter=${actualId}`}
+                            className="col-span-5 flex items-center gap-3 min-w-0 transition-opacity hover:opacity-80"
+                            title="View specific transaction history for this endpoint"
+                          >
+                            <div className="w-8 h-8 rounded-xl bg-violet-600 flex items-center justify-center text-white shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                              <LinkIcon className="w-3.5 h-3.5 rotate-45" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-white truncate group-hover:text-violet-400 transition-colors">
+                                {s.description || s.token || 'Paylink'}
+                              </p>
+                              <p className="text-[9px] text-gray-500 truncate">
+                                Deposit collection for {s.description ? s.description.toLowerCase() : 'paylink'}
+                              </p>
+                            </div>
+                          </Link>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          onClick={() => copySessionUrl(s.id)}
-                          className="px-2.5 py-1 bg-white/[0.03] hover:bg-white/[0.08] rounded-lg border border-white/5 text-[11px] text-violet-300 font-bold transition-all flex items-center gap-1"
-                        >
-                          {copiedId === s.id ? (
-                            <span className="text-emerald-400 font-bold">Copied!</span>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3 text-gray-400" />
-                              <span>Copy Link</span>
-                            </>
-                          )}
-                        </button>
+                          {/* 2. PRICE */}
+                          <div className="col-span-2 text-center">
+                            <span className="text-xs font-bold text-gray-400">{isNakedAmt}</span>
+                          </div>
 
-                        <Link
-                          href={`/pay/${s.id}`}
-                          target="_blank"
-                          className="p-1.5 bg-violet-600/10 hover:bg-violet-600/20 rounded-lg border border-violet-500/20 text-violet-400 transition-all"
-                          title="Open Universal Checkout Link"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                        </Link>
-                      </div>
-                    </div>
+                          {/* 3. VOLUME */}
+                          <div className="col-span-2 text-center leading-tight">
+                            <span className="text-xs font-bold text-white block">${salesSum.toFixed(0)}</span>
+                            <span className="text-[8px] text-violet-400 font-bold block">USDC</span>
+                          </div>
 
+                          {/* 4. SALES */}
+                          <div className="col-span-2 text-center leading-tight">
+                            <span className="text-xs font-bold text-gray-300 block font-mono">{linkBuyers.length}</span>
+                            <span className="text-[8px] text-gray-500 font-bold block">orders</span>
+                          </div>
+
+                          {/* 5. MANAGE */}
+                          <div className="col-span-1 flex items-center justify-end gap-0.5 relative z-50">
+                            <Link 
+                              href={`/pay/${actualId}`}
+                              target="_blank"
+                              className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-violet-400 transition-all rounded-lg hover:bg-white/[0.05]"
+                              title="Open Live Gateway"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Link>
+
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setActiveDropdown(prev => prev === actualId ? null : actualId);
+                              }} 
+                              className={`w-7 h-7 flex items-center justify-center transition-all rounded-lg border cursor-pointer ${
+                                activeDropdown === actualId 
+                                  ? 'bg-violet-500/20 text-violet-300 border-violet-500/30 shadow-sm' 
+                                  : 'text-gray-400 hover:text-white border-transparent hover:bg-white/[0.08]'
+                              }`}
+                              title="Manage Paylink Options"
+                            >
+                              <span className="text-sm font-black leading-none block">⋮</span>
+                            </button>
+
+                            {/* DROPDOWN MENU PREMIUM GLASSMORPHISM DENGAN HOVER MULTI-WARNA */}
+                            {activeDropdown === actualId && (
+                              <div className="absolute right-0 top-9 w-52 rounded-2xl bg-[#0B0B12]/95 backdrop-blur-2xl border border-violet-500/30 ring-1 ring-white/5 shadow-[0_20px_60px_rgba(0,0,0,0.9)] py-2 z-[100] animate-fade-in text-left divide-y divide-white/[0.04] pointer-events-auto cursor-default">
+                                <div className="px-3 py-1.5 bg-gradient-to-r from-violet-500/10 to-transparent">
+                                  <span className="text-[8px] font-black text-violet-400 uppercase tracking-widest block">Manage Paylink</span>
+                                  <span className="text-[9px] font-mono text-gray-400 truncate block mt-0.5">{actualId}</span>
+                                </div>
+
+                                <div className="py-1.5 space-y-0.5 px-1.5">
+                                  <button 
+                                    type="button"
+                                    onPointerDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      router.push(`/dashboard/history?filter=${actualId}`);
+                                      setTimeout(() => setActiveDropdown(null), 10);
+                                    }}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-300 hover:text-violet-300 hover:bg-violet-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
+                                  >
+                                    <span className="text-violet-400 text-sm block">👥</span> 
+                                    <span>View Buyers</span>
+                                  </button>
+
+                                  <button 
+                                    type="button"
+                                    onPointerDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      copySessionUrl(actualId);
+                                      setTimeout(() => setActiveDropdown(null), 10);
+                                    }}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-300 hover:text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
+                                  >
+                                    <span className="text-emerald-400 text-sm block">📋</span> 
+                                    <span>{copiedId === actualId ? 'Copied!' : 'Copy Link'}</span>
+                                  </button>
+                                </div>
+
+                                <div className="pt-1.5 px-1.5">
+                                  <button 
+                                    type="button"
+                                    onPointerDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setSessionToDelete(actualId);
+                                      setTimeout(() => setActiveDropdown(null), 10);
+                                    }}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-red-400 hover:text-red-200 hover:bg-red-500/20 flex items-center gap-2.5 font-semibold transition-all text-left group/btn cursor-pointer pointer-events-auto"
+                                  >
+                                    <span className="text-sm block group-hover/btn:scale-110 transition-transform">🗑️</span> 
+                                    <span>Delete Payment Link</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* MOBILE VIEW: Stacked Native Cards (Tanpa Geser Horizontal) */}
+              <div className="block md:hidden space-y-3 pt-2">
+                {createdSessions.length === 0 ? (
+                  <div className="py-6 text-center text-xs text-gray-500">
+                    No active payment endpoints created yet.
                   </div>
-                );
-              })}
-            </div>
-          )}
+                ) : (
+                  createdSessions.map((s: any, idx: number) => {
+                    const actualId = s.id || s.sessionId;
+                    const linkBuyers = filteredRecentPayments.filter((p: any) => 
+                      p.sessionId && actualId && (
+                        p.sessionId.toLowerCase() === actualId.toLowerCase() ||
+                        p.sessionId.toLowerCase().includes(actualId.toLowerCase()) ||
+                        actualId.toLowerCase().includes(p.sessionId.toLowerCase())
+                      )
+                    );
+                    const salesSum = linkBuyers.reduce((acc: number, p: any) => acc + (p.amount ? Number(formatUnits(BigInt(p.amount), 6)) : 0), 0);
+                    const isNakedAmt = s.amount ? `$${formatUnits(BigInt(s.amount), 6)}` : 'N/A';
 
-        </div>
+                    return (
+                      <div key={`mob-${actualId || idx}`} className={`p-4 rounded-2xl bg-white/[0.02] border border-white/[0.04] space-y-3 relative group ${activeDropdown === actualId ? 'z-50 ring-1 ring-violet-500/30' : 'z-10'}`}>
+                        {/* Top Bar: Title & Actions */}
+                        <div className="flex items-start justify-between gap-2">
+                          <Link 
+                            href={`/dashboard/history?filter=${actualId}`}
+                            className="flex items-center gap-3 min-w-0 transition-opacity hover:opacity-80"
+                          >
+                            <div className="w-8 h-8 rounded-xl bg-violet-600 flex items-center justify-center text-white shrink-0 shadow-md">
+                              <LinkIcon className="w-3.5 h-3.5 rotate-45" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-white truncate">
+                                {s.description || s.token || 'Paylink'}
+                              </p>
+                              <p className="text-[9px] text-gray-500 truncate">
+                                {s.description ? s.description.toLowerCase() : 'paylink'}
+                              </p>
+                            </div>
+                          </Link>
 
-        {/* ── TABEL RIWAYAT KUITANSI PEMBELI (LIVE SETTLEMENT RECEIPTS) ── */}
-        <div className="glass-panel p-6 sm:p-8 space-y-6">
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
-            <div>
-              <h3 className="text-lg font-bold text-white tracking-tight">Live Settlement Receipts</h3>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Auto-capturing completed peer-to-peer transfers from Goldsky.
-              </p>
-            </div>
+                          {/* Manage Shortcuts */}
+                          <div className="flex items-center gap-0.5 shrink-0 relative z-50">
+                            <Link 
+                              href={`/pay/${actualId}`}
+                              target="_blank"
+                              className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-violet-400 transition-all rounded-xl hover:bg-white/[0.05]"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Link>
 
-            <div className="inline-flex items-center gap-2 bg-violet-950/40 border border-violet-500/20 px-3 py-1.5 rounded-full text-xs text-violet-300 self-start sm:self-auto">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
-              </span>
-              <span className="font-bold text-[11px]">Goldsky Synchronized</span>
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setActiveDropdown(prev => prev === actualId ? null : actualId);
+                              }} 
+                              className={`w-8 h-8 flex items-center justify-center transition-all rounded-xl border cursor-pointer ${
+                                activeDropdown === actualId 
+                                  ? 'bg-violet-500/20 text-violet-300 border-violet-500/30 shadow-sm' 
+                                  : 'text-gray-400 hover:text-white border-transparent hover:bg-white/[0.08]'
+                              }`}
+                            >
+                              <span className="text-base font-black leading-none block">⋮</span>
+                            </button>
+
+                            {/* Dropdown Mobile */}
+                            {activeDropdown === actualId && (
+                              <div className="absolute right-0 top-9 w-52 rounded-2xl bg-[#0B0B12]/98 backdrop-blur-3xl border border-violet-500/30 ring-1 ring-white/5 shadow-2xl py-2 z-[100] animate-fade-in text-left divide-y divide-white/[0.04] pointer-events-auto cursor-default">
+                                <div className="px-3 py-1.5 bg-gradient-to-r from-violet-500/10 to-transparent">
+                                  <span className="text-[8px] font-black text-violet-400 uppercase tracking-widest block">Manage Paylink</span>
+                                  <span className="text-[9px] font-mono text-gray-400 truncate block mt-0.5">{actualId}</span>
+                                </div>
+
+                                <div className="py-1.5 space-y-0.5 px-1.5">
+                                  <button 
+                                    type="button"
+                                    onPointerDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      router.push(`/dashboard/history?filter=${actualId}`);
+                                      setTimeout(() => setActiveDropdown(null), 10);
+                                    }}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-300 hover:text-violet-300 hover:bg-violet-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
+                                  >
+                                    <span className="text-violet-400 text-sm block">👥</span> 
+                                    <span>View Buyers</span>
+                                  </button>
+
+                                  <button 
+                                    type="button"
+                                    onPointerDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      copySessionUrl(actualId);
+                                      setTimeout(() => setActiveDropdown(null), 10);
+                                    }}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-300 hover:text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
+                                  >
+                                    <span className="text-emerald-400 text-sm block">📋</span> 
+                                    <span>{copiedId === actualId ? 'Copied!' : 'Copy Link'}</span>
+                                  </button>
+                                </div>
+
+                                <div className="pt-1.5 px-1.5">
+                                  <button 
+                                    type="button"
+                                    onPointerDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setSessionToDelete(actualId);
+                                      setTimeout(() => setActiveDropdown(null), 10);
+                                    }}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-red-400 hover:text-red-200 hover:bg-red-500/20 flex items-center gap-2.5 font-semibold transition-all text-left group/btn cursor-pointer pointer-events-auto"
+                                  >
+                                    <span className="text-sm block group-hover/btn:scale-110 transition-transform">🗑️</span> 
+                                    <span>Delete Payment Link</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Bottom Bar: Badges for Price, Volume, Sales */}
+                        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/[0.02]">
+                          <div className="bg-white/[0.01] p-2 rounded-xl text-center border border-white/[0.02]">
+                            <span className="text-[8px] font-bold text-gray-500 block uppercase tracking-wider">Price</span>
+                            <span className="text-xs font-bold text-gray-300 mt-0.5 block">{isNakedAmt}</span>
+                          </div>
+                          <div className="bg-white/[0.01] p-2 rounded-xl text-center border border-white/[0.02]">
+                            <span className="text-[8px] font-bold text-violet-400 block uppercase tracking-wider">Volume</span>
+                            <span className="text-xs font-black text-white mt-0.5 block">${salesSum.toFixed(0)}</span>
+                          </div>
+                          <div className="bg-white/[0.01] p-2 rounded-xl text-center border border-white/[0.02]">
+                            <span className="text-[8px] font-bold text-gray-500 block uppercase tracking-wider">Orders</span>
+                            <span className="text-xs font-bold text-gray-300 mt-0.5 block">{linkBuyers.length}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
 
-          {isLoadingHistory ? (
-            <div className="py-12 text-center">
-              <Loader2 className="w-8 h-8 text-violet-400 animate-spin mx-auto mb-3" />
+        </div>
+
+        {/* BOTTOM PANE: Transactions Container */}
+        <div className="w-full glass-panel p-8 rounded-3xl border border-white/5 bg-[#0A0A0F] text-center relative overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+          {/* Ikon Rantai 3D Bergradasi Ungu/Metalik di Tengah */}
+          <div className="w-16 h-16 mx-auto mb-3 relative flex items-center justify-center">
+            <div className="absolute inset-0 bg-violet-600/10 rounded-full blur-xl animate-pulse" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600/20 via-black to-violet-400/10 border border-violet-500/30 flex items-center justify-center shadow-lg relative z-10 rotate-12 group-hover:rotate-0 transition-transform">
+              <LinkIcon className="w-5 h-5 text-violet-400 stroke-[2.5]" />
             </div>
-          ) : recentPayments.length === 0 ? (
-            <div className="p-10 text-center bg-black/20 rounded-2xl border border-white/5">
-              <Layers className="w-8 h-8 text-gray-600 mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-400">No incoming buyer settlement receipts verified yet.</p>
-            </div>
+          </div>
+
+          <h3 className="text-base font-black text-white tracking-tight">Transactions</h3>
+
+          {filteredRecentPayments.length === 0 ? (
+            <p className="text-xs text-gray-500 mt-1 font-semibold">No transactions found.</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="mt-6 text-left overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="text-gray-500 uppercase tracking-wider text-[10px] border-b border-white/5">
+                  <tr className="text-gray-500 uppercase tracking-wider text-[9px] border-b border-white/5">
                     <th className="pb-3 font-bold px-2">Session Hash</th>
-                    <th className="pb-3 font-bold px-2">Payer Hash Identity</th>
+                    <th className="pb-3 font-bold px-2">Payer Identity</th>
                     <th className="pb-3 font-bold px-2">Settled Asset</th>
                     <th className="pb-3 font-bold px-2">Timestamp</th>
                     <th className="pb-3 font-bold text-right px-2">Verification Registry</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 font-medium text-gray-300">
-                  {recentPayments.slice(0, 10).map((p: any, idx: number) => {
+                  {filteredRecentPayments.slice(0, 10).map((p: any, idx: number) => {
                     const pAmountFormatted = p.amount ? formatUnits(BigInt(p.amount), 6) : '0.00';
                     const txHash = p.id || '';
+                    
+                    const matchedSession = rawCreatedSessions.find((s: any) => 
+                      s.id?.toLowerCase() === p.sessionId?.toLowerCase() || 
+                      s.sessionId?.toLowerCase() === p.sessionId?.toLowerCase()
+                    );
+                    const customTitle = matchedSession ? (matchedSession.description || matchedSession.token) : null;
+
                     return (
                       <tr key={idx} className="hover:bg-white/[0.02] transition-colors group">
-                        
-                        <td className="py-3.5 px-2 font-mono text-violet-300/90 font-semibold">
-                          <div className="flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>{p.sessionId ? `${p.sessionId.slice(0, 10)}...${p.sessionId.slice(-4)}` : 'N/A'}</span>
+                        <td className="py-3 px-2 font-mono text-violet-300/90 font-semibold">
+                          <div className="space-y-0.5">
+                            {customTitle && (
+                              <span className="text-[9px] font-bold text-white bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/5 block font-sans w-fit truncate max-w-[120px]">
+                                {customTitle}
+                              </span>
+                            )}
+                            <div className="flex items-center gap-1.5 pt-0.5">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                              <span>{p.sessionId ? `${p.sessionId.slice(0, 10)}...${p.sessionId.slice(-4)}` : 'N/A'}</span>
+                            </div>
                           </div>
                         </td>
 
-                        <td className="py-3.5 px-2 font-mono text-gray-400">
+                        <td className="py-3 px-2 font-mono text-gray-400">
                           <span className="bg-white/[0.02] px-1.5 py-0.5 rounded border border-white/5">
                             {p.payer ? `${p.payer.slice(0, 8)}...${p.payer.slice(-4)}` : 'Unknown'}
                           </span>
                         </td>
 
-                        <td className="py-3.5 px-2">
+                        <td className="py-3 px-2">
                           <span className="font-black text-white">${pAmountFormatted}</span>
-                          <span className="text-[10px] text-violet-400 font-bold ml-1">USDC</span>
+                          <span className="text-[9px] text-violet-400 font-bold ml-1">USDC</span>
                         </td>
 
-                        <td className="py-3.5 px-2 text-gray-500">
+                        <td className="py-3 px-2 text-gray-500">
                           <span>{new Date(Number(p.timestamp) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </td>
 
-                        <td className="py-3.5 px-2 text-right">
+                        <td className="py-3 px-2 text-right">
                           <a 
                             href={`https://testnet.arcscan.app/tx/${txHash}`} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-violet-400 hover:text-violet-300 font-bold bg-white/[0.03] hover:bg-white/[0.06] px-2.5 py-1 rounded-lg border border-white/5 transition-all"
+                            className="inline-flex items-center gap-1 text-[11px] text-violet-400 hover:text-violet-300 font-bold bg-white/[0.03] hover:bg-white/[0.06] px-2 py-0.5 rounded border border-white/5 transition-all"
                           >
                             <span>ArcScan L1</span>
-                            <ExternalLink className="w-3 h-3" />
+                            <ExternalLink className="w-2.5 h-2.5" />
                           </a>
                         </td>
-
                       </tr>
                     );
                   })}
@@ -446,6 +745,60 @@ export default function DashboardPage() {
         </div>
 
       </div>
+
+      {/* Floating Action Spark Button di Sudut Kanan Bawah */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button 
+          onClick={() => { refetchMerchant(); }}
+          className="w-12 h-12 rounded-full bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center shadow-[0_0_25px_rgba(124,58,237,0.6)] transition-all hover:scale-110 relative group"
+          title="Quick Protocol Synchronize"
+        >
+          <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-[#0A0A0F]" />
+          <span className="text-lg font-bold">✨</span>
+        </button>
+      </div>
+
+      {/* ── MODAL KONFIRMASI PENGHAPUSAN LINK (PREMIUM GLASSMORPHISM) ── */}
+      {sessionToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-md glass-panel p-6 sm:p-8 rounded-3xl border border-red-500/30 bg-[#0A0A0F] space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.15)]">
+            {/* Ambient Red Glow Accent */}
+            <div className="absolute top-0 right-0 w-40 h-40 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex flex-col items-center text-center space-y-3 relative z-10">
+              <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shadow-inner">
+                <Trash2 className="w-7 h-7" />
+              </div>
+              <h3 className="text-lg font-black text-white tracking-tight">Deactivate & Delete Link?</h3>
+              <p className="text-xs text-gray-400 leading-relaxed max-w-sm">
+                Are you sure you want to permanently decommission this settlement link endpoint? 
+                <span className="block mt-1 text-red-400 font-medium">Customers trying to pay via this URL will be automatically blocked.</span>
+              </p>
+              <div className="p-2 rounded-xl bg-black/50 border border-white/5 font-mono text-[10px] text-gray-500 max-w-full truncate px-3">
+                ID: {sessionToDelete}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 relative z-10 pt-2">
+              <button
+                onClick={() => setSessionToDelete(null)}
+                className="flex-1 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 text-xs text-gray-300 font-bold transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (sessionToDelete) handleDeleteSession(sessionToDelete);
+                  setSessionToDelete(null);
+                }}
+                className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-xs text-white font-black transition-all shadow-[0_0_20px_rgba(239,68,68,0.4)]"
+              >
+                Yes, Delete Link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
