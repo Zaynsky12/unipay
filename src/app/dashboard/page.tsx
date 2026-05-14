@@ -312,10 +312,10 @@ export default function DashboardPage() {
       <div className="space-y-6 animate-fade-in">
         
         {/* UPPER PANE: Wadah Tunggal Etalase Payments */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-30">
           
           {/* Kolom Penuh: Payments Card */}
-          <div className="lg:col-span-12 glass-panel p-6 rounded-3xl border border-white/5 flex flex-col justify-between relative bg-gradient-to-b from-white/[0.03] via-[#0A0A0F] to-[#0A0A0F]">
+          <div className="lg:col-span-12 glass-panel p-6 rounded-3xl border border-white/5 flex flex-col justify-between relative z-30 bg-gradient-to-b from-white/[0.03] via-[#0A0A0F] to-[#0A0A0F]">
             <div>
               <h2 className="text-lg font-black text-white tracking-tight mb-4">Payments</h2>
               
@@ -744,18 +744,6 @@ export default function DashboardPage() {
           )}
         </div>
 
-      </div>
-
-      {/* Floating Action Spark Button di Sudut Kanan Bawah */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <button 
-          onClick={() => { refetchMerchant(); }}
-          className="w-12 h-12 rounded-full bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center shadow-[0_0_25px_rgba(124,58,237,0.6)] transition-all hover:scale-110 relative group"
-          title="Quick Protocol Synchronize"
-        >
-          <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-[#0A0A0F]" />
-          <span className="text-lg font-bold">✨</span>
-        </button>
       </div>
 
       {/* ── MODAL KONFIRMASI PENGHAPUSAN LINK (PREMIUM GLASSMORPHISM) ── */}
