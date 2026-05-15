@@ -8,7 +8,7 @@ dataSources:
     source:
       address: "0xf103ead5fc6917274eb74c1449ac48f564901e84"
       abi: UniPayRegistry
-      startBlock: 1
+      startBlock: 42320000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
