@@ -32,6 +32,7 @@ contract UniPayRegistry is ERC2771Context {
         address token;
         uint256 expiry;
         bool isFulfilled;
+        bool isActive;
     }
 
     // Mapping identitas merchant onchain
@@ -56,6 +57,7 @@ contract UniPayRegistry is ERC2771Context {
     // Events Logging untuk direfleksikan secara instan oleh Wagmi/Viem Listeners
     event MerchantRegistered(address indexed merchant, string name, string metadata);
     event SessionCreated(bytes32 indexed sessionId, address indexed merchant, uint256 amount, address token, uint256 expiry);
+    event SessionDeactivated(bytes32 indexed sessionId);
     event PaymentCompleted(bytes32 indexed sessionId, address indexed merchant, address indexed payer, uint256 amount);
     event SubscriptionCreated(bytes32 indexed subId, address indexed merchant, address indexed subscriber, uint256 amount, uint256 interval);
     event SubscriptionExecuted(bytes32 indexed subId, address indexed merchant, address indexed subscriber, uint256 amount);
@@ -114,10 +116,23 @@ contract UniPayRegistry is ERC2771Context {
             amount: amount,
             token: token,
             expiry: expiry,
-            isFulfilled: false
+            isFulfilled: false,
+            isActive: true
         });
 
         emit SessionCreated(sessionId, _msgSender(), amount, token, expiry);
+    }
+
+    /**
+     * @dev Menonaktifkan sesi pembayaran secara on-chain.
+     * @param sessionId Hash identifier sesi pesanan yang ingin dinonaktifkan.
+     */
+    function deactivateSession(bytes32 sessionId) external {
+        require(sessions[sessionId].merchant == _msgSender(), "Only the merchant can deactivate this session");
+        require(sessions[sessionId].isActive, "Session is already inactive");
+        
+        sessions[sessionId].isActive = false;
+        emit SessionDeactivated(sessionId);
     }
 
     /**
@@ -128,6 +143,7 @@ contract UniPayRegistry is ERC2771Context {
         CheckoutSession storage session = sessions[sessionId];
         
         require(session.merchant != address(0), "Target payment dispatch session does not exist");
+        require(session.isActive, "Payment session has been deactivated by the merchant");
         require(!session.isFulfilled, "Payment session endpoint has already been fulfilled");
         require(block.timestamp <= session.expiry, "Payment dispatch session lifecycle has expired");
 

@@ -79,7 +79,7 @@ async function main() {
     const hash = await client.deployContract({
       abi: REGISTRY_ABI,
       bytecode: REGISTRY_BYTECODE,
-      args: [],
+      args: ['0x0000000000000000000000000000000000000000'], // Trusted Forwarder for Meta-transactions
     });
 
     console.log(`⚡ Transaksi berhasil di-broadcast! Tx Hash: ${hash}`);

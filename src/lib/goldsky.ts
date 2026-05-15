@@ -60,6 +60,7 @@ export const GET_MERCHANT_HISTORY = gql`
         amount
         token
         paid
+        active
         createdAt
       }
       payments(orderBy: timestamp, orderDirection: desc) {

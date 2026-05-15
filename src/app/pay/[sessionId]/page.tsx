@@ -41,6 +41,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   const tokenAddr = sessionData?.[2] || '';
   const expiry = sessionData?.[3] || 0n;
   const isPaid = sessionData?.[4] || false;
+  const isActiveOnchain = sessionData?.[5] ?? true;
 
   // 2. Membaca profil bisnis merchant
   const { data: merchantData } = useReadContract({
@@ -164,8 +165,9 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   }, [rawSessionId]);
 
   const isExpired = Number(expiry) > 0 && Math.floor(Date.now() / 1000) > Number(expiry);
-  const isPreviewState = rawSessionId.includes('preview') || amountRaw === 0n;
+  const isPreviewState = rawSessionId.includes('preview');
   const showPaidState = isPaid || simulatedLocalSuccess;
+  const isActuallyDisabled = !isActiveOnchain && !isPreviewState;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#0A0A0F] relative overflow-hidden animate-fade-in">
@@ -224,7 +226,11 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
               <span className="text-xs text-gray-400 font-bold">Total Payable Amount</span>
               <div className="text-right">
                 <span className="text-4xl font-black text-white tracking-tight font-mono">
-                  {customInvoiceMeta?.amount ? customInvoiceMeta.amount : (isPreviewState ? '99.00' : formattedAmount)}
+                  {isLoadingSession ? (
+                    <span className="shimmer inline-block w-24 h-8 rounded" />
+                  ) : (
+                    customInvoiceMeta?.amount ? customInvoiceMeta.amount : (isPreviewState ? '99.00' : formattedAmount)
+                  )}
                 </span>
                 <span className="text-xs text-violet-400 font-bold ml-1.5 uppercase font-sans">
                   {customInvoiceMeta ? customInvoiceMeta.token : matchedToken.symbol}
@@ -248,7 +254,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
         {/* ── Alur Mekanisme Pembayaran (Kondisi UI) ── */}
         
         {/* Kondisi 0: Link Telah Dihapus / Dinonaktifkan */}
-        {isLinkDeleted && (
+        {(isLinkDeleted || isActuallyDisabled) && (
           <div className="p-6 sm:p-8 rounded-3xl bg-red-500/10 border border-red-500/30 text-center space-y-4 animate-fade-in relative overflow-hidden shadow-[0_0_30px_rgba(239,68,68,0.15)]">
             <div className="absolute inset-0 bg-gradient-to-tr from-red-600/10 to-transparent pointer-events-none" />
             
@@ -305,7 +311,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
         )}
 
         {/* Kondisi 2: Menunggu Persetujuan / Pembayaran */}
-        {!showPaidState && !isExpired && !isLinkDeleted && (
+        {!showPaidState && !isExpired && !isLinkDeleted && !isActuallyDisabled && (
           <div className="space-y-4">
             
             {!isConnected ? (

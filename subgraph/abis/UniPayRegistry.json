@@ -20,7 +20,8 @@
       { "internalType": "uint256", "name": "amount", "type": "uint256" },
       { "internalType": "address", "name": "token", "type": "address" },
       { "internalType": "uint256", "name": "expiry", "type": "uint256" },
-      { "internalType": "bool", "name": "isFulfilled", "type": "bool" }
+      { "internalType": "bool", "name": "isFulfilled", "type": "bool" },
+      { "internalType": "bool", "name": "isActive", "type": "bool" }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -59,6 +60,13 @@
     ],
     "name": "createSession",
     "outputs": [{ "internalType": "bytes32", "name": "sessionId", "type": "bytes32" }],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes32", "name": "sessionId", "type": "bytes32" }],
+    "name": "deactivateSession",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -115,6 +123,14 @@
       { "indexed": false, "internalType": "uint256", "name": "expiry", "type": "uint256" }
     ],
     "name": "SessionCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "bytes32", "name": "sessionId", "type": "bytes32" }
+    ],
+    "name": "SessionDeactivated",
     "type": "event"
   },
   {

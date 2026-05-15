@@ -18,6 +18,7 @@ type PaymentSession @entity {
   token: String!
   expiresAt: BigInt!
   paid: Boolean!
+  active: Boolean!
   payer: String
   paidAt: BigInt
   createdAt: BigInt!

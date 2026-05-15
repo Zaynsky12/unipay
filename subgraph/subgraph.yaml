@@ -6,7 +6,7 @@ dataSources:
     name: UniPayRegistry
     network: arc-testnet
     source:
-      address: "0xe9dbfa0c86bb35f2152826d759482a03edf9d612"
+      address: "0xf103ead5fc6917274eb74c1449ac48f564901e84"
       abi: UniPayRegistry
       startBlock: 1
     mapping:
@@ -28,6 +28,8 @@ dataSources:
           handler: handleMerchantRegistered
         - event: SessionCreated(indexed bytes32,indexed address,uint256,address,uint256)
           handler: handleSessionCreated
+        - event: SessionDeactivated(indexed bytes32)
+          handler: handleSessionDeactivated
         - event: PaymentCompleted(indexed bytes32,indexed address,indexed address,uint256)
           handler: handlePaymentCompleted
         - event: SubscriptionCreated(indexed bytes32,indexed address,indexed address,uint256,uint256)

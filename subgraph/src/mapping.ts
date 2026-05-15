@@ -2,6 +2,7 @@ import { BigInt, Bytes } from "@graphprotocol/graph-ts"
 import {
   MerchantRegistered,
   SessionCreated,
+  SessionDeactivated,
   PaymentCompleted,
   SubscriptionCreated,
   SubscriptionExecuted,
@@ -55,6 +56,7 @@ export function handleSessionCreated(event: SessionCreated): void {
   session.token = event.params.token.toHexString()
   session.expiresAt = event.params.expiry
   session.paid = false
+  session.active = true
   session.createdAt = event.block.timestamp
   session.save()
 
@@ -62,6 +64,14 @@ export function handleSessionCreated(event: SessionCreated): void {
   if (merchant) {
     merchant.totalSessions = merchant.totalSessions.plus(BigInt.fromI32(1))
     merchant.save()
+  }
+}
+
+export function handleSessionDeactivated(event: SessionDeactivated): void {
+  let session = PaymentSession.load(event.params.sessionId.toHexString())
+  if (session) {
+    session.active = false
+    session.save()
   }
 }
 

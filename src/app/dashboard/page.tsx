@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useAccount, useReadContract } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatUnits } from 'viem';
 import { 
   Building2, 
@@ -31,6 +31,7 @@ export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [isDeactivating, setIsDeactivating] = useState<string | null>(null);
 
   // Membaca identitas merchant onchain
   const { data: merchantData, isLoading: isLoadingRead, refetch: refetchMerchant } = useReadContract({
@@ -40,6 +41,20 @@ export default function DashboardPage() {
     args: address ? [address] : undefined,
     query: { enabled: !!address }
   });
+
+  // Contract Write for Deactivation
+  const { writeContract, data: txHashDeactivate } = useWriteContract();
+  const { isLoading: isConfirmingDeactivate, isSuccess: isDeactivateSuccess } = useWaitForTransactionReceipt({
+    hash: txHashDeactivate,
+  });
+
+  // Refetch when deactivation is successful
+  React.useEffect(() => {
+    if (isDeactivateSuccess) {
+      refetchMerchant();
+      setIsDeactivating(null);
+    }
+  }, [isDeactivateSuccess, refetchMerchant]);
 
   const isRegistered = merchantData ? merchantData[2] : false;
   const name = merchantData?.[0] || '';
@@ -53,14 +68,19 @@ export default function DashboardPage() {
   const recentPayments = history?.payments || [];
 
   // Sessions and history are now managed via the Goldsky database (history hook)
-  const createdSessions = history?.sessions || [];
+  const createdSessions = (history?.sessions || []).filter((s: any) => s.active !== false);
   const filteredRecentPayments = history?.payments || [];
 
-  // Handler penghapusan link mutlak (Erase dari storage & filter multi-parameter aktif)
+  // Handler penghapusan link mutlak (Deactivate di Smart Contract)
   const handleDeleteSession = (sessionId: string) => {
-    // Note: On-chain sessions are immutable. 
-    // Manual deletion is disabled as per the move to purely database-driven state.
-    console.log("Deletion requested for:", sessionId);
+    if (!address) return;
+    setIsDeactivating(sessionId);
+    writeContract({
+      address: UNIPAY_REGISTRY_ADDRESS,
+      abi: REGISTRY_ABI,
+      functionName: 'deactivateSession',
+      args: [sessionId as `0x${string}`],
+    });
   };
 
 
@@ -348,16 +368,19 @@ export default function DashboardPage() {
 
                                   <button 
                                     type="button"
+                                    disabled={isDeactivating === actualId || isConfirmingDeactivate}
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
                                       handleDeleteSession(actualId);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
-                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-red-400 hover:text-red-200 hover:bg-red-500/20 flex items-center gap-2.5 font-semibold transition-all text-left group/btn cursor-pointer pointer-events-auto"
+                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-red-400 hover:text-red-200 hover:bg-red-500/20 flex items-center gap-2.5 font-semibold transition-all text-left group/btn cursor-pointer pointer-events-auto disabled:opacity-50"
                                   >
-                                    <span className="text-sm block group-hover/btn:scale-110 transition-transform">🗑️</span> 
-                                    <span>Archive Paylink</span>
+                                    <span className="text-sm block group-hover/btn:scale-110 transition-transform">
+                                      {(isDeactivating === actualId || isConfirmingDeactivate) ? '⏳' : '🗑️'}
+                                    </span> 
+                                    <span>{(isDeactivating === actualId || isConfirmingDeactivate) ? 'Deactivating...' : 'Archive Paylink'}</span>
                                   </button>
                               </div>
                             )}
@@ -484,6 +507,7 @@ export default function DashboardPage() {
                                 <div className="pt-1.5 px-1.5">
                                   <button 
                                     type="button"
+                                    disabled={isDeactivating === actualId || isConfirmingDeactivate}
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
@@ -494,10 +518,12 @@ export default function DashboardPage() {
                                       e.preventDefault();
                                       e.stopPropagation();
                                     }}
-                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-red-400 hover:text-red-200 hover:bg-red-500/20 flex items-center gap-2.5 font-semibold transition-all text-left group/btn cursor-pointer pointer-events-auto"
+                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-red-400 hover:text-red-200 hover:bg-red-500/20 flex items-center gap-2.5 font-semibold transition-all text-left group/btn cursor-pointer pointer-events-auto disabled:opacity-50"
                                   >
-                                    <span className="text-sm block group-hover/btn:scale-110 transition-transform">🗑️</span> 
-                                    <span>Archive Paylink</span>
+                                    <span className="text-sm block group-hover/btn:scale-110 transition-transform">
+                                      {(isDeactivating === actualId || isConfirmingDeactivate) ? '⏳' : '🗑️'}
+                                    </span> 
+                                    <span>{(isDeactivating === actualId || isConfirmingDeactivate) ? 'Deactivating...' : 'Archive Paylink'}</span>
                                   </button>
                                 </div>
                               </div>

@@ -1,6 +1,6 @@
 // ── UniPay Contract Address (UniPayRegistry) ──────────────────────────────────
 // Will be filled automatically after deploy on Arc Testnet
-export const UNIPAY_REGISTRY_ADDRESS = "0xe9dbfa0c86bb35f2152826d759482a03edf9d612" as `0x${string}`;
+export const UNIPAY_REGISTRY_ADDRESS = "0xf103ead5fc6917274eb74c1449ac48f564901e84" as `0x${string}`;
 
 // ── Token Addresses ────────────────────────────────────────────────────────────
 export const USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as `0x${string}`;
@@ -30,7 +30,8 @@ export const REGISTRY_ABI = [
       { "internalType": "uint256", "name": "amount", "type": "uint256" },
       { "internalType": "address", "name": "token", "type": "address" },
       { "internalType": "uint256", "name": "expiry", "type": "uint256" },
-      { "internalType": "bool", "name": "isFulfilled", "type": "bool" }
+      { "internalType": "bool", "name": "isFulfilled", "type": "bool" },
+      { "internalType": "bool", "name": "isActive", "type": "bool" }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -70,6 +71,13 @@ export const REGISTRY_ABI = [
     ],
     "name": "createSession",
     "outputs": [{ "internalType": "bytes32", "name": "sessionId", "type": "bytes32" }],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes32", "name": "sessionId", "type": "bytes32" }],
+    "name": "deactivateSession",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -127,6 +135,14 @@ export const REGISTRY_ABI = [
       { "indexed": false, "internalType": "uint256", "name": "expiry", "type": "uint256" }
     ],
     "name": "SessionCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "bytes32", "name": "sessionId", "type": "bytes32" }
+    ],
+    "name": "SessionDeactivated",
     "type": "event"
   },
   {
