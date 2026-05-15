@@ -19,7 +19,9 @@ import {
   ArrowUpRight as ArrowUpRightIcon,
   UserCheck,
   ShieldAlert,
-  Trash2
+  Trash2,
+  BadgeCheck,
+  Plus
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -57,7 +59,7 @@ export default function DashboardPage() {
   }, [isDeactivateSuccess, refetchMerchant]);
 
   const isRegistered = merchantData ? merchantData[2] : false;
-  const name = merchantData?.[0] || '';
+  const name = isRegistered ? (merchantData?.[0] || 'Merchant') : 'Anonymous';
   const metadata = merchantData?.[1] || '';
   const totalReceivedRaw = merchantData?.[3] || 0n;
   const totalTransactionsRaw = merchantData?.[4] || 0n;
@@ -132,88 +134,55 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 animate-fade-in pb-12">
       
-      {/* ── Banner/Header Dashboard Premium ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-900/20 via-indigo-900/10 to-black border border-white/5 p-6 sm:p-8 shadow-[0_0_40px_rgba(124,58,237,0.05)]">
-        <div className="absolute -right-20 -top-20 w-60 h-60 bg-violet-500/10 rounded-full blur-3xl" />
-        
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black text-violet-400 uppercase tracking-wider bg-violet-500/10 px-2.5 py-1 rounded-md border border-violet-500/20">
-                Workspace Identity
-              </span>
-              <span className="flex items-center gap-1 text-[11px] text-gray-500">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Arc Testnet
-              </span>
-            </div>
-            
-            <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-              {isLoadingRead ? (
-                <span className="shimmer inline-block w-48 h-8 rounded" />
-              ) : isRegistered ? (
-                name
-              ) : (
-                'Unverified Workspace'
-              )}
-            </h1>
-
-            <p className="text-xs text-gray-400 flex items-center gap-1.5 truncate max-w-md">
-              <span className="text-gray-500">Owner:</span> 
-              <span className="font-mono text-violet-300/80 bg-white/[0.03] px-2 py-0.5 rounded border border-white/5">{address}</span>
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 self-start sm:self-center">
-            {isRegistered ? (
-              <Link 
-                href="/dashboard/create" 
-                className="btn-primary px-5 py-3 rounded-xl text-xs flex items-center gap-2 shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:scale-105 transition-all"
-              >
-                <PlusCircle className="w-4 h-4" /> New Payment Link
-              </Link>
+      {/* ── COMPACT DASHBOARD HEADER ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-white/5 pb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <h1 className="text-3xl font-black text-white tracking-tight">
+            {isLoadingRead ? (
+              <span className="shimmer inline-block w-48 h-8 rounded" />
+            ) : isRegistered ? (
+              <>
+                {name}
+                <BadgeCheck className="inline-block w-6 h-6 text-emerald-400 ml-2 mb-1" />
+              </>
             ) : (
-              <Link 
-                href="/dashboard/account" 
-                className="px-5 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold flex items-center gap-2 transition-all hover:bg-amber-500/20"
-              >
-                <UserCheck className="w-4 h-4" /> Verify Account Now
-              </Link>
+              <span className="text-gray-500">Anonymous</span>
             )}
-            <button 
-              onClick={() => { refetchMerchant(); window.location.reload(); }} 
-              className="p-3 bg-white/[0.04] hover:bg-white/[0.08] rounded-xl border border-white/5 text-gray-400 hover:text-white transition-all flex items-center justify-center"
-              title="Refresh Protocol State"
+          </h1>
+
+          {!isLoadingRead && !isRegistered && (
+            <Link 
+              href="/dashboard/account"
+              className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-black transition-all"
             >
-              <RefreshCw className={`w-4 h-4 ${isLoadingRead ? 'animate-spin text-violet-400' : ''}`} />
-            </button>
-          </div>
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Register Profile
+            </Link>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+           {isRegistered && (
+             <Link 
+               href="/dashboard/create"
+               className="btn-primary px-6 py-3 rounded-2xl flex items-center gap-2 text-xs font-black shadow-lg shadow-violet-600/20 transition-all hover:-translate-y-0.5 active:scale-95"
+             >
+               <Plus className="w-4 h-4" />
+               <span>New Paylink</span>
+             </Link>
+           )}
+
+           <button 
+             onClick={() => { refetchMerchant(); window.location.reload(); }} 
+             className="p-3 bg-white/[0.04] hover:bg-white/[0.08] rounded-xl border border-white/5 text-gray-400 hover:text-white transition-all flex items-center justify-center h-[46px] w-[46px]"
+             title="Refresh"
+           >
+             <RefreshCw className={`w-4 h-4 ${isLoadingRead ? 'animate-spin text-violet-400' : ''}`} />
+           </button>
         </div>
       </div>
 
-      {/* ── SPANDUK PERINGATAN JIKA BELUM TERVERIFIKASI (SANGAT BERSIH & RAPI) ── */}
-      {!isLoadingRead && !isRegistered && (
-        <div className="glass-panel p-6 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/[0.02] to-transparent flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 shrink-0 mt-0.5">
-              <ShieldAlert className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-amber-200">Account Verification Required</h3>
-              <p className="text-xs text-gray-400 mt-0.5 max-w-xl leading-relaxed">
-                Your store namespace has not been claimed on the Arc L1 Network. To publish automated payment dispatches and unlock zero-gas Meta-transactions, please register your brand profile.
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/dashboard/account"
-            className="btn-primary py-2.5 px-4 text-xs font-bold whitespace-nowrap self-start sm:self-center"
-          >
-            Go to Account Verification →
-          </Link>
-        </div>
-      )}
-
-      {/* ── State Terdaftar / Metrik Operasional (Dirombak Sempurna Sesuai Mockup UI Premium) ── */}
+      {/* ── REGISTERED STATE / OPERATIONAL METRICS (PREMIUM UI) ── */}
       <div className="space-y-6 animate-fade-in">
         
         {/* UPPER PANE: Wadah Tunggal Etalase Payments */}

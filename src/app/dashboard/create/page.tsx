@@ -50,8 +50,8 @@ export default function CreatePaymentPage() {
     query: { enabled: !!address }
   });
 
-  const merchantName = merchantData?.[0] || 'Verified Merchant';
   const isRegistered = merchantData ? merchantData[2] : false;
+  const merchantName = isRegistered ? (merchantData?.[0] || 'Merchant') : 'Anonymous';
 
   // L1 Contract Execution
   const { writeContract, data: txHash, isPending, error: writeError } = useWriteContract();
