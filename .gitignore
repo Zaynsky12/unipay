@@ -46,3 +46,6 @@ next-env.d.ts
 
 # Database
 transactions.json
+
+# Scratch & Temporary
+/scratch/

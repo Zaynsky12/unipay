@@ -53,7 +53,7 @@ export default function LandingPage() {
         </h1>
         
         <p className="max-w-2xl text-lg sm:text-xl text-gray-400 leading-relaxed mb-12 animate-fade-in-up delay-100 px-2">
-          UniPay is the decentralized Stripe of Web3. Intercept multi-chain stablecoin settlements directly into your self-custodial sovereign matrix. Zero private database dependencies.
+          UniPay is the decentralized Stripe of Web3. Intercept multi-chain stablecoin settlements directly into your self-custodial sovereign matrix. Real-time on-chain indexing for absolute transaction transparency.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto animate-fade-in-up delay-200">
@@ -154,7 +154,7 @@ export default function LandingPage() {
             
             <div className="space-y-3 pt-2">
               {[
-                "Zero platform database requirements",
+                "High-performance indexed database (Goldsky)",
                 "Recurring Subscription Autopay Engine",
                 "ERC-2771 Gasless Meta-Transactions",
                 "Instant programmatic cross-chain route detection",

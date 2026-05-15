@@ -26,7 +26,7 @@ export default function HistoryPage() {
   const { address, isConnected } = useAccount();
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
-  const [createdSessions, setCreatedSessions] = useState<any[]>([]);
+
   const [selectedSessionFilter, setSelectedSessionFilter] = useState<string | null>(null);
 
   // Membaca parameter URL kueri '?filter=ID' saat halaman pertama kali dimuat
@@ -40,32 +40,6 @@ export default function HistoryPage() {
     }
   }, []);
 
-  // Sinkronisasi daftar sesi yang aktif (non-deleted) milik merchant dari localStorage
-  useEffect(() => {
-    if (address) {
-      try {
-        // 1. Baca ID sesi yang telah dihapus
-        const deletedKey = `unipay_deleted_sessions`;
-        const existingDeleted = localStorage.getItem(deletedKey);
-        const deletedSet = existingDeleted ? new Set(JSON.parse(existingDeleted)) : new Set();
-
-        // 2. Baca seluruh sesi dari penyimpanan
-        const storageKey = `unipay_sessions_${address.toLowerCase()}`;
-        const existing = localStorage.getItem(storageKey);
-        if (existing) {
-          const allSessions = JSON.parse(existing);
-          // 3. Filter keluar sesi yang memiliki tanda isDeleted atau terdaftar di set penghapusan
-          const activeOnly = allSessions.filter((s: any) => {
-            if (s.isDeleted) return false;
-            if (deletedSet.has(s.id || s.sessionId)) return false;
-            return true;
-          });
-          setCreatedSessions(activeOnly);
-        }
-      } catch (e) {}
-    }
-  }, [address]);
-
   // Membaca identitas pedagang aktif
   const { data: merchantData } = useReadContract({
     address: UNIPAY_REGISTRY_ADDRESS,
@@ -76,6 +50,9 @@ export default function HistoryPage() {
   });
 
   const { history, isLoading: isLoadingLogs, error } = useMerchantHistory(address);
+
+  // Sessions are now managed via the database (history hook)
+  const createdSessions = history?.sessions || [];
 
   // Parse logs from Goldsky history
   const logs = history?.payments || [];

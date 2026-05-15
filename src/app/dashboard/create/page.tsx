@@ -71,25 +71,6 @@ export default function CreatePaymentPage() {
       // Deterministic signature-based subscription setup
       const pseudoId = `subplan_${Date.now()}`;
       setCreatedSessionId(pseudoId);
-      
-      // Save locally to display in active matrices
-      try {
-        const storageKey = `unipay_sessions_${address.toLowerCase()}`;
-        const existing = localStorage.getItem(storageKey);
-        const sessionsArray = existing ? JSON.parse(existing) : [];
-        const newSessionObj = {
-          sessionId: pseudoId,
-          amount: amount,
-          token: selectedToken,
-          description: `Recurring Subscription: ${subInterval} Days Interval`,
-          expiryTimestamp: Math.floor(Date.now() / 1000) + 31536000, // valid 1 year
-          createdAt: Date.now(),
-          isPaid: false,
-          isSubscription: true
-        };
-        localStorage.setItem(storageKey, JSON.stringify([newSessionObj, ...sessionsArray]));
-      } catch(e) {}
-      
       return;
     }
 
@@ -127,29 +108,6 @@ export default function CreatePaymentPage() {
       }
 
       setCreatedSessionId(extractedId);
-
-      if (address && typeof window !== 'undefined') {
-        try {
-          const storageKey = `unipay_sessions_${address.toLowerCase()}`;
-          const existing = localStorage.getItem(storageKey);
-          const sessionsArray = existing ? JSON.parse(existing) : [];
-          
-          if (!sessionsArray.some((s: any) => s.sessionId === extractedId)) {
-            const expiryTimestamp = Math.floor(Date.now() / 1000) + Number(expiryDays) * 86400;
-            const newSessionObj = {
-              sessionId: extractedId,
-              amount: amount || '0.00',
-              token: selectedToken,
-              description: description || `Instant Invoice — ${merchantName}`,
-              expiryTimestamp: expiryTimestamp,
-              createdAt: Date.now(),
-              isPaid: false
-            };
-            
-            localStorage.setItem(storageKey, JSON.stringify([newSessionObj, ...sessionsArray]));
-          }
-        } catch (err) {}
-      }
     }
   }, [isSuccess, txReceipt, txHash, address, amount, selectedToken, description, merchantName, expiryDays]);
 

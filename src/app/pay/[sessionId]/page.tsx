@@ -107,40 +107,9 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   const [customInvoiceMeta, setCustomInvoiceMeta] = useState<{ title: string; description: string; amount: string; token: string } | null>(null);
 
-  // Fungsi penanda pelunasan lokal di localStorage agar seketika berstatus 'Settled' di Dashboard & History
+  // Session settlement verification logic
   const markSessionAsPaidLocally = () => {
-    try {
-      let foundSessionId: string | null = null;
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('unipay_sessions_')) {
-          const val = localStorage.getItem(key);
-          if (val) {
-            let arr = JSON.parse(val);
-            let updated = false;
-            arr = arr.map((s: any) => {
-              const sId = s.sessionId || s.id;
-              if (sId && (
-                  sId.toLowerCase() === rawSessionId.toLowerCase() || 
-                  rawSessionId.toLowerCase().includes(sId.toLowerCase()) || 
-                  sId.toLowerCase().includes(rawSessionId.toLowerCase())
-                )) {
-                updated = true;
-                foundSessionId = sId;
-                return { ...s, isPaid: true, paid: true, isPaidLocally: true, paidAt: Date.now() };
-              }
-              return s;
-            });
-            if (updated) {
-              localStorage.setItem(key, JSON.stringify(arr));
-              break;
-            }
-          }
-        }
-      }
-      // Membicu re-render sinkron di tab dashboard jika terbuka
-      window.dispatchEvent(new Event('storage'));
-    } catch(e) {}
+    // No-op: relying on indexer/on-chain state
   };
 
   const handleGaslessPayment = async () => {
@@ -175,35 +144,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   // Membaca metadata kustom tagihan dari penyimpanan saat dimuat
   useEffect(() => {
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('unipay_sessions_')) {
-          const val = localStorage.getItem(key);
-          if (val) {
-            const arr = JSON.parse(val);
-            const found = arr.find((s: any) => 
-              (s.sessionId && s.sessionId.toLowerCase() === rawSessionId.toLowerCase()) || 
-              (s.id && s.id.toLowerCase() === rawSessionId.toLowerCase()) ||
-              (s.sessionId && rawSessionId.toLowerCase().includes(s.sessionId.toLowerCase())) ||
-              (s.id && rawSessionId.toLowerCase().includes(s.id.toLowerCase()))
-            );
-            if (found) {
-              setCustomInvoiceMeta({
-                title: found.description || found.token || 'Universal Checkout Gateway',
-                description: found.token ? `Payment request for ${found.description || 'order'}` : 'Decentralized multichain point-of-sale settlement',
-                amount: found.amount || '',
-                token: found.token || 'USDC'
-              });
-              if (found.isPaid || found.paid) {
-                setSimulatedLocalSuccess(true);
-              }
-              break;
-            }
-          }
-        }
-      }
-    } catch(e) {}
+    // Relying on on-chain data for meta
   }, [rawSessionId]);
 
   // Memantau keberhasilan persetujuan atau pembayaran onchain
@@ -218,47 +159,8 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   // Memantau secara real-time jika link telah dinonaktifkan/dihapus oleh merchant
   useEffect(() => {
-    const checkDeleted = () => {
-      try {
-        let deleted = false;
-        const deletedKey = `unipay_deleted_sessions`;
-        const existingDeleted = localStorage.getItem(deletedKey);
-        if (existingDeleted) {
-          const deletedArray = JSON.parse(existingDeleted);
-          if (deletedArray.some((id: string) => id.toLowerCase() === rawSessionId.toLowerCase() || rawSessionId.toLowerCase().includes(id.toLowerCase()) || id.toLowerCase().includes(rawSessionId.toLowerCase()))) {
-            deleted = true;
-          }
-        }
-
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('unipay_sessions_')) {
-            const val = localStorage.getItem(key);
-            if (val) {
-              const arr = JSON.parse(val);
-              const found = arr.find((s: any) => 
-                (s.sessionId && s.sessionId.toLowerCase() === rawSessionId.toLowerCase()) || 
-                (s.id && s.id.toLowerCase() === rawSessionId.toLowerCase()) ||
-                (s.sessionId && rawSessionId.toLowerCase().includes(s.sessionId.toLowerCase())) ||
-                (s.id && rawSessionId.toLowerCase().includes(s.id.toLowerCase()))
-              );
-              if (found && found.isDeleted) {
-                deleted = true;
-                break;
-              }
-            }
-          }
-        }
-
-        if (deleted) {
-          setIsLinkDeleted(true);
-        }
-      } catch(e) {}
-    };
-
-    checkDeleted();
-    const interval = setInterval(checkDeleted, 1000);
-    return () => clearInterval(interval);
+    // Status is now managed via on-chain state
+    setIsLinkDeleted(false);
   }, [rawSessionId]);
 
   const isExpired = Number(expiry) > 0 && Math.floor(Date.now() / 1000) > Number(expiry);

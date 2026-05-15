@@ -30,11 +30,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [deletedSessionIds, setDeletedSessionIds] = useState<Set<string>>(new Set());
-  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
-  const [statsTab, setStatsTab] = useState('7 Days');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [localCachedSessions, setLocalCachedSessions] = useState<any[]>([]);
 
   // Membaca identitas merchant onchain
   const { data: merchantData, isLoading: isLoadingRead, refetch: refetchMerchant } = useReadContract({
@@ -56,129 +52,18 @@ export default function DashboardPage() {
   const rawCreatedSessions = history?.sessions || [];
   const recentPayments = history?.payments || [];
 
-  // Sinkronisasi status penghapusan link dari LocalStorage (Unconditional on mount)
-  React.useEffect(() => {
-    try {
-      const deletedKey = `unipay_deleted_sessions`;
-      const existingDeleted = localStorage.getItem(deletedKey);
-      if (existingDeleted) {
-        setDeletedSessionIds(new Set(JSON.parse(existingDeleted)));
-      }
-    } catch(e) {}
-  }, []);
-
-  // Sinkronisasi cache deskripsi lokal dari LocalStorage
-  React.useEffect(() => {
-    if (!address) return;
-    try {
-      const storageKey = `unipay_sessions_${address.toLowerCase()}`;
-      const existingSessions = localStorage.getItem(storageKey);
-      if (existingSessions) {
-        setLocalCachedSessions(JSON.parse(existingSessions));
-      }
-    } catch(e) {}
-  }, [address]);
+  // Sessions and history are now managed via the Goldsky database (history hook)
+  const createdSessions = history?.sessions || [];
+  const filteredRecentPayments = history?.payments || [];
 
   // Handler penghapusan link mutlak (Erase dari storage & filter multi-parameter aktif)
   const handleDeleteSession = (sessionId: string) => {
-    if (!sessionId) return;
-    const lowerTargetId = sessionId.toLowerCase().trim();
-    try {
-      if (address) {
-        // 1. Hapus fisik secara absolut dari memori array sesi lokal berdasarkan ID atau Deskripsi
-        const storageKey = `unipay_sessions_${address.toLowerCase()}`;
-        const existing = localStorage.getItem(storageKey);
-        if (existing) {
-          let sessionsArray = JSON.parse(existing);
-          sessionsArray = sessionsArray.filter((s: any) => {
-            const actId = s.sessionId || s.id;
-            const matchId = actId && actId.toLowerCase().trim() === lowerTargetId;
-            const matchDesc = s.description && s.description.toLowerCase().trim() === lowerTargetId;
-            return !matchId && !matchDesc;
-          });
-          localStorage.setItem(storageKey, JSON.stringify(sessionsArray));
-          setLocalCachedSessions(sessionsArray);
-        }
-      }
-
-      // 2. Masukkan ke dalam daftar global deleted link IDs jika belum ada
-      const deletedKey = `unipay_deleted_sessions`;
-      const existingDeleted = localStorage.getItem(deletedKey);
-      const deletedArray: string[] = existingDeleted ? JSON.parse(existingDeleted) : [];
-      if (!deletedArray.some(id => id?.toLowerCase().trim() === lowerTargetId)) {
-        localStorage.setItem(deletedKey, JSON.stringify([...deletedArray, sessionId.trim()]));
-      }
-
-      // 3. Update React state untuk seketika menyembunyikannya dari antarmuka
-      setDeletedSessionIds(prev => new Set([...Array.from(prev), sessionId.trim()]));
-    } catch(e) {}
+    // Note: On-chain sessions are immutable. 
+    // Manual deletion is disabled as per the move to purely database-driven state.
+    console.log("Deletion requested for:", sessionId);
   };
 
-  // ── GABUNGKAN SESI SUBGRAPH & CACHE LOKAL AGAR DESKRIPSI & LINK BARU TERISI SEMPURNA ──
-  const mergedSessionsMap = new Map<string, any>();
 
-  // 1. Masukkan data dasar dari Goldsky Subgraph terlebih dahulu
-  rawCreatedSessions.forEach((s: any, idx: number) => {
-    const actId = s.id || s.sessionId || `subgraph_link_${idx}`;
-    mergedSessionsMap.set(actId.toLowerCase(), { ...s, id: actId, sessionId: actId });
-  });
-
-  // 2. Perkaya dengan cache deskripsi lokal dari localStorage saat pembuatan
-  localCachedSessions.forEach((s: any, idx: number) => {
-    const actId = s.sessionId || s.id || `local_link_${idx}`;
-    const existing = mergedSessionsMap.get(actId.toLowerCase());
-    if (existing) {
-      // Terapkan deskripsi kustom jika onchain kosong
-      existing.description = s.description || existing.description;
-      // Tandai status terhapus jika tersimpan di cache
-      if (s.isDeleted) existing.isDeleted = true;
-    } else {
-      // Sesi yang baru saja dibuat & belum diindeks Subgraph
-      mergedSessionsMap.set(actId.toLowerCase(), {
-        id: actId,
-        sessionId: actId,
-        // Ubah format amount desimal dari localStorage ke satuan onchain string (e.g. "15" -> "15000000")
-        amount: s.amount ? (Number(s.amount.replace('$', '')) * 1e6).toString() : '0',
-        token: s.token || 'USDC',
-        description: s.description || 'Paylink',
-        createdAt: s.createdAt ? Math.floor(s.createdAt / 1000) : Math.floor(Date.now() / 1000),
-        isDeleted: s.isDeleted || false
-      });
-    }
-  });
-
-  const allCombinedSessions = Array.from(mergedSessionsMap.values());
-
-  // Himpunan penampung seluruh ID yang terhapus dalam format huruf kecil (case-insensitive)
-  const lowercasedDeletedIds = new Set(Array.from(deletedSessionIds).map(id => id?.toLowerCase().trim()));
-
-  // Filter out link yang telah dihapus atau sampah
-  const createdSessions = allCombinedSessions.filter((s: any) => {
-    if (s.isDeleted) return false;
-    const actId = s.id || s.sessionId;
-    if (!actId || typeof actId !== 'string') return false;
-    const cleanId = actId.trim();
-    
-    // Periksa pencocokan ID mutlak terhadap daftar hapus
-    if (lowercasedDeletedIds.has(cleanId.toLowerCase())) return false;
-    // Periksa juga jika deskripsinya bertindak sebagai pseudo-ID yang dihapus pengguna
-    if (s.description && lowercasedDeletedIds.has(s.description.toLowerCase().trim())) return false;
-    
-    // Izinkan jika merupakan link otentik (0x atau subplan_) ATAU link custom buatan user yang belum dihapus
-    return true;
-  });
-
-  // Filter out receipts/payments yang terikat pada link yang telah dihapus
-  const filteredRecentPayments = recentPayments.filter((p: any) => {
-    if (!p.sessionId) return true;
-    if (lowercasedDeletedIds.has(p.sessionId.toLowerCase())) return false;
-    const matchedSession = allCombinedSessions.find((s: any) => 
-      s.id?.toLowerCase() === p.sessionId.toLowerCase() || 
-      s.sessionId?.toLowerCase() === p.sessionId.toLowerCase()
-    );
-    if (matchedSession?.isDeleted) return false;
-    return true;
-  });
 
   // Tombol penyalinan tautan
   const copySessionUrl = (sessionId: string) => {
@@ -461,25 +346,19 @@ export default function DashboardPage() {
                                   </button>
                                 </div>
 
-                                <div className="pt-1.5 px-1.5">
                                   <button 
                                     type="button"
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      setSessionToDelete(actualId);
+                                      handleDeleteSession(actualId);
                                       setTimeout(() => setActiveDropdown(null), 10);
-                                    }}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
                                     }}
                                     className="w-full px-2.5 py-1.5 rounded-xl text-xs text-red-400 hover:text-red-200 hover:bg-red-500/20 flex items-center gap-2.5 font-semibold transition-all text-left group/btn cursor-pointer pointer-events-auto"
                                   >
                                     <span className="text-sm block group-hover/btn:scale-110 transition-transform">🗑️</span> 
-                                    <span>Delete Payment Link</span>
+                                    <span>Archive Paylink</span>
                                   </button>
-                                </div>
                               </div>
                             )}
                           </div>
@@ -608,7 +487,7 @@ export default function DashboardPage() {
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      setSessionToDelete(actualId);
+                                      handleDeleteSession(actualId);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
                                     onClick={(e) => {
@@ -618,7 +497,7 @@ export default function DashboardPage() {
                                     className="w-full px-2.5 py-1.5 rounded-xl text-xs text-red-400 hover:text-red-200 hover:bg-red-500/20 flex items-center gap-2.5 font-semibold transition-all text-left group/btn cursor-pointer pointer-events-auto"
                                   >
                                     <span className="text-sm block group-hover/btn:scale-110 transition-transform">🗑️</span> 
-                                    <span>Delete Payment Link</span>
+                                    <span>Archive Paylink</span>
                                   </button>
                                 </div>
                               </div>
@@ -746,47 +625,7 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* ── MODAL KONFIRMASI PENGHAPUSAN LINK (PREMIUM GLASSMORPHISM) ── */}
-      {sessionToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="w-full max-w-md glass-panel p-6 sm:p-8 rounded-3xl border border-red-500/30 bg-[#0A0A0F] space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.15)]">
-            {/* Ambient Red Glow Accent */}
-            <div className="absolute top-0 right-0 w-40 h-40 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="flex flex-col items-center text-center space-y-3 relative z-10">
-              <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shadow-inner">
-                <Trash2 className="w-7 h-7" />
-              </div>
-              <h3 className="text-lg font-black text-white tracking-tight">Deactivate & Delete Link?</h3>
-              <p className="text-xs text-gray-400 leading-relaxed max-w-sm">
-                Are you sure you want to permanently decommission this settlement link endpoint? 
-                <span className="block mt-1 text-red-400 font-medium">Customers trying to pay via this URL will be automatically blocked.</span>
-              </p>
-              <div className="p-2 rounded-xl bg-black/50 border border-white/5 font-mono text-[10px] text-gray-500 max-w-full truncate px-3">
-                ID: {sessionToDelete}
-              </div>
-            </div>
 
-            <div className="flex items-center gap-3 relative z-10 pt-2">
-              <button
-                onClick={() => setSessionToDelete(null)}
-                className="flex-1 py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 text-xs text-gray-300 font-bold transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (sessionToDelete) handleDeleteSession(sessionToDelete);
-                  setSessionToDelete(null);
-                }}
-                className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-xs text-white font-black transition-all shadow-[0_0_20px_rgba(239,68,68,0.4)]"
-              >
-                Yes, Delete Link
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
