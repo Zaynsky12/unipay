@@ -10,17 +10,14 @@ import {
   BadgeCheck,
   Wallet,
   ArrowRight,
-  User,
   Shield,
-  Activity,
-  ChevronRight
+  Activity
 } from 'lucide-react';
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
 import { formatUnits } from 'viem';
 
 export default function AccountPage() {
   const { address, isConnected } = useAccount();
-  const [activeTab, setActiveTab] = useState<'merchant' | 'account'>('merchant');
   
   // Merchant State
   const [merchantName, setMerchantName] = useState('');
@@ -74,178 +71,121 @@ export default function AccountPage() {
           <Wallet className="w-8 h-8 text-gray-500" />
         </div>
         <h1 className="text-xl font-bold text-white mb-2">Connect Wallet</h1>
-        <p className="text-gray-400 text-xs max-w-[240px]">Please link your wallet to manage your profile.</p>
+        <p className="text-gray-400 text-xs max-w-[240px]">Please link your wallet to view your account.</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 animate-fade-in pb-20">
+    <div className="max-w-2xl mx-auto px-4 py-8 space-y-10 animate-fade-in pb-24">
       
-      {/* Page Header */}
-      <div className="flex items-end justify-between border-b border-white/5 pb-6">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-black text-white tracking-tight">Settings</h1>
-          <p className="text-gray-500 text-xs">Manage your identity and account preferences.</p>
-        </div>
-      </div>
-
-      {/* Tab Switcher */}
-      <div className="flex p-1 bg-white/[0.03] border border-white/5 rounded-2xl gap-1">
-        <button
-          onClick={() => setActiveTab('merchant')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold transition-all ${
-            activeTab === 'merchant' 
-              ? 'bg-violet-600 text-white shadow-lg' 
-              : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
-          }`}
-        >
-          <Building2 className="w-4 h-4" />
-          <span>Merchant Profile</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('account')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold transition-all ${
-            activeTab === 'account' 
-              ? 'bg-violet-600 text-white shadow-lg' 
-              : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
-          }`}
-        >
-          <User className="w-4 h-4" />
-          <span>Account Profile</span>
-        </button>
-      </div>
-
-      {activeTab === 'merchant' ? (
-        <div className="space-y-6 animate-in slide-in-from-left-4 duration-300">
-          {/* Status Card */}
-          <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-2xl ${isRegistered ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                {isRegistered ? <BadgeCheck className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Identity Status</h3>
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black mt-0.5">
-                  {isRegistered ? 'Verified On-Chain' : 'Unregistered Node'}
-                </p>
-              </div>
-            </div>
-            {isRegistered && (
-              <div className="px-3 py-1 bg-white/5 rounded-full text-[10px] text-gray-400 font-mono">
-                {address?.slice(0,6)}...{address?.slice(-4)}
-              </div>
-            )}
-          </div>
-
-          {/* Form */}
-          <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 sm:p-8 shadow-2xl space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Merchant Name</label>
-                <div className="relative group">
-                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-violet-500 transition-colors" />
-                  <input
-                    type="text"
-                    value={merchantName}
-                    onChange={(e) => setMerchantName(e.target.value)}
-                    placeholder="e.g. Acme Corp"
-                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white text-sm font-bold focus:border-violet-500 outline-none transition-all"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Tagline</label>
-                <div className="relative group">
-                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-violet-500 transition-colors" />
-                  <input
-                    type="text"
-                    value={merchantMetadata}
-                    onChange={(e) => setMerchantMetadata(e.target.value)}
-                    placeholder="Short description"
-                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white text-xs font-medium focus:border-violet-500 outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isPending || isTxConfirming || !merchantName}
-                className="w-full py-4 bg-violet-600 hover:bg-violet-500 disabled:bg-white/5 disabled:text-gray-600 text-white text-xs font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] mt-2 shadow-lg shadow-violet-600/10"
-              >
-                {isPending || isTxConfirming ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <span>{isRegistered ? 'Update Profile' : 'Register Now'}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
+      {/* ── SECTION 1: MERCHANT IDENTITY (THE CORE) ── */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+            <Shield className="w-4 h-4 text-violet-400" />
+            Merchant Profile
+          </h2>
+          <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${
+            isRegistered ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+          }`}>
+            {isRegistered ? 'Verified' : 'Unregistered'}
           </div>
         </div>
-      ) : (
-        <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-          {/* Account Metrics */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-5 space-y-1">
-              <div className="p-2 w-fit rounded-lg bg-violet-500/10 text-violet-400 mb-2">
-                <Activity className="w-4 h-4" />
-              </div>
-              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Total Sales</p>
-              <h4 className="text-xl font-black text-white">${formatUnits(totalReceived, 6)}</h4>
-            </div>
-            <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-5 space-y-1">
-              <div className="p-2 w-fit rounded-lg bg-blue-500/10 text-blue-400 mb-2">
-                <Shield className="w-4 h-4" />
-              </div>
-              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Transactions</p>
-              <h4 className="text-xl font-black text-white">{totalTx.toString()}</h4>
-            </div>
-          </div>
 
-          {/* Wallet Section */}
-          <div className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden">
-            <div className="p-5 border-b border-white/5 bg-white/[0.01]">
-              <h3 className="text-sm font-bold text-white">Wallet Connection</h3>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="flex items-center justify-between p-4 bg-black/40 border border-white/5 rounded-2xl">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white shrink-0">
-                    <Wallet className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-white truncate">{address}</p>
-                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-tighter">Active Network: Arc Testnet</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs px-1">
-                  <span className="text-gray-500 font-medium">Currency Display</span>
-                  <span className="text-white font-bold">USD (Stablecoins)</span>
-                </div>
-                <div className="flex items-center justify-between text-xs px-1">
-                  <span className="text-gray-500 font-medium">Auto-Refresh History</span>
-                  <span className="text-emerald-500 font-bold">Enabled</span>
-                </div>
+        <div className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-600/[0.03] to-transparent pointer-events-none" />
+          
+          <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Store Name</label>
+              <div className="relative group/input">
+                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within/input:text-violet-500 transition-colors" />
+                <input
+                  type="text"
+                  value={merchantName}
+                  onChange={(e) => setMerchantName(e.target.value)}
+                  placeholder="Enter your business name"
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white text-sm font-bold focus:border-violet-500 outline-none transition-all"
+                  required
+                />
               </div>
             </div>
-          </div>
 
-          {/* Danger Zone */}
-          <div className="pt-4">
-            <button className="w-full py-4 border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all">
-              Sign Out from Device
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Business Description</label>
+              <div className="relative group/input">
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within/input:text-violet-500 transition-colors" />
+                <input
+                  type="text"
+                  value={merchantMetadata}
+                  onChange={(e) => setMerchantMetadata(e.target.value)}
+                  placeholder="e.g. Premium Digital Services"
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white text-xs font-medium focus:border-violet-500 outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isPending || isTxConfirming || !merchantName}
+              className="w-full py-4 bg-violet-600 hover:bg-violet-500 disabled:bg-white/5 disabled:text-gray-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-xl shadow-violet-600/20"
+            >
+              {isPending || isTxConfirming ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <span>{isRegistered ? 'Update Identity' : 'Register Profile'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
+          </form>
+        </div>
+      </section>
+
+      {/* ── SECTION 2: PERFORMANCE & WALLET ── */}
+      <section className="space-y-6">
+        <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+          <Activity className="w-4 h-4 text-blue-400" />
+          Account Metrics
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 flex flex-col justify-between h-32 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/5 rounded-full -mr-12 -mt-12 blur-xl" />
+            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest relative z-10">Total Volume</p>
+            <h4 className="text-2xl font-black text-white relative z-10">${formatUnits(totalReceived, 6)}</h4>
+          </div>
+          <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 flex flex-col justify-between h-32 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -mr-12 -mt-12 blur-xl" />
+            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest relative z-10">Total Sales</p>
+            <h4 className="text-2xl font-black text-white relative z-10">{totalTx.toString()}</h4>
           </div>
         </div>
-      )}
+
+        <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 space-y-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-600 flex items-center justify-center text-white shrink-0 shadow-lg">
+              <Wallet className="w-6 h-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Connected Wallet</p>
+              <p className="text-xs font-bold text-white truncate font-mono">{address}</p>
+            </div>
+          </div>
+          
+          <div className="pt-4 border-t border-white/5 flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+            <span className="text-gray-500">Network</span>
+            <span className="text-emerald-400">Arc Testnet (Live)</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="pt-6 border-t border-white/5 text-center">
+        <p className="text-[9px] text-gray-600 uppercase tracking-[0.3em] font-medium">UniPay Protocol v1.0 — Arc Network</p>
+      </footer>
 
     </div>
   );

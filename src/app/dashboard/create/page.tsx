@@ -68,9 +68,17 @@ export default function CreatePaymentPage() {
     if (!tokenObj) return;
 
     if (paymentType === 'subscription') {
-      // Deterministic signature-based subscription setup
-      const pseudoId = `subplan_${Date.now()}`;
-      setCreatedSessionId(pseudoId);
+      const amountUnits = parseUnits(amount, tokenObj.decimals);
+      // subInterval is in days (as string)
+      const intervalSec = BigInt(subInterval) * 86400n;
+
+      writeContract({
+        address: UNIPAY_REGISTRY_ADDRESS,
+        abi: REGISTRY_ABI,
+        functionName: 'createSubscription',
+        args: [address, amountUnits, tokenObj.address, intervalSec],
+        gas: 500000n,
+      });
       return;
     }
 

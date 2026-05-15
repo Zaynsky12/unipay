@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatUnits } from 'viem';
 import { 
@@ -89,21 +89,51 @@ export default function DashboardPage() {
   const rawCreatedSessions = history?.sessions || [];
   const recentPayments = history?.payments || [];
 
-  // Merge Goldsky sessions with optimistic localStorage sessions
-  const goldskyActiveSessions = (history?.sessions || []).filter((s: any) => s.active !== false);
-  const optimisticSessions = React.useMemo(() => {
-    if (typeof window === 'undefined') return [];
+  // Memoize goldskyActiveSessions to prevent infinite loop in useEffect
+  const goldskyActiveSessions = useMemo(() => {
+    return (history?.sessions || []).filter((s: any) => s.active !== false);
+  }, [history?.sessions]);
+  
+  // Use a more robust deduplication for optimistic sessions
+  const [optimisticSessions, setOptimisticSessions] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     try {
       const stored = JSON.parse(localStorage.getItem('unipay_optimistic_sessions') || '[]');
-      const goldskyIds = new Set(goldskyActiveSessions.map((s: any) => s.id?.toLowerCase()));
-      // Remove optimistic entries that Goldsky has already indexed
-      const pending = stored.filter((s: any) => !goldskyIds.has(s.id?.toLowerCase()));
-      localStorage.setItem('unipay_optimistic_sessions', JSON.stringify(pending));
-      return pending;
-    } catch { return []; }
-  }, [goldskyActiveSessions]);
+      
+      const goldskyIds = new Set(goldskyActiveSessions.map((s: any) => (s.id || s.sessionId || '').toLowerCase()));
+      
+      // Filter out sessions that are already in Goldsky
+      const pending = stored.filter((s: any) => {
+        const id = (s.id || s.sessionId || '').toLowerCase();
+        return id && !goldskyIds.has(id);
+      });
 
-  const createdSessions = [...goldskyActiveSessions, ...optimisticSessions];
+      // Update state and localStorage ONLY if pending items have changed
+      if (JSON.stringify(pending) !== JSON.stringify(optimisticSessions)) {
+        setOptimisticSessions(pending);
+        if (pending.length !== stored.length) {
+          localStorage.setItem('unipay_optimistic_sessions', JSON.stringify(pending));
+        }
+      }
+    } catch (e) {
+      console.error("Failed to sync optimistic sessions:", e);
+    }
+  }, [goldskyActiveSessions, optimisticSessions]);
+
+  const createdSessions = React.useMemo(() => {
+    const combined = [...optimisticSessions, ...goldskyActiveSessions];
+    // Final safety check: filter unique IDs again
+    const seen = new Set();
+    return combined.filter(s => {
+      const id = (s.id || s.sessionId || '').toLowerCase();
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    }).sort((a: any, b: any) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+  }, [optimisticSessions, goldskyActiveSessions]);
+
   const filteredRecentPayments = history?.payments || [];
 
   // Handler penghapusan link mutlak (Deactivate di Smart Contract)
@@ -167,39 +197,43 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 animate-fade-in pb-12">
       
-      {/* ── COMPACT DASHBOARD HEADER ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-white/5 pb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <h1 className="text-3xl font-black text-white tracking-tight">
-            {isLoadingRead ? (
-              <span className="shimmer inline-block w-48 h-8 rounded" />
-            ) : isRegistered ? (
-              <>
-                {name}
-                <BadgeCheck className="inline-block w-6 h-6 text-emerald-400 ml-2 mb-1" />
-              </>
-            ) : (
-              <span className="text-gray-500">Anonymous</span>
-            )}
-          </h1>
+      {/* ── DASHBOARD HEADER (SLIM MOBILE) ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-40">
+        <div className="flex flex-col gap-1">
+          <p className="text-[8px] font-black text-violet-400 uppercase tracking-[0.3em] ml-1 opacity-70">
+            {isRegistered ? 'Verified Merchant' : 'Merchant Portal'}
+          </p>
+          
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tighter flex items-center gap-2">
+              {isLoadingRead ? (
+                <div className="h-7 w-24 bg-white/5 animate-pulse rounded-lg" />
+              ) : (
+                <>
+                  {isRegistered ? name : 'Anonymous'}
+                  {isRegistered && <BadgeCheck className="w-5 h-5 sm:w-7 sm:h-7 text-emerald-400 shrink-0" />}
+                </>
+              )}
+            </h1>
 
-          {!isLoadingRead && !isRegistered && (
-            <Link 
-              href="/dashboard/account"
-              className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-black transition-all"
-            >
-              <ShieldAlert className="w-3.5 h-3.5" />
-              Register Profile
-            </Link>
-          )}
+            {!isLoadingRead && !isRegistered && (
+              <Link 
+                href="/dashboard/account"
+                className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 text-[8px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-black transition-all shrink-0"
+              >
+                <ShieldAlert className="w-2.5 h-2.5" />
+                Register
+              </Link>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 w-full md:w-auto">
            <Link 
              href="/dashboard/create"
-             className="btn-primary px-6 py-3 rounded-2xl flex items-center gap-2 text-xs font-black shadow-lg shadow-violet-600/20 transition-all hover:-translate-y-0.5 active:scale-95"
+             className="flex-1 md:flex-none btn-primary px-4 py-2.5 sm:px-6 rounded-xl flex items-center justify-center gap-2 text-[10px] sm:text-xs font-black shadow-lg shadow-violet-600/20 transition-all hover:-translate-y-0.5 active:scale-95"
            >
-             <Plus className="w-4 h-4" />
+             <Plus className="w-3.5 h-3.5" />
              <span>New Paylink</span>
            </Link>
 
@@ -211,10 +245,10 @@ export default function DashboardPage() {
                setTimeout(() => setIsRefreshing(false), 600);
              }}
              disabled={isRefreshing}
-             className="p-3 bg-white/[0.04] hover:bg-white/[0.08] rounded-xl border border-white/5 text-gray-400 hover:text-white transition-all flex items-center justify-center h-[46px] w-[46px] disabled:opacity-60"
+             className="p-2.5 bg-white/[0.04] hover:bg-white/[0.08] rounded-xl border border-white/5 text-gray-400 hover:text-white transition-all flex items-center justify-center h-[40px] w-[40px] disabled:opacity-60"
              title="Refresh"
            >
-             <RefreshCw className={`w-4 h-4 transition-all ${isRefreshing ? 'animate-spin text-violet-400' : ''}`} />
+             <RefreshCw className={`w-3.5 h-3.5 transition-all ${isRefreshing ? 'animate-spin text-violet-400' : ''}`} />
            </button>
         </div>
       </div>
@@ -276,7 +310,7 @@ export default function DashboardPage() {
                                 {getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink'}
                               </p>
                               <p className="text-[9px] text-gray-500 truncate">
-                                {resolveTokenSymbol(s.token)} · {isNakedAmt}
+                                {resolveTokenSymbol(s.token)} · Created {s.createdAt ? new Date(Number(s.createdAt) * 1000).toLocaleDateString() : 'recently'}
                               </p>
                             </div>
                           </Link>
