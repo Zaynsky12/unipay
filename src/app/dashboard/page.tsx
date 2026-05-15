@@ -25,8 +25,25 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
+import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
 import { useMerchantHistory } from '@/lib/hooks/useMerchantHistory';
+
+// Helper: translate token address to readable symbol
+function resolveTokenSymbol(tokenAddr: string): string {
+  const addr = tokenAddr?.toLowerCase();
+  if (addr === USDC_ADDRESS.toLowerCase()) return 'USDC';
+  if (addr === EURC_ADDRESS.toLowerCase()) return 'EURC';
+  return 'Payment Link';
+}
+
+// Helper: get saved description from localStorage
+function getSavedDescription(sessionId: string): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    const descs = JSON.parse(localStorage.getItem('unipay_descriptions') || '{}');
+    return descs[sessionId] || '';
+  } catch { return ''; }
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -34,6 +51,7 @@ export default function DashboardPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isDeactivating, setIsDeactivating] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Membaca identitas merchant onchain
   const { data: merchantData, isLoading: isLoadingRead, refetch: refetchMerchant } = useReadContract({
@@ -55,6 +73,8 @@ export default function DashboardPage() {
     if (isDeactivateSuccess) {
       refetchMerchant();
       setIsDeactivating(null);
+      // Auto-refresh history after deletion
+      setTimeout(() => refetchHistory(), 2000);
     }
   }, [isDeactivateSuccess, refetchMerchant]);
 
@@ -65,12 +85,25 @@ export default function DashboardPage() {
   const totalTransactionsRaw = merchantData?.[4] || 0n;
 
   // Goldsky Subgraph hook
-  const { history, isLoading: isLoadingHistory } = useMerchantHistory(address);
+  const { history, isLoading: isLoadingHistory, refetch: refetchHistory } = useMerchantHistory(address);
   const rawCreatedSessions = history?.sessions || [];
   const recentPayments = history?.payments || [];
 
-  // Sessions and history are now managed via the Goldsky database (history hook)
-  const createdSessions = (history?.sessions || []).filter((s: any) => s.active !== false);
+  // Merge Goldsky sessions with optimistic localStorage sessions
+  const goldskyActiveSessions = (history?.sessions || []).filter((s: any) => s.active !== false);
+  const optimisticSessions = React.useMemo(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = JSON.parse(localStorage.getItem('unipay_optimistic_sessions') || '[]');
+      const goldskyIds = new Set(goldskyActiveSessions.map((s: any) => s.id?.toLowerCase()));
+      // Remove optimistic entries that Goldsky has already indexed
+      const pending = stored.filter((s: any) => !goldskyIds.has(s.id?.toLowerCase()));
+      localStorage.setItem('unipay_optimistic_sessions', JSON.stringify(pending));
+      return pending;
+    } catch { return []; }
+  }, [goldskyActiveSessions]);
+
+  const createdSessions = [...goldskyActiveSessions, ...optimisticSessions];
   const filteredRecentPayments = history?.payments || [];
 
   // Handler penghapusan link mutlak (Deactivate di Smart Contract)
@@ -171,17 +204,23 @@ export default function DashboardPage() {
            </Link>
 
            <button 
-             onClick={() => { refetchMerchant(); window.location.reload(); }} 
-             className="p-3 bg-white/[0.04] hover:bg-white/[0.08] rounded-xl border border-white/5 text-gray-400 hover:text-white transition-all flex items-center justify-center h-[46px] w-[46px]"
+             onClick={async () => {
+               setIsRefreshing(true);
+               refetchMerchant();
+               await refetchHistory();
+               setTimeout(() => setIsRefreshing(false), 600);
+             }}
+             disabled={isRefreshing}
+             className="p-3 bg-white/[0.04] hover:bg-white/[0.08] rounded-xl border border-white/5 text-gray-400 hover:text-white transition-all flex items-center justify-center h-[46px] w-[46px] disabled:opacity-60"
              title="Refresh"
            >
-             <RefreshCw className={`w-4 h-4 ${isLoadingRead ? 'animate-spin text-violet-400' : ''}`} />
+             <RefreshCw className={`w-4 h-4 transition-all ${isRefreshing ? 'animate-spin text-violet-400' : ''}`} />
            </button>
         </div>
       </div>
 
-      {/* ── REGISTERED STATE / OPERATIONAL METRICS (PREMIUM UI) ── */}
-      <div className="space-y-6 animate-fade-in">
+      {/* ── OPERATIONAL METRICS ── */}
+      <div className={`space-y-6 animate-fade-in transition-opacity duration-300 ${isRefreshing ? 'opacity-40' : 'opacity-100'}`}>
         
         {/* UPPER PANE: Wadah Tunggal Etalase Payments */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-30">
@@ -234,10 +273,10 @@ export default function DashboardPage() {
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-white truncate group-hover:text-violet-400 transition-colors">
-                                {s.description || s.token || 'Paylink'}
+                                {getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink'}
                               </p>
                               <p className="text-[9px] text-gray-500 truncate">
-                                Deposit collection for {s.description ? s.description.toLowerCase() : 'paylink'}
+                                {resolveTokenSymbol(s.token)} · {isNakedAmt}
                               </p>
                             </div>
                           </Link>
@@ -391,10 +430,10 @@ export default function DashboardPage() {
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-white truncate">
-                                {s.description || s.token || 'Paylink'}
+                                {getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink'}
                               </p>
                               <p className="text-[9px] text-gray-500 truncate">
-                                {s.description ? s.description.toLowerCase() : 'paylink'}
+                                {resolveTokenSymbol(s.token)} · {isNakedAmt}
                               </p>
                             </div>
                           </Link>

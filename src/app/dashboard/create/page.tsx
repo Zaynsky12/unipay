@@ -108,6 +108,30 @@ export default function CreatePaymentPage() {
       }
 
       setCreatedSessionId(extractedId);
+
+      // Save to localStorage for instant optimistic display on dashboard
+      if (extractedId) {
+        try {
+          // Save description
+          const descs = JSON.parse(localStorage.getItem('unipay_descriptions') || '{}');
+          descs[extractedId] = description || `${selectedToken} Payment`;
+          localStorage.setItem('unipay_descriptions', JSON.stringify(descs));
+
+          // Save optimistic session for instant dashboard display
+          const tokenObj = SUPPORTED_TOKENS.find(t => t.symbol === selectedToken);
+          const optimisticSession = {
+            id: extractedId,
+            amount: parseUnits(amount, tokenObj?.decimals || 6).toString(),
+            token: tokenObj?.address || '',
+            paid: false,
+            active: true,
+            createdAt: Math.floor(Date.now() / 1000).toString(),
+          };
+          const sessions = JSON.parse(localStorage.getItem('unipay_optimistic_sessions') || '[]');
+          sessions.push(optimisticSession);
+          localStorage.setItem('unipay_optimistic_sessions', JSON.stringify(sessions));
+        } catch {}
+      }
     }
   }, [isSuccess, txReceipt, txHash, address, amount, selectedToken, description, merchantName, expiryDays]);
 
