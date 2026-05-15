@@ -50,8 +50,26 @@ export function handleMerchantRegistered(event: MerchantRegistered): void {
 }
 
 export function handleSessionCreated(event: SessionCreated): void {
+  let merchantId = event.params.merchant.toHexString()
+  let merchant = Merchant.load(merchantId)
+  
+  if (!merchant) {
+    merchant = new Merchant(merchantId)
+    merchant.name = "Anonymous"
+    merchant.metadata = ""
+    merchant.totalReceived = BigInt.fromI32(0)
+    merchant.totalSessions = BigInt.fromI32(0)
+    merchant.registeredAt = event.block.timestamp
+    merchant.active = true
+    merchant.save()
+
+    let protocol = getOrCreateProtocol()
+    protocol.totalMerchants = protocol.totalMerchants.plus(BigInt.fromI32(1))
+    protocol.save()
+  }
+
   let session = new PaymentSession(event.params.sessionId.toHexString())
-  session.merchant = event.params.merchant.toHexString()
+  session.merchant = merchantId
   session.amount = event.params.amount
   session.token = event.params.token.toHexString()
   session.expiresAt = event.params.expiry
@@ -60,11 +78,8 @@ export function handleSessionCreated(event: SessionCreated): void {
   session.createdAt = event.block.timestamp
   session.save()
 
-  let merchant = Merchant.load(event.params.merchant.toHexString())
-  if (merchant) {
-    merchant.totalSessions = merchant.totalSessions.plus(BigInt.fromI32(1))
-    merchant.save()
-  }
+  merchant.totalSessions = merchant.totalSessions.plus(BigInt.fromI32(1))
+  merchant.save()
 }
 
 export function handleSessionDeactivated(event: SessionDeactivated): void {
