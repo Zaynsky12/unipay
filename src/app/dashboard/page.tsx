@@ -162,15 +162,13 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
-           {isRegistered && (
-             <Link 
-               href="/dashboard/create"
-               className="btn-primary px-6 py-3 rounded-2xl flex items-center gap-2 text-xs font-black shadow-lg shadow-violet-600/20 transition-all hover:-translate-y-0.5 active:scale-95"
-             >
-               <Plus className="w-4 h-4" />
-               <span>New Paylink</span>
-             </Link>
-           )}
+           <Link 
+             href="/dashboard/create"
+             className="btn-primary px-6 py-3 rounded-2xl flex items-center gap-2 text-xs font-black shadow-lg shadow-violet-600/20 transition-all hover:-translate-y-0.5 active:scale-95"
+           >
+             <Plus className="w-4 h-4" />
+             <span>New Paylink</span>
+           </Link>
 
            <button 
              onClick={() => { refetchMerchant(); window.location.reload(); }} 
@@ -477,15 +475,13 @@ export default function DashboardPage() {
                                   <button 
                                     type="button"
                                     disabled={isDeactivating === actualId || isConfirmingDeactivate}
-                                    onPointerDown={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleDeleteSession(actualId);
-                                      setTimeout(() => setActiveDropdown(null), 10);
-                                    }}
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
+                                      if (window.confirm("Are you sure you want to archive this payment link? This action cannot be undone on the blockchain.")) {
+                                        handleDeleteSession(actualId);
+                                      }
+                                      setActiveDropdown(null);
                                     }}
                                     className="w-full px-2.5 py-1.5 rounded-xl text-xs text-red-400 hover:text-red-200 hover:bg-red-500/20 flex items-center gap-2.5 font-semibold transition-all text-left group/btn cursor-pointer pointer-events-auto disabled:opacity-50"
                                   >
