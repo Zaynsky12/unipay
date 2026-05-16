@@ -4,7 +4,7 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "goldsky subgraph deploy unipay/v1"
+    "deploy": "goldsky subgraph deploy unipay/v2"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.68.0",
