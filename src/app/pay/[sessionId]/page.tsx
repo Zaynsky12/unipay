@@ -27,6 +27,15 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   const sessionIdBytes32 = (rawSessionId.startsWith('0x') ? rawSessionId : `0x${rawSessionId}`) as `0x${string}`;
 
   const { address, isConnected } = useAccount();
+  const [urlDesc, setUrlDesc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const desc = params.get('desc');
+      if (desc) setUrlDesc(decodeURIComponent(desc));
+    }
+  }, []);
 
   // 1. Membaca tuple state sesi onchain
   const { data: sessionData, isLoading: isLoadingSession, refetch: refetchSession } = useReadContract({
@@ -77,8 +86,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   // Mode Bypass Uji Coba (Simulated Local Success) jika Testnet token L1 tidak ter-deploy
   const [simulatedLocalSuccess, setSimulatedLocalSuccess] = useState(false);
-  const [activeStep, setActiveStep] = useState<'idle' | 'approving' | 'paying' | 'gasless_paying'>('idle');
-  const [isGasless, setIsGasless] = useState(true);
+  const [activeStep, setActiveStep] = useState<'idle' | 'approving' | 'paying'>('idle');
 
   // Aksi 1: Otorisasi Saldo (Approve)
   const handleApproveToken = () => {
@@ -111,28 +119,6 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   // Session settlement verification logic
   const markSessionAsPaidLocally = () => {
     // No-op: relying on indexer/on-chain state
-  };
-
-  const handleGaslessPayment = async () => {
-    if (!address) return;
-    setActiveStep('gasless_paying');
-    try {
-      // Men-generate pesan terstruktur untuk memunculkan pop-up approval di dompet pengguna (MetaMask/Rabby)
-      const amtStr = customInvoiceMeta?.amount || formattedAmount;
-      const tknStr = customInvoiceMeta?.token || 'USDC';
-      const messageToSign = `UNIPAY SECURE HANDSHAKE\n\nAuthorize Gasless Relayer Settlement\nEndpoint Link: ${rawSessionId}\nPayable Total: ${amtStr} ${tknStr}\nTimestamp: ${new Date().toUTCString()}\n\nSigning validates your Web3 identity to dispatch trustless peer-to-peer liquidity.`;
-      
-      await signMessageAsync({ message: messageToSign });
-      
-      // Jika penandatanganan sukses disetujui di ekstensi dompet
-      markSessionAsPaidLocally();
-      setSimulatedLocalSuccess(true);
-      setActiveStep('idle');
-    } catch (err: any) {
-      // Jika pengguna membatalkan (reject) pop-up persetujuan
-      setActiveStep('idle');
-      console.warn('Wallet signature approval rejected by user:', err);
-    }
   };
 
   // Aksi 3: Simulasi Pelunasan Langsung
@@ -195,7 +181,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
           
           {/* Judul Tagihan Kustom (Invoice Title) */}
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-2 leading-tight">
-            {customInvoiceMeta ? customInvoiceMeta.title : (isLoadingSession ? <span className="shimmer inline-block w-48 h-8 rounded" /> : merchantName)}
+            {urlDesc || (isLoadingSession ? <span className="shimmer inline-block w-48 h-8 rounded" /> : merchantName)}
           </h1>
           
           {/* Deskripsi atau Nama Toko */}
@@ -347,16 +333,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   </span>
                 </div>
 
-                {/* Gasless Sponsored Indicator Badge */}
-                <div className="p-3 rounded-xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-violet-300 font-bold">
-                    <Zap className="w-4 h-4 text-violet-400" />
-                    <span>Sponsored Zero-Gas Settlement</span>
-                  </div>
-                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-mono font-bold border border-emerald-500/20">
-                    Active
-                  </span>
-                </div>
+
 
                 {writeError && (
                   <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 font-medium space-y-2">
@@ -372,42 +349,43 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   </div>
                 )}
 
-                {/* Render Tombol Utama Penyelesaian Pembayaran Khusus (Mendukung Skenario Standar & Gasless Sponsored) */}
+                {/* Render Tombol Utama Penyelesaian Pembayaran (On-chain Real) */}
                 <div className="space-y-3 pt-2">
-                  <button
-                    onClick={handleGaslessPayment}
-                    disabled={isWritePending || isTxConfirming || activeStep === 'gasless_paying'}
-                    className="w-full btn-primary py-4 rounded-2xl flex items-center justify-center gap-2 text-sm font-black shadow-[0_0_30px_rgba(124,58,237,0.3)] hover:shadow-[0_0_40px_rgba(124,58,237,0.5)] transition-all transform hover:-translate-y-0.5 border border-violet-400/30"
-                  >
-                    {isWritePending || isTxConfirming || activeStep === 'gasless_paying' ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin text-white" />
-                        <span>Capturing Settlement Handshake...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4 text-violet-200 fill-violet-200 animate-pulse" />
-                        <span>Pay & Settle Securely (Zero Gas Fee)</span>
-                        <ArrowRight className="w-4 h-4 text-violet-200" />
-                      </>
-                    )}
-                  </button>
-
-                  {!hasSufficientAllowance && (
+                  {!hasSufficientAllowance ? (
                     <button
                       onClick={handleApproveToken}
                       disabled={isWritePending || isTxConfirming || activeStep === 'approving'}
-                      className="w-full py-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-all flex items-center justify-center gap-2.5"
+                      className="w-full btn-primary py-4 rounded-2xl flex items-center justify-center gap-2 text-sm font-black shadow-[0_0_30px_rgba(124,58,237,0.3)] hover:shadow-[0_0_40px_rgba(124,58,237,0.5)] transition-all transform hover:-translate-y-0.5 border border-violet-400/30"
                     >
                       {activeStep === 'approving' ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-violet-400" />
-                          <span>Requesting ERC20 L1 Quota Approval...</span>
+                          <Loader2 className="w-5 h-5 animate-spin text-white" />
+                          <span>Approving USDC...</span>
                         </>
                       ) : (
                         <>
-                          <Coins className="w-3.5 h-3.5 text-violet-400" />
-                          <span>Alternative: Standard Token Approve Handshake</span>
+                          <ShieldCheck className="w-4 h-4 text-violet-200" />
+                          <span>Approve Payment</span>
+                          <ArrowRight className="w-4 h-4 text-violet-200" />
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleExecutePayment}
+                      disabled={isWritePending || isTxConfirming || activeStep === 'paying'}
+                      className="w-full btn-primary py-4 rounded-2xl flex items-center justify-center gap-2 text-sm font-black shadow-[0_0_30_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] transition-all transform hover:-translate-y-0.5 border border-emerald-400/30 !bg-emerald-600 hover:!bg-emerald-500"
+                    >
+                      {activeStep === 'paying' || isTxConfirming ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin text-white" />
+                          <span>Settling on Arc L1...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4 text-white fill-white" />
+                          <span>Pay & Settle Now</span>
+                          <ArrowRight className="w-4 h-4 text-white" />
                         </>
                       )}
                     </button>

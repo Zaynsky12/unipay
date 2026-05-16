@@ -7,12 +7,9 @@ import {
   History as HistoryIcon, 
   ExternalLink, 
   Search, 
-  Layers, 
-  RefreshCw, 
   ArrowLeft,
   CheckCircle2,
   Calendar,
-  Filter,
   ArrowUpRight,
   Coins,
   Loader2,
@@ -28,14 +25,17 @@ export default function HistoryPage() {
   const [showSearchInput, setShowSearchInput] = useState(false);
 
   const [selectedSessionFilter, setSelectedSessionFilter] = useState<string | null>(null);
+  const [selectedSessionName, setSelectedSessionName] = useState<string | null>(null);
 
-  // Membaca parameter URL kueri '?filter=ID' saat halaman pertama kali dimuat
+  // Membaca parameter URL kueri '?filter=ID&name=NAME' saat halaman pertama kali dimuat
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const filterSession = params.get('filter');
+      const filterName = params.get('name');
       if (filterSession) {
         setSelectedSessionFilter(filterSession);
+        setSelectedSessionName(filterName ? decodeURIComponent(filterName) : null);
       }
     }
   }, []);
@@ -74,48 +74,78 @@ export default function HistoryPage() {
     return matchesSearch;
   });
 
-  if (!isConnected) {
-    return (
-      <div className="glass-panel p-8 text-center max-w-md mx-auto mt-12 animate-fade-in shadow-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-600/5 to-transparent pointer-events-none" />
-        <HistoryIcon className="w-10 h-10 text-violet-400 mx-auto mb-4 relative z-10 animate-pulse" />
-        <h2 className="text-xl font-bold text-white mb-2 relative z-10 tracking-tight">Audit Trail Locked</h2>
-        <p className="text-xs text-gray-400 mb-6 relative z-10 leading-relaxed max-w-xs mx-auto">
-          Please connect your Web3 wallet provider to load immutable public order event archives associated with your credentials.
-        </p>
-        
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.02] border border-white/5 text-xs text-violet-300 font-medium relative z-10">
-          <span>Connect via the top right navbar button</span>
-          <ArrowUpRight className="w-3.5 h-3.5 text-violet-400" />
+      {/* ── CONNECTION ALERT BANNER (Only if not connected) ── */}
+      {!isConnected && (
+        <div className="p-6 rounded-3xl bg-violet-600/10 border border-violet-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in shadow-[0_0_40px_rgba(124,58,237,0.1)]">
+          <div className="flex items-center gap-4 text-center sm:text-left">
+            <div className="w-12 h-12 rounded-2xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0 shadow-lg">
+              <HistoryIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-white uppercase tracking-tight">Audit Trail Locked</h3>
+              <p className="text-[11px] text-gray-400 leading-relaxed max-w-sm">
+                Connect your Web3 identity to load immutable public order event archives and verify settlements associated with your address.
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              const kitBtn = document.querySelector('appkit-button');
+              if (kitBtn) (kitBtn as any).click();
+            }}
+            className="px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-black rounded-xl border border-violet-400/30 shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all flex items-center gap-2 group whitespace-nowrap"
+          >
+            Connect Identity
+            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </button>
         </div>
-      </div>
-    );
-  }
+      )}
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-16">
       
-      {/* ── Header Premium bergaya Vercel/Stripe ── */}
-      <div className="flex items-center justify-between gap-3 pb-4 border-b border-white/5">
-        <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-          Transactions
-        </h1>
+      {/* ── Header Premium ── */}
+      <div className="flex items-start justify-between gap-3 pb-4 border-b border-white/5">
+        <div className="flex flex-col gap-1.5">
+          {/* Breadcrumb aktif saat ada filter */}
+          {selectedSessionFilter ? (
+            <>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setSelectedSessionFilter(null); setSelectedSessionName(null); }}
+                  className="text-[10px] font-bold text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1"
+                >
+                  <ArrowLeft className="w-3 h-3" />
+                  All Transactions
+                </button>
+                <span className="text-gray-600 text-[10px]">/</span>
+                <span className="text-[10px] font-bold text-violet-400 truncate max-w-[160px] sm:max-w-xs">
+                  {selectedSessionName || `${selectedSessionFilter?.slice(0, 10)}...${selectedSessionFilter?.slice(-6)}`}
+                </span>
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+                {selectedSessionName || 'Payment History'}
+                <span className="text-xs font-bold text-violet-300 bg-violet-500/10 border border-violet-500/20 px-2.5 py-1 rounded-full">
+                  Filtered
+                </span>
+              </h1>
+              <p className="text-[11px] text-gray-500 font-medium">
+                Showing all buyers for this specific payment link
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                History Transaction
+              </h1>
+              <p className="text-[11px] text-gray-500 font-medium">
+                Incoming settlements to your payment links
+              </p>
+            </>
+          )}
+        </div>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          <button 
-            onClick={() => alert("Outgoing multichain settlement records are synced directly into your target recipient address.")}
-            className="text-[11px] text-violet-400 hover:text-violet-300 font-medium underline transition-colors hidden sm:inline"
-          >
-            Looking for outgoing transactions?
-          </button>
-
-          <button 
-            onClick={() => {}}
-            className="p-1.5 text-gray-400 hover:text-white transition-colors"
-            title="Filter options"
-          >
-            <Filter className="w-4 h-4" />
-          </button>
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 mt-1">
 
           <button 
             onClick={() => setShowSearchInput(!showSearchInput)}
@@ -162,14 +192,15 @@ export default function HistoryPage() {
             <p className="text-sm font-bold text-white tracking-tight">Querying Transactions...</p>
           </div>
         ) : filteredLogs.length === 0 ? (
-          <div className="py-24 text-center space-y-3 bg-[#0D0D11] rounded-3xl border border-white/[0.02]">
-            {/* Premium 3D Metallic Chain Link representation exactly like screenshot */}
-            <div className="relative w-20 h-20 mx-auto mb-5 flex items-center justify-center">
-              <div className="absolute inset-0 bg-violet-600/15 rounded-full blur-xl animate-pulse" />
-              <LinkIcon className="w-12 h-12 text-violet-500 drop-shadow-[0_10px_15px_rgba(124,58,237,0.6)] transform -rotate-45 relative z-10 stroke-[2.5]" />
+          <div className="py-24 text-center space-y-3">
+            <div className="w-16 h-16 mx-auto mb-3 relative flex items-center justify-center">
+              <div className="absolute inset-0 bg-violet-600/10 rounded-full blur-xl animate-pulse" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600/20 via-black to-violet-400/10 border border-violet-500/30 flex items-center justify-center shadow-lg relative z-10 rotate-12">
+                <LinkIcon className="w-5 h-5 text-violet-400 stroke-[2.5]" />
+              </div>
             </div>
-            <h3 className="text-base font-bold text-white tracking-tight">Transactions</h3>
-            <p className="text-xs text-gray-500">No transactions found.</p>
+            <h3 className="text-base font-black text-white tracking-tight">History Transaction</h3>
+            <p className="text-xs text-gray-500 font-semibold">No history transactions found.</p>
           </div>
         ) : (
           <div className="space-y-6 animate-fade-in">

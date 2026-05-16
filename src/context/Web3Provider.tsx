@@ -6,6 +6,7 @@ import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
 import { defineChain } from 'viem';
+import { base, arbitrum, optimism } from 'viem/chains';
 
 // ── Arc Testnet Chain Definition ───────────────────────────────────────────────
 export const arcTestnet = defineChain({
@@ -41,14 +42,14 @@ const metadata = {
 };
 
 const wagmiAdapter = new WagmiAdapter({
-  networks: [arcTestnet],
+  networks: [arcTestnet, base, arbitrum, optimism],
   projectId,
   ssr: true,
 });
 
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: [arcTestnet],
+  networks: [arcTestnet, base, arbitrum, optimism],
   defaultNetwork: arcTestnet,
   projectId,
   metadata,

@@ -21,7 +21,10 @@ import {
   ShieldAlert,
   Trash2,
   BadgeCheck,
-  Plus
+  Plus,
+  Users,
+  Layout,
+  ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -78,8 +81,10 @@ export default function DashboardPage() {
     }
   }, [isDeactivateSuccess, refetchMerchant]);
 
-  const isRegistered = merchantData ? merchantData[2] : false;
-  const name = isRegistered ? (merchantData?.[0] || 'Merchant') : 'Anonymous';
+  const isRegisteredOnchain = merchantData ? merchantData[2] : false;
+  const rawName = isRegisteredOnchain ? (merchantData?.[0] || '') : '';
+  const isRegistered = isRegisteredOnchain && rawName !== '' && rawName !== 'Anonymous';
+  const name = isRegistered ? rawName : 'Anonymous';
   const metadata = merchantData?.[1] || '';
   const totalReceivedRaw = merchantData?.[3] || 0n;
   const totalTransactionsRaw = merchantData?.[4] || 0n;
@@ -158,28 +163,32 @@ export default function DashboardPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Tampilan terkunci saat belum konek dompet
-  if (!isConnected) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 relative">
-        <div className="absolute w-[300px] h-[300px] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
-        
-        <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border border-violet-500/30 flex items-center justify-center mb-6 text-violet-400 relative shadow-[0_0_30px_rgba(124,58,237,0.15)] animate-pulse">
-          <Wallet className="w-8 h-8 relative z-10" />
+      {/* ── CONNECTION ALERT BANNER (Only if not connected) ── */}
+      {!isConnected && (
+        <div className="p-6 rounded-3xl bg-violet-600/10 border border-violet-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in shadow-[0_0_40px_rgba(124,58,237,0.1)]">
+          <div className="flex items-center gap-4 text-center sm:text-left">
+            <div className="w-12 h-12 rounded-2xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0 shadow-lg">
+              <Wallet className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-white uppercase tracking-tight">Wallet Connection Required</h3>
+              <p className="text-[11px] text-gray-400 leading-relaxed max-w-sm">
+                Connect your Web3 identity to access real-time onchain metrics, manage active payment endpoints, and review settlements.
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              const kitBtn = document.querySelector('appkit-button');
+              if (kitBtn) (kitBtn as any).click();
+            }}
+            className="px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-violet-600/20 transition-all flex items-center gap-2 group whitespace-nowrap"
+          >
+            Connect Identity
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </button>
         </div>
-        
-        <h1 className="text-2xl sm:text-3xl font-black text-white mb-2 tracking-tight">Merchant Portal Access</h1>
-        <p className="text-gray-400 max-w-md text-xs sm:text-sm leading-relaxed mb-6">
-          Your decentralized enterprise dashboard state is directly keyed to your Web3 identity.
-        </p>
-
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.02] border border-white/5 text-xs text-violet-300 font-medium">
-          <span>Click the wallet button in the top right navbar</span>
-          <ArrowUpRightIcon className="w-3.5 h-3.5 text-violet-400" />
-        </div>
-      </div>
-    );
-  }
+      )}
 
   // Kalkulasi total murni menggabungkan baseline onchain L1 dengan akumulasi pelunasan sinkronisasi lokal/gasless
   const localRevenueSum = filteredRecentPayments.reduce((sum: number, p: any) => {
@@ -201,7 +210,7 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-40">
         <div className="flex flex-col gap-1">
           <p className="text-[8px] font-black text-violet-400 uppercase tracking-[0.3em] ml-1 opacity-70">
-            {isRegistered ? 'Verified Merchant' : 'Merchant Portal'}
+            {isRegistered ? 'Verified Merchant' : 'Unverified Identity'}
           </p>
           
           <div className="flex items-center gap-3">
@@ -218,7 +227,7 @@ export default function DashboardPage() {
 
             {!isLoadingRead && !isRegistered && (
               <Link 
-                href="/dashboard/account"
+                href="/dashboard/account?tab=Merchant Setting"
                 className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 text-[8px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-black transition-all shrink-0"
               >
                 <ShieldAlert className="w-2.5 h-2.5" />
@@ -298,12 +307,13 @@ export default function DashboardPage() {
                         <div key={actualId || idx} className={`grid grid-cols-12 items-center gap-2 group py-1.5 border-b border-white/[0.02] last:border-0 relative ${activeDropdown === actualId ? 'z-50' : 'z-10'}`}>
                           {/* 1. PAYMENTS */}
                           <Link 
-                            href={`/dashboard/history?filter=${actualId}`}
+                            href={`/pay/${actualId}`}
+                            target="_blank"
                             className="col-span-5 flex items-center gap-3 min-w-0 transition-opacity hover:opacity-80"
-                            title="View specific transaction history for this endpoint"
+                            title="Open Live Payment Link (Checkout Page)"
                           >
                             <div className="w-8 h-8 rounded-xl bg-violet-600 flex items-center justify-center text-white shrink-0 shadow-md group-hover:scale-105 transition-transform">
-                              <LinkIcon className="w-3.5 h-3.5 rotate-45" />
+                              <ExternalLink className="w-3.5 h-3.5" />
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-white truncate group-hover:text-violet-400 transition-colors">
@@ -334,14 +344,16 @@ export default function DashboardPage() {
 
                           {/* 5. MANAGE */}
                           <div className="col-span-1 flex items-center justify-end gap-0.5 relative z-50">
-                            <Link 
-                              href={`/pay/${actualId}`}
-                              target="_blank"
+                            <button 
+                              onClick={() => {
+                                const linkName = getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink';
+                                router.push(`/dashboard/history?filter=${actualId}&name=${encodeURIComponent(linkName)}`);
+                              }}
                               className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-violet-400 transition-all rounded-lg hover:bg-white/[0.05]"
-                              title="Open Live Gateway"
+                              title="View Buyers / History"
                             >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </Link>
+                              <Users className="w-3.5 h-3.5" />
+                            </button>
 
                             <button 
                               type="button"
@@ -374,7 +386,8 @@ export default function DashboardPage() {
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      router.push(`/dashboard/history?filter=${actualId}`);
+                                      const linkName = getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink';
+                                      router.push(`/dashboard/history?filter=${actualId}&name=${encodeURIComponent(linkName)}`);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
                                     onClick={(e) => {
@@ -456,11 +469,12 @@ export default function DashboardPage() {
                         {/* Top Bar: Title & Actions */}
                         <div className="flex items-start justify-between gap-2">
                           <Link 
-                            href={`/dashboard/history?filter=${actualId}`}
+                            href={`/pay/${actualId}`}
+                            target="_blank"
                             className="flex items-center gap-3 min-w-0 transition-opacity hover:opacity-80"
                           >
                             <div className="w-8 h-8 rounded-xl bg-violet-600 flex items-center justify-center text-white shrink-0 shadow-md">
-                              <LinkIcon className="w-3.5 h-3.5 rotate-45" />
+                              <ExternalLink className="w-3.5 h-3.5" />
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-white truncate">
@@ -474,13 +488,15 @@ export default function DashboardPage() {
 
                           {/* Manage Shortcuts */}
                           <div className="flex items-center gap-0.5 shrink-0 relative z-50">
-                            <Link 
-                              href={`/pay/${actualId}`}
-                              target="_blank"
+                            <button 
+                              onClick={() => {
+                                const linkName = getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink';
+                                router.push(`/dashboard/history?filter=${actualId}&name=${encodeURIComponent(linkName)}`);
+                              }}
                               className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-violet-400 transition-all rounded-xl hover:bg-white/[0.05]"
                             >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </Link>
+                              <Users className="w-3.5 h-3.5" />
+                            </button>
 
                             <button 
                               type="button"
@@ -512,7 +528,8 @@ export default function DashboardPage() {
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      router.push(`/dashboard/history?filter=${actualId}`);
+                                      const linkName = getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink';
+                                      router.push(`/dashboard/history?filter=${actualId}&name=${encodeURIComponent(linkName)}`);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
                                     onClick={(e) => {
@@ -604,10 +621,10 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <h3 className="text-base font-black text-white tracking-tight">Transactions</h3>
+          <h3 className="text-base font-black text-white tracking-tight">History Transaction</h3>
 
           {filteredRecentPayments.length === 0 ? (
-            <p className="text-xs text-gray-500 mt-1 font-semibold">No transactions found.</p>
+            <p className="text-xs text-gray-500 mt-1 font-semibold">No history transactions found.</p>
           ) : (
             <div className="mt-6 text-left overflow-x-auto">
               <table className="w-full text-left text-xs">

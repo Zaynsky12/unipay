@@ -145,7 +145,7 @@ export default function CreatePaymentPage() {
 
   const paymentLink = typeof window !== 'undefined' 
     ? (paymentType === 'onetime' 
-        ? `${window.location.origin}/pay/${createdSessionId || 'preview_id'}`
+        ? `${window.location.origin}/pay/${createdSessionId || 'preview_id'}${description ? `?desc=${encodeURIComponent(description)}` : ''}`
         : `${window.location.origin}/subscribe/${address}?amount=${amount || '0'}&interval=${subInterval}&token=${selectedToken}`)
     : `https://unipay.app/${paymentType === 'onetime' ? 'pay/preview_id' : 'subscribe/0x...'}`;
 
@@ -169,23 +169,32 @@ export default function CreatePaymentPage() {
     }
   };
 
-  if (!isConnected) {
-    return (
-      <div className="glass-panel p-8 text-center max-w-md mx-auto mt-12 animate-fade-in shadow-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-600/5 to-transparent pointer-events-none" />
-        <AlertCircle className="w-10 h-10 text-violet-400 mx-auto mb-4 relative z-10 animate-pulse" />
-        <h2 className="text-xl font-bold text-white mb-2 relative z-10 tracking-tight">Endpoint Dispatcher Locked</h2>
-        <p className="text-xs text-gray-400 mb-6 relative z-10 leading-relaxed max-w-xs mx-auto">
-          Please link your Web3 provider account to issue tamper-proof digital payment endpoints.
-        </p>
-        
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.02] border border-white/5 text-xs text-violet-300 font-medium relative z-10">
-          <span>Connect via the top right navbar button</span>
-          <ArrowUpRight className="w-3.5 h-3.5 text-violet-400" />
+      {/* ── CONNECTION ALERT BANNER (Only if not connected) ── */}
+      {!isConnected && (
+        <div className="p-6 rounded-3xl bg-violet-600/10 border border-violet-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in shadow-[0_0_40px_rgba(124,58,237,0.1)]">
+          <div className="flex items-center gap-4 text-center sm:text-left">
+            <div className="w-12 h-12 rounded-2xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0 shadow-lg">
+              <LinkIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-white uppercase tracking-tight">Dispatcher Locked</h3>
+              <p className="text-[11px] text-gray-400 leading-relaxed max-w-sm">
+                Connect your Web3 account to issue tamper-proof digital payment endpoints and generate deterministic billing parameters.
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              const kitBtn = document.querySelector('appkit-button');
+              if (kitBtn) (kitBtn as any).click();
+            }}
+            className="px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-black rounded-xl border border-violet-400/30 shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all flex items-center gap-2 group whitespace-nowrap"
+          >
+            Connect Identity
+            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </button>
         </div>
-      </div>
-    );
-  }
+      )}
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-16">

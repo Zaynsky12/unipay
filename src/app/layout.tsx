@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Orbitron } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
+import { AIFloatingButton } from "@/components/layout/AIFloatingButton";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { Web3Provider } from "@/context/Web3Provider";
 import "./globals.css";
@@ -40,6 +41,7 @@ export default function RootLayout({
           {/* Ambient glow background */}
           <div className="glow-bg" />
           <Navbar />
+          <AIFloatingButton />
           <MainContainer>
             {children}
           </MainContainer>
