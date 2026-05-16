@@ -156,6 +156,7 @@ export default function CreatePaymentPage() {
             id: extractedId,
             amount: parseUnits(amount, tokenObj?.decimals || 6).toString(),
             token: tokenObj?.address || '',
+            description: description || `${selectedToken} Payment`,
             paid: false,
             active: true,
             createdAt: Math.floor(Date.now() / 1000).toString(),

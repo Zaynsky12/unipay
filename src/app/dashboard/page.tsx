@@ -41,12 +41,12 @@ function resolveTokenSymbol(tokenAddr: string): string {
 }
 
 // Helper: get saved description from localStorage
-function getSavedDescription(sessionId: string): string {
-  if (typeof window === 'undefined') return '';
+function getSavedDescription(sessionId: string, fallback?: string): string {
+  if (typeof window === 'undefined') return fallback || '';
   try {
     const descs = JSON.parse(localStorage.getItem('unipay_descriptions') || '{}');
-    return descs[sessionId] || '';
-  } catch { return ''; }
+    return descs[sessionId] || fallback || '';
+  } catch { return fallback || ''; }
 }
 
 export default function DashboardPage() {
@@ -326,7 +326,7 @@ export default function DashboardPage() {
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-white truncate group-hover:text-violet-400 transition-colors">
-                                {getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink'}
+                                {getSavedDescription(actualId, s.description) || resolveTokenSymbol(s.token) + ' Paylink'}
                               </p>
                               <p className="text-[9px] text-gray-500 truncate">
                                 {resolveTokenSymbol(s.token)} · Created {s.createdAt ? new Date(Number(s.createdAt) * 1000).toLocaleDateString() : 'recently'}
@@ -355,7 +355,7 @@ export default function DashboardPage() {
                           <div className="col-span-1 flex items-center justify-end gap-0.5 relative z-50">
                             <button 
                               onClick={() => {
-                                const linkName = getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink';
+                                const linkName = getSavedDescription(actualId, s.description) || resolveTokenSymbol(s.token) + ' Paylink';
                                 router.push(`/dashboard/history?filter=${actualId}&name=${encodeURIComponent(linkName)}`);
                               }}
                               className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-violet-400 transition-all rounded-lg hover:bg-white/[0.05]"
@@ -395,7 +395,7 @@ export default function DashboardPage() {
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      const linkName = getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink';
+                                      const linkName = getSavedDescription(actualId, s.description) || resolveTokenSymbol(s.token) + ' Paylink';
                                       router.push(`/dashboard/history?filter=${actualId}&name=${encodeURIComponent(linkName)}`);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
@@ -487,7 +487,7 @@ export default function DashboardPage() {
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-white truncate">
-                                {getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink'}
+                                {getSavedDescription(actualId, s.description) || resolveTokenSymbol(s.token) + ' Paylink'}
                               </p>
                               <p className="text-[9px] text-gray-500 truncate">
                                 {resolveTokenSymbol(s.token)} · {isNakedAmt}
@@ -499,7 +499,7 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-0.5 shrink-0 relative z-50">
                             <button 
                               onClick={() => {
-                                const linkName = getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink';
+                                const linkName = getSavedDescription(actualId, s.description) || resolveTokenSymbol(s.token) + ' Paylink';
                                 router.push(`/dashboard/history?filter=${actualId}&name=${encodeURIComponent(linkName)}`);
                               }}
                               className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-violet-400 transition-all rounded-xl hover:bg-white/[0.05]"
@@ -537,7 +537,7 @@ export default function DashboardPage() {
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      const linkName = getSavedDescription(actualId) || resolveTokenSymbol(s.token) + ' Paylink';
+                                      const linkName = getSavedDescription(actualId, s.description) || resolveTokenSymbol(s.token) + ' Paylink';
                                       router.push(`/dashboard/history?filter=${actualId}&name=${encodeURIComponent(linkName)}`);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
