@@ -59,6 +59,7 @@ export const GET_MERCHANT_HISTORY = gql`
         id
         amount
         token
+        description
         paid
         active
         createdAt
@@ -93,6 +94,7 @@ export const GET_SESSION = gql`
       }
       amount
       token
+      description
       expiresAt
       paid
       payer
