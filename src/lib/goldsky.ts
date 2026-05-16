@@ -1,6 +1,6 @@
 import { GraphQLClient, gql } from 'graphql-request';
 
-const GOLDSKY_ENDPOINT = process.env.NEXT_PUBLIC_GOLDSKY_URL || 'https://api.goldsky.com/api/public/project_cmp4c9mq1fr6t01y5emhw79h2/subgraphs/unipay/v2/gn';
+const GOLDSKY_ENDPOINT = 'https://api.goldsky.com/api/public/project_cmp4c9mq1fr6t01y5emhw79h2/subgraphs/unipay/v2/gn';
 
 export const goldskyClient = new GraphQLClient(GOLDSKY_ENDPOINT);
 
@@ -59,7 +59,6 @@ export const GET_MERCHANT_HISTORY = gql`
         id
         amount
         token
-        description
         paid
         active
         createdAt
@@ -94,7 +93,6 @@ export const GET_SESSION = gql`
       }
       amount
       token
-      description
       expiresAt
       paid
       payer
