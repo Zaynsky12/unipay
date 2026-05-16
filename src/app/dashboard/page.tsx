@@ -24,7 +24,8 @@ import {
   Plus,
   Users,
   Layout,
-  ArrowRight
+  ArrowRight,
+  Shield
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -164,31 +165,39 @@ export default function DashboardPage() {
   };
 
       {/* ── CONNECTION ALERT BANNER (Only if not connected) ── */}
-      {!isConnected && (
-        <div className="p-6 rounded-3xl bg-violet-600/10 border border-violet-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in shadow-[0_0_40px_rgba(124,58,237,0.1)]">
-          <div className="flex items-center gap-4 text-center sm:text-left">
-            <div className="w-12 h-12 rounded-2xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0 shadow-lg">
-              <Wallet className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-sm font-black text-white uppercase tracking-tight">Wallet Connection Required</h3>
-              <p className="text-[11px] text-gray-400 leading-relaxed max-w-sm">
-                Connect your Web3 identity to access real-time onchain metrics, manage active payment endpoints, and review settlements.
-              </p>
-            </div>
-          </div>
-          <button 
-            onClick={() => {
-              const kitBtn = document.querySelector('appkit-button');
-              if (kitBtn) (kitBtn as any).click();
-            }}
-            className="px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-violet-600/20 transition-all flex items-center gap-2 group whitespace-nowrap"
-          >
-            Connect Identity
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-          </button>
+  if (!isConnected) return (
+    <div className="fixed inset-0 z-[100] bg-[#0A0A0F] flex items-center justify-center p-6 animate-fade-in overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[120px] opacity-60 pointer-events-none" />
+      <div className="absolute bottom-1/3 -right-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] opacity-50 pointer-events-none" />
+      
+      <div className="max-w-md w-full glass-panel p-10 rounded-[3rem] border border-white/5 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
+        <div className="w-20 h-20 bg-violet-600/20 rounded-[2rem] border border-violet-500/30 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-violet-600/10">
+          <Shield className="w-10 h-10 text-violet-400" />
         </div>
-      )}
+        
+        <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-4">Identity Required</h2>
+        <p className="text-sm text-gray-400 leading-relaxed mb-10">
+          To access the UniPay Merchant App, you must connect your Web3 identity. This ensures all your transactions and merchant data remain secure and self-custodial.
+        </p>
+        
+        <button 
+          onClick={() => {
+            const kitBtn = document.querySelector('appkit-button');
+            if (kitBtn) (kitBtn as any).click();
+          }}
+          className="w-full py-4 bg-violet-600 hover:bg-violet-500 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-violet-600/20 transition-all flex items-center justify-center gap-3 group"
+        >
+          <span>Connect Identity</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        <Link href="/" className="inline-block mt-8 text-[10px] font-black text-gray-600 hover:text-gray-400 uppercase tracking-widest transition-colors">
+          &larr; Back to Landing Page
+        </Link>
+      </div>
+    </div>
+  );
 
   // Kalkulasi total murni menggabungkan baseline onchain L1 dengan akumulasi pelunasan sinkronisasi lokal/gasless
   const localRevenueSum = filteredRecentPayments.reduce((sum: number, p: any) => {
