@@ -313,7 +313,7 @@ export default function CreatePaymentPage() {
                 {isPending || isTxConfirming ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Finalizing on L1...</>
                 ) : (
-                  <><Sparkles className="w-4 h-4" /> Deploy Cryptographic Link</>
+                  <><Sparkles className="w-4 h-4" /> Create Paylink</>
                 )}
               </button>
             </form>
@@ -366,7 +366,7 @@ export default function CreatePaymentPage() {
                       target="_blank"
                       className="flex-1 py-3.5 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 transition-all"
                     >
-                      Test Checkout <ExternalLink className="w-3.5 h-3.5" />
+                      Open Paylink <ExternalLink className="w-3.5 h-3.5" />
                     </Link>
                     <Link 
                       href="/dashboard"

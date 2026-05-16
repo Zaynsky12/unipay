@@ -122,13 +122,13 @@ export default function AccountPage() {
       
       {/* ── HEADER & TABS (REVERTED TO UNDERLINE STYLE) ── */}
       <div className="mb-8 sm:mb-10 space-y-6">
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight px-1">Account</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight px-1 italic uppercase text-center sm:text-left">Account <span className="text-violet-500">Center</span></h1>
         <div className="flex items-center gap-8 sm:gap-10 border-b border-white/5 px-2 overflow-x-auto no-scrollbar scroll-smooth">
           {(['Account', 'Merchant Setting', 'Integrations'] as TabType[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative whitespace-nowrap ${
+              className={`pb-4 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all relative flex-1 sm:flex-none text-center sm:text-left whitespace-nowrap ${
                 activeTab === tab ? 'text-violet-400' : 'text-gray-500 hover:text-gray-300'
               }`}
             >
@@ -198,12 +198,6 @@ export default function AccountPage() {
                   <TrendingUp className="w-4 h-4" />
                   Live Performance
                 </div>
-                {merchantWebsite && (
-                  <a href={merchantWebsite} target="_blank" className="text-[9px] font-black text-violet-400 hover:text-violet-300 transition-colors flex items-center gap-1 uppercase tracking-widest truncate max-w-[150px]">
-                    <Globe className="w-3 h-3" />
-                    {merchantWebsite.replace('https://','').replace('http://','')}
-                  </a>
-                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-end">
                 <div className="space-y-4 text-center md:text-left">
@@ -231,9 +225,9 @@ export default function AccountPage() {
 
             {/* LIQUIDITY SECTION */}
             <div className="p-8 sm:p-10 bg-white/[0.01] space-y-6">
-              <div className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                <Globe2 className="w-4 h-4 text-blue-500" />
-                Cross-Chain Liquidity
+              <div className="flex items-center gap-2 text-[10px] font-black text-blue-400 uppercase tracking-widest">
+                <Globe2 className="w-4 h-4" />
+                My Asset
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[

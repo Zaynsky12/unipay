@@ -20,18 +20,13 @@ export function Navbar() {
   const { isConnected, address } = useAccount();
   const { open } = useAppKit();
   
-  // Deteksi apakah pengguna berada di Halaman Awal / Beranda (Landing Page)
   const isLandingPage = pathname === '/';
-
-  // Deteksi apakah pengguna berada di Halaman Pembayaran Mandiri (P2P Checkout)
   const isPaymentPage = pathname.startsWith('/pay/');
 
-  // Fungsi pembantu penanda menu aktif
   const isActive = (href: string) => {
     return pathname === href;
   };
 
-  // Aturan 1: Jika berada di halaman pembayaran (/pay/[sessionId]), sembunyikan seluruh navbar
   if (isPaymentPage) return null;
 
   return (
@@ -40,7 +35,6 @@ export function Navbar() {
       <header className="w-full bg-[#0A0A0F]/80 border-b border-white/5 backdrop-blur-xl fixed top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
-          {/* Sisi Kiri: Logo Premium UniPay */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <div className="w-8 h-8 rounded-xl bg-violet-600 flex items-center justify-center shadow-[0_0_15px_rgba(124,58,237,0.4)]">
               <Eye className="w-4 h-4 text-white" fill="currentColor" />
@@ -50,7 +44,6 @@ export function Navbar() {
             </span>
           </Link>
 
-          {/* Sisi Tengah: Desktop Navigation (Hanya muncul jika BUKAN di Landing Page) */}
           {!isLandingPage && (
             <nav className="hidden md:flex items-center bg-white/[0.03] rounded-full p-1 border border-white/5 gap-1 animate-fade-in">
               {navItems.map((item) => {
@@ -74,7 +67,6 @@ export function Navbar() {
             </nav>
           )}
 
-          {/* Sisi Kanan: Tombol Dompet Kustom Berwarna Ungu (Violet) Premium */}
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => open()}
@@ -91,7 +83,6 @@ export function Navbar() {
         </div>
       </header>
 
-      {/* ── Mobile Bottom Navigation Bar (Hanya muncul jika BUKAN di Landing Page) ── */}
       {!isLandingPage && (
         <div className="md:hidden fixed bottom-0 left-0 w-full bg-[#0A0A0F]/95 backdrop-blur-xl border-t border-white/10 z-50 animate-fade-in">
           <nav className="flex items-center justify-around px-1 py-1.5 max-w-md mx-auto">

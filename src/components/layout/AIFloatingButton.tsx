@@ -76,11 +76,11 @@ export function AIFloatingButton() {
       {/* ── THE BUTTON ── */}
       <button 
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-10 right-10 z-[100] group transition-all duration-500 ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
+        className={`fixed bottom-24 right-6 sm:bottom-12 sm:right-12 z-[100] group transition-all duration-500 ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
       >
         <div className="absolute inset-0 bg-violet-600 rounded-full blur-xl opacity-40 group-hover:opacity-70 group-hover:scale-125 transition-all duration-500 animate-pulse" />
-        <div className="relative w-16 h-16 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-full flex items-center justify-center border border-violet-400/30 shadow-[0_10px_30px_rgba(124,58,237,0.5)] transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-2">
-          <Sparkles className="w-8 h-8 text-white animate-pulse" />
+        <div className="relative w-14 h-14 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-full flex items-center justify-center border border-violet-400/30 shadow-[0_10px_30px_rgba(124,58,237,0.5)] transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-2">
+          <Sparkles className="w-6 h-6 text-white animate-pulse" />
           <div className="absolute right-full mr-4 bg-[#0B0B12] border border-white/10 px-3 py-1.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
             <p className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
               Ask UniPay AI
@@ -91,7 +91,7 @@ export function AIFloatingButton() {
       </button>
 
       {/* ── CHAT MODAL ── */}
-      <div className={`fixed bottom-10 right-10 z-[101] w-full max-w-[400px] transition-all duration-500 origin-bottom-right ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}>
+      <div className={`fixed bottom-24 right-6 sm:bottom-12 sm:right-12 z-[101] w-full max-w-[400px] transition-all duration-500 origin-bottom-right ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}>
         <div className="bg-[#0B0B12] border border-white/10 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.8)] flex flex-col h-[550px] overflow-hidden">
           
           {/* Header */}
