@@ -21,6 +21,7 @@ type PaymentSession @entity {
   active: Boolean!
   payer: String
   paidAt: BigInt
+  description: String
   createdAt: BigInt!
   transaction: Transaction
 }

@@ -56,7 +56,7 @@ contract UniPayRegistry is ERC2771Context {
 
     // Events Logging untuk direfleksikan secara instan oleh Wagmi/Viem Listeners
     event MerchantRegistered(address indexed merchant, string name, string metadata);
-    event SessionCreated(bytes32 indexed sessionId, address indexed merchant, uint256 amount, address token, uint256 expiry);
+    event SessionCreated(bytes32 indexed sessionId, address indexed merchant, uint256 amount, address token, string description, uint256 expiry);
     event SessionDeactivated(bytes32 indexed sessionId);
     event PaymentCompleted(bytes32 indexed sessionId, address indexed merchant, address indexed payer, uint256 amount);
     event SubscriptionCreated(bytes32 indexed subId, address indexed merchant, address indexed subscriber, uint256 amount, uint256 interval);
@@ -120,7 +120,7 @@ contract UniPayRegistry is ERC2771Context {
             isActive: true
         });
 
-        emit SessionCreated(sessionId, _msgSender(), amount, token, expiry);
+        emit SessionCreated(sessionId, _msgSender(), amount, token, description, expiry);
     }
 
     /**

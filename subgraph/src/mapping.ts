@@ -73,6 +73,7 @@ export function handleSessionCreated(event: SessionCreated): void {
   session.amount = event.params.amount
   session.token = event.params.token.toHexString()
   session.expiresAt = event.params.expiry
+  session.description = event.params.description
   session.paid = false
   session.active = true
   session.createdAt = event.block.timestamp
