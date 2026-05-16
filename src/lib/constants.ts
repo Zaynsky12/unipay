@@ -1,6 +1,6 @@
 // ── UniPay Contract Address (UniPayRegistry) ──────────────────────────────────
 // Will be filled automatically after deploy on Arc Testnet
-export const UNIPAY_REGISTRY_ADDRESS = "0xf103ead5fc6917274eb74c1449ac48f564901e84" as `0x${string}`;
+export const UNIPAY_REGISTRY_ADDRESS = "0x6596195d701b6d09e2a9a177f71c8205d4562fb1" as `0x${string}`;
 
 // ── Token Addresses ────────────────────────────────────────────────────────────
 export const USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as `0x${string}`;
