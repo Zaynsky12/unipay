@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, USDC_ADDRESS, ERC20_ABI } from '@/lib/constants';
 import { formatUnits } from 'viem';
+import Link from 'next/link';
 
 type TabType = 'Account' | 'Merchant Setting' | 'Integrations';
 

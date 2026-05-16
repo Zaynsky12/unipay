@@ -14,7 +14,8 @@ import {
   Coins,
   Link as LinkIcon,
   Shield,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
