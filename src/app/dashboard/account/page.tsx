@@ -147,7 +147,7 @@ function AccountContent() {
       
       <div className="mb-8 sm:mb-10 space-y-6">
         <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight px-1 italic uppercase text-center sm:text-left">Account <span className="text-violet-500">Center</span></h1>
-        <div className="flex items-center border-b border-white/5 px-2 overflow-x-auto no-scrollbar scroll-smooth">
+        <div className="flex items-center gap-2 sm:gap-12 border-b border-white/5 px-2 overflow-x-auto no-scrollbar scroll-smooth">
           {(['Account', 'Merchant Setting', 'Integrations'] as TabType[]).map((tab) => (
             <button
               key={tab}
