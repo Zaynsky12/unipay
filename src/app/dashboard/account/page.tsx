@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { 
@@ -32,7 +32,8 @@ import { formatUnits } from 'viem';
 
 type TabType = 'Account' | 'Merchant Setting' | 'Integrations';
 
-export default function AccountPage() {
+// Kita pindahkan logika utama ke komponen internal agar bisa dibungkus Suspense
+function AccountContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') as TabType;
@@ -87,10 +88,10 @@ export default function AccountPage() {
   useEffect(() => { if (isSuccess) refetch(); }, [isSuccess, refetch]);
 
   // Balances
-  const { data: rawArcBalance, isLoading: isLoadingArc } = useReadContract({ address: USDC_ADDRESS as `0x${string}`, abi: ERC20_ABI, functionName: 'balanceOf', args: address ? [address] : undefined, query: { enabled: !!address } });
-  const { data: baseBalance, isLoading: isLoadingBase } = useReadContract({ address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', abi: ERC20_ABI, functionName: 'balanceOf', args: address ? [address] : undefined, chainId: 8453, query: { enabled: !!address } });
-  const { data: arbBalance, isLoading: isLoadingArb } = useReadContract({ address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', abi: ERC20_ABI, functionName: 'balanceOf', args: address ? [address] : undefined, chainId: 42161, query: { enabled: !!address } });
-  const { data: optBalance, isLoading: isLoadingOpt } = useReadContract({ address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', abi: ERC20_ABI, functionName: 'balanceOf', args: address ? [address] : undefined, chainId: 10, query: { enabled: !!address } });
+  const { data: rawArcBalance } = useReadContract({ address: USDC_ADDRESS as `0x${string}`, abi: ERC20_ABI, functionName: 'balanceOf', args: address ? [address] : undefined, query: { enabled: !!address } });
+  const { data: baseBalance } = useReadContract({ address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', abi: ERC20_ABI, functionName: 'balanceOf', args: address ? [address] : undefined, chainId: 8453, query: { enabled: !!address } });
+  const { data: arbBalance } = useReadContract({ address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', abi: ERC20_ABI, functionName: 'balanceOf', args: address ? [address] : undefined, chainId: 42161, query: { enabled: !!address } });
+  const { data: optBalance } = useReadContract({ address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', abi: ERC20_ABI, functionName: 'balanceOf', args: address ? [address] : undefined, chainId: 10, query: { enabled: !!address } });
 
   const formatB = (val: any) => val ? Number(formatUnits(val as bigint, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
 
@@ -120,10 +121,9 @@ export default function AccountPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 animate-fade-in pb-24 font-sans">
       
-      {/* ── HEADER & TABS (REVERTED TO UNDERLINE STYLE) ── */}
       <div className="mb-8 sm:mb-10 space-y-6">
         <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight px-1 italic uppercase text-center sm:text-left">Account <span className="text-violet-500">Center</span></h1>
-        <div className="flex items-center gap-8 sm:gap-10 border-b border-white/5 px-2 overflow-x-auto no-scrollbar scroll-smooth">
+        <div className="flex items-center border-b border-white/5 px-2 overflow-x-auto no-scrollbar scroll-smooth">
           {(['Account', 'Merchant Setting', 'Integrations'] as TabType[]).map((tab) => (
             <button
               key={tab}
@@ -141,13 +141,9 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* ── TAB CONTENT ── */}
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-        
         {activeTab === 'Account' && (
           <div className="bg-[#0B0B12] border border-white/10 rounded-3xl sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
-            
-            {/* CARD HEADER (CENTERED) */}
             <div className="p-10 sm:p-14 flex flex-col items-center text-center border-b border-white/5 space-y-6">
               <div className="relative group">
                 <div className="absolute -inset-4 bg-violet-600/20 rounded-full blur-2xl group-hover:bg-violet-600/30 transition duration-500" />
@@ -164,13 +160,11 @@ export default function AccountPage() {
                 <h1 className="text-3xl font-black text-white uppercase tracking-tighter truncate max-w-[280px] sm:max-w-none">
                   {isRegistered ? currentName : 'Anonymous'}
                 </h1>
-                
                 <div className="flex flex-col items-center gap-2">
                   <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border ${isRegistered ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
                     {isRegistered ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
                     {isRegistered ? 'Verified Merchant' : 'Unverified Identity'}
                   </div>
-                  
                   {isRegistered && (
                     <div className="flex flex-wrap justify-center gap-4 mt-2">
                       {merchantWebsite && (
@@ -191,7 +185,6 @@ export default function AccountPage() {
               </div>
             </div>
 
-            {/* PERFORMANCE SECTION */}
             <div className="p-8 sm:p-10 border-b border-white/5 space-y-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-[10px] font-black text-blue-400 uppercase tracking-widest">
@@ -223,7 +216,6 @@ export default function AccountPage() {
               </div>
             </div>
 
-            {/* LIQUIDITY SECTION */}
             <div className="p-8 sm:p-10 bg-white/[0.01] space-y-6">
               <div className="flex items-center gap-2 text-[10px] font-black text-blue-400 uppercase tracking-widest">
                 <Globe2 className="w-4 h-4" />
@@ -249,7 +241,6 @@ export default function AccountPage() {
           </div>
         )}
 
-        {/* TAB 2: MERCHANT SETTING */}
         {activeTab === 'Merchant Setting' && (
           <div className="bg-[#0B0B12] border border-white/10 rounded-3xl sm:rounded-[2.5rem] p-8 sm:p-12 space-y-10">
             <div className="flex items-center gap-4 mb-4">
@@ -258,7 +249,7 @@ export default function AccountPage() {
               </div>
               <div>
                 <h2 className="text-xl font-black text-white uppercase tracking-tight">Merchant Identity</h2>
-                <p className="text-gray-500 text-xs uppercase tracking-widest leading-relaxed">Setup your business identity on-chain to start accepting custom branded payments.</p>
+                <p className="text-gray-500 text-xs uppercase tracking-widest leading-relaxed">Setup your business identity on-chain.</p>
               </div>
             </div>
 
@@ -266,31 +257,19 @@ export default function AccountPage() {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Brand Name</label>
-                    <div className="relative group">
-                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-violet-500 transition-colors" />
-                      <input type="text" value={merchantName} onChange={(e) => setMerchantName(e.target.value)} placeholder="Acme Corp" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white text-sm font-bold focus:border-violet-500 outline-none transition-all" required />
-                    </div>
+                    <input type="text" value={merchantName} onChange={(e) => setMerchantName(e.target.value)} placeholder="Acme Corp" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none" required />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Business Email</label>
-                    <div className="relative group">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-violet-500 transition-colors" />
-                      <input type="email" value={merchantEmail} onChange={(e) => setMerchantEmail(e.target.value)} placeholder="contact@brand.com" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white text-sm font-bold focus:border-violet-500 outline-none transition-all" />
-                    </div>
+                    <input type="email" value={merchantEmail} onChange={(e) => setMerchantEmail(e.target.value)} placeholder="contact@brand.com" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Official Website</label>
-                    <div className="relative group">
-                      <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-violet-500 transition-colors" />
-                      <input type="url" value={merchantWebsite} onChange={(e) => setMerchantWebsite(e.target.value)} placeholder="https://brand.com" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white text-sm font-bold focus:border-violet-500 outline-none transition-all" />
-                    </div>
+                    <input type="url" value={merchantWebsite} onChange={(e) => setMerchantWebsite(e.target.value)} placeholder="https://brand.com" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Logo URL</label>
-                    <div className="relative group">
-                      <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-violet-500 transition-colors" />
-                      <input type="text" value={merchantLogo} onChange={(e) => setMerchantLogo(e.target.value)} placeholder="https://brand.com/logo.png" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white text-sm font-bold focus:border-violet-500 outline-none transition-all" />
-                    </div>
+                    <input type="text" value={merchantLogo} onChange={(e) => setMerchantLogo(e.target.value)} placeholder="https://brand.com/logo.png" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none" />
                   </div>
                </div>
                <div className="pt-4 flex flex-col sm:flex-row gap-4">
@@ -303,16 +282,27 @@ export default function AccountPage() {
           </div>
         )}
 
-        {/* TAB 3: INTEGRATIONS */}
         {activeTab === 'Integrations' && (
           <div className="bg-[#0B0B12] border border-white/10 rounded-3xl py-16 text-center space-y-4 px-6">
             <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/5 text-gray-600"><Puzzle className="w-8 h-8" /></div>
-            <h2 className="text-lg font-black text-white uppercase tracking-tight">Integrations Coming Soon</h2>
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Connect UniPay to your existing store with our API.</p>
+            <h2 className="text-lg font-black text-white uppercase tracking-tight">Coming Soon</h2>
           </div>
         )}
-
       </div>
     </div>
+  );
+}
+
+// Default export yang dibungkus Suspense agar build Vercel aman
+export default function AccountPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-8 h-8 text-violet-600 animate-spin" />
+        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Loading Account Center...</p>
+      </div>
+    }>
+      <AccountContent />
+    </Suspense>
   );
 }
