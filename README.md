@@ -1,112 +1,49 @@
-# UniPay — Decentralized Checkout Protocol 🌐💳
+# UniPay Protocol 🟣
 
-> **Stripe-grade Payment Experience Built Natively for Web3.**  
-> Accept static or dynamic settlements in **USDC / EURC** from any EVM network, bridge natively to the **Arc Network L1**, and settle directly into your merchant wallet in **&lt; 1 second**.
+**UniPay** is a premium, stateless payment protocol built on the **Arc Network**, designed to provide seamless, non-custodial billing solutions for the modern decentralized web.
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
-[![Solidity](https://img.shields.io/badge/Solidity-%5E0.8.20-363636?style=flat-square&logo=solidity)](https://soliditylang.org)
-[![Arc Network](https://img.shields.io/badge/L1%20Chain-Arc%20Testnet-7C3AED?style=flat-square)](https://arc.network)
+![UniPay Banner](https://unipay.app/banner.png)
 
----
+## 🚀 Key Features
 
-## ⚡ System Architecture & Protocol Mechanics
+- **Stateless Payment Dispatch**: Funds go directly from the buyer to the merchant's wallet. UniPay never holds your assets.
+- **On-chain Merchant Identity**: Verify your brand via the UniPay Registry. Set up your brand logo, name, and contact info directly on the blockchain.
+- **Smart Paylinks**: Generate deterministic billing endpoints for one-time invoices with custom descriptions and expiry.
+- **Recurring Subscriptions**: Set up recurring billing cycles for your services with ease.
+- **AI-Powered Assistant**: Integrated intelligent guide powered by Google Gemini to help users navigate the protocol and resolve issues.
+- **Multi-chain Readiness**: Built for Arc L1 with future-ready support for Base, Arbitrum, and Optimism.
 
-UniPay operates entirely **without backend servers or centralized proprietary databases**.  
-The core verification state machine is a highly optimized, un-upgradable Solidity smart contract (`UniPayRegistry`) deployed natively on the Arc Network blockchain.
+## 🛠 Tech Stack
 
-### 🏛️ High-Level Component Flow Diagram
+- **Frontend**: Next.js 15 (App Router), TailwindCSS, Lucide Icons.
+- **Blockchain Interface**: Wagmi, Viem, Reown AppKit.
+- **Smart Contracts**: Solidity (UniPayRegistry deployed on Arc Network).
+- **Intelligence**: Google Gemini Flash 1.5.
 
-```mermaid
-graph TD
-    %% Entities
-    Buyer["Payer / Buyer (Arbitrum, Base, Ethereum L2s)"]
-    AppKit["Circle Arc AppKit (Unified Cross-Chain Router)"]
-    Registry["UniPayRegistry.sol (Stateless Dispatcher on Arc L1)"]
-    Merchant["Merchant Sovereign Wallet (Self-Custody L1 Target)"]
-    Indexer["Goldsky Subgraph Indexer (Real-time P2P Indexer)"]
-    Storage["Client Memory Engine (Hybrid UI Sync)"]
+## 📦 Installation
 
-    %% Process Flow
-    Merchant -->|"1. registerMerchant() / createSession()"| Registry
-    Buyer -->|"2. Initiates Checkout URL / Widget"| AppKit
-    AppKit -->|"3. Detects Liquidity & Auto-bridges Assets"| Registry
-    Buyer -->|"4. Invokes EVM pay(sessionId)"| Registry
-    Registry -->|"5. Executes P2P stablecoin transferFrom()"| Merchant
-    Registry -->|"6. Emits Event Logs"| Indexer
-    Indexer -->|"7. GraphQL Subgraph Response"| Storage
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Zaynsky12/unipay.git
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up your environment variables in `.env.local`:
+   ```env
+   NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
+   NEXT_PUBLIC_GOLDSKY_URL=your_subgraph_url
+   ```
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-### ⚙️ Protocol Architecture Lifecycle
+## 🔐 Security & Non-Custodial
 
-1. **Stateless Immutable Execution**:
-   - Zero centralized database footprint. Commercial state variables (`merchants` profiles and `sessions` lifecycle structs) reside entirely within contract L1 memory slots.
-2. **Deterministic Hash Invoicing**:
-   - Bill payloads generate unique session keys derived securely via `keccak256` hashing of target amounts, dynamic tokens, descriptions, and strict expiry interval integers.
-3. **Unified Liquidity & Cross-Chain Routing**:
-   - Integrated over native **Circle Arc AppKit** channels, allowing seamless user stablecoin abstraction. Buyers hold assets on any standard Layer-2, while payments flow seamlessly to settle directly into the Arc L1 base architecture.
-4. **Sub-second P2P Handshake**:
-   - Orders trigger trustless atomic dispatch execution (`pay()`). Funds are deducted and wired directly to the destination merchant self-custodial wallet instantly without platform fees or withholding accounts.
-5. **Hybrid Client-State Synchronization Engine**:
-   - Next.js dashboards track L1 socket updates (`useWatchContractEvent`) coupled with an optimized local persistent layer (`localStorage`) to guarantee blazing-fast web-grade responsiveness while maintaining absolute cryptographical verification.
-
-### 🛡️ Key Platform Modules:
-1. **Merchant Command Center (`/dashboard`)**:
-   - Self-custodial namespace deployment with auto-refreshing real-time ledger verification logs.
-2. **Dynamic Invoicing Generator (`/dashboard/create`)**:
-   - Publish tamper-proof payment specification links mapped directly with custom expiry lifecycles.
-3. **Decentralized Audit Archives (`/dashboard/history`)**:
-   - Interrogates EVM historical RPC nodes (`eth_getLogs`) to form tamper-evident accounting tables.
-4. **Public Registry Explorer (`/explorer`)**:
-   - Query decentralized commercial state mapping active validation statuses.
-5. **Universal Embedded Widget (`public/widget.js`)**:
-   - Drop-in standalone Web Component (`<unipay-checkout>`) enabling zero-dependency multi-chain embedded frames inside external ecosystems (WordPress, React, Vanilla Web).
+UniPay is designed with a **stateless architecture**. When a session is paid, the protocol executes a direct transfer of assets. Merchants maintain 100% control over their funds at all times. All merchant metadata is stored on-chain via the `UniPayRegistry` contract.
 
 ---
 
-## 🛠️ Technology Stack
-- **Frontend Framework**: Next.js 14 (App Router) + TypeScript
-- **Styling Engine**: Tailwind CSS + Premium Custom Glassmorphism UI
-- **Web3 Adapters**: Wagmi v2 + Viem v2 + Reown AppKit Cross-chain Modals
-- **Smart Contract Interface**: Solidity (EVM Bytecode Compliant)
-- **Target L1 Node**: Arc Testnet (`Chain ID: 5042002`, `RPC: https://rpc.testnet.arc.network`)
-
----
-
-## 📦 Local Deployment & Verification
-
-### 1. Environment Setup
-Create a `.env` file at root level mapping your explicit environment keys:
-```env
-NEXT_PUBLIC_REOWN_PROJECT_ID="YOUR_REOWN_PROJECT_ID"
-DEPLOYER_PRIVATE_KEY="0xYOUR_TESTNET_PRIVATE_KEY"
-```
-
-### 2. Auto-Deploying Smart Contract
-Execute our smart pre-compiled Node.js script to push your state machine directly to the Arc Testnet:
-```bash
-node scripts/deploy.mjs
-```
-*Note: Upon block confirmation, the script will automatically harvest the resultant permanent contract address and inject it safely into your `src/lib/constants.ts` file.*
-
-### 3. Launching Development Server
-Start hot-reloading development instances locally:
-```bash
-npm install
-npm run dev
-```
-Navigate to `http://localhost:3000` to review rich aesthetic landing sequences.
-
----
-
-## 🛡️ Production Compliance
-This application strictly adheres to production validation parameters. Running compilation audits guarantees clean execution traces:
-```bash
-npm run build
-```
-Resultant output routes guarantee highly optimized static server pre-rendering configurations mixed with fast dynamic routes.
-
----
-
-## 📄 License
-Distributed under the **MIT License**. Immutably accessible globally.
+*Built for the future of decentralized settlements on Arc Network.*

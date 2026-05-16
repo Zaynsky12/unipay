@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, use } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSignMessage } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatUnits } from 'viem';
 import { 
   ShieldCheck, 
@@ -9,13 +9,13 @@ import {
   Loader2, 
   AlertCircle, 
   ExternalLink, 
-  Coins, 
   Lock,
-  ArrowRight,
-  RefreshCw,
   Wallet,
   Check,
-  Zap
+  Zap,
+  Globe,
+  Mail,
+  UserCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
@@ -45,29 +45,53 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
     args: [sessionIdBytes32],
   });
 
-  const merchantAddr = sessionData?.[0] || '0x0000000000000000000000000000000000000000';
-  const amountRaw = sessionData?.[1] || 0n;
-  const tokenAddr = sessionData?.[2] || '';
-  const expiry = sessionData?.[3] || 0n;
-  const isPaid = sessionData?.[4] || false;
-  const isActiveOnchain = sessionData?.[5] ?? true;
+  const merchantAddr = (sessionData as any)?.[0] || '0x0000000000000000000000000000000000000000';
+  const amountRaw = (sessionData as any)?.[1] || 0n;
+  const tokenAddr = (sessionData as any)?.[2] || '';
+  const expiry = (sessionData as any)?.[3] || 0n;
+  const isPaid = (sessionData as any)?.[4] || false;
+  const isActiveOnchain = (sessionData as any)?.[5] ?? true;
 
   // 2. Membaca profil bisnis merchant
-  const { data: merchantData } = useReadContract({
+  const { data: merchantData, refetch: refetchMerchant } = useReadContract({
     address: UNIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
-    args: merchantAddr && merchantAddr !== '0x0000000000000000000000000000000000000000' ? [merchantAddr] : undefined,
-    query: { enabled: !!merchantAddr }
+    args: merchantAddr !== '0x0000000000000000000000000000000000000000' ? [merchantAddr] : undefined,
+    query: { enabled: merchantAddr !== '0x0000000000000000000000000000000000000000' }
   });
 
-  const merchantName = merchantData?.[0] || 'Verified Sovereign Merchant';
-  const merchantMetadata = merchantData?.[1] || 'Decentralized Multi-chain Link';
+  useEffect(() => {
+    if (merchantAddr !== '0x0000000000000000000000000000000000000000') {
+      refetchMerchant();
+    }
+  }, [merchantAddr, refetchMerchant]);
+
+  const rawMerchantName = (merchantData as any)?.[0] || '';
+  const rawMerchantMetadata = (merchantData as any)?.[1] || '';
+  const isRegisteredOnchain = (merchantData as any)?.[2] || false;
+  
+  let merchantLogo = '';
+  let merchantWebsite = '';
+  let merchantEmail = '';
+  
+  const displayName = (rawMerchantName && rawMerchantName !== 'Anonymous') 
+    ? rawMerchantName 
+    : `${merchantAddr.slice(0, 6)}...${merchantAddr.slice(-4)}`;
+
+  if (rawMerchantMetadata && rawMerchantMetadata.includes('{')) {
+    try {
+      const cleanJson = rawMerchantMetadata.substring(rawMerchantMetadata.indexOf('{'));
+      const meta = JSON.parse(cleanJson);
+      merchantLogo = meta.logo || '';
+      merchantWebsite = meta.website || '';
+      merchantEmail = meta.email || '';
+    } catch (e) { console.error("Metadata parse error", e); }
+  }
 
   const matchedToken = SUPPORTED_TOKENS.find(t => t.address.toLowerCase() === tokenAddr?.toLowerCase()) || SUPPORTED_TOKENS[0];
   const formattedAmount = formatUnits(amountRaw, matchedToken.decimals);
 
-  // 3. Membaca Allowance ERC20 pembeli ke alamat UniPay Registry
   const { data: currentAllowance, refetch: refetchAllowance } = useReadContract({
     address: tokenAddr as `0x${string}`,
     abi: ERC20_ABI,
@@ -76,355 +100,212 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
     query: { enabled: !!address && !!tokenAddr && tokenAddr !== '0x0000000000000000000000000000000000000000' }
   });
 
-  const allowanceVal = currentAllowance ?? 0n;
+  const allowanceVal = (currentAllowance as bigint) ?? 0n;
   const hasSufficientAllowance = allowanceVal >= amountRaw;
 
-  // Hooks Penulisan Eksekusi Onchain & Penandatanganan Pesan
-  const { writeContract, data: txHash, isPending: isWritePending, error: writeError } = useWriteContract();
+  const { writeContract, data: txHash, isPending: isWritePending } = useWriteContract();
   const { isLoading: isTxConfirming, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({ hash: txHash });
-  const { signMessageAsync } = useSignMessage();
 
-  // Mode Bypass Uji Coba (Simulated Local Success) jika Testnet token L1 tidak ter-deploy
-  const [simulatedLocalSuccess, setSimulatedLocalSuccess] = useState(false);
   const [activeStep, setActiveStep] = useState<'idle' | 'approving' | 'paying'>('idle');
 
-  // Aksi 1: Otorisasi Saldo (Approve)
   const handleApproveToken = () => {
     if (!tokenAddr || !address) return;
     setActiveStep('approving');
-    writeContract({
-      address: tokenAddr as `0x${string}`,
-      abi: ERC20_ABI,
-      functionName: 'approve',
-      args: [UNIPAY_REGISTRY_ADDRESS, amountRaw],
-      gas: 100000n, // Batas gas pengamanan standar
-    });
+    writeContract({ address: tokenAddr as `0x${string}`, abi: ERC20_ABI, functionName: 'approve', args: [UNIPAY_REGISTRY_ADDRESS, amountRaw], gas: 100000n });
   };
 
-  // Aksi 2: Penyelesaian Akhir (Pay)
   const handleExecutePayment = () => {
     if (!address) return;
     setActiveStep('paying');
-    writeContract({
-      address: UNIPAY_REGISTRY_ADDRESS,
-      abi: REGISTRY_ABI,
-      functionName: 'pay',
-      args: [sessionIdBytes32],
-      gas: 500000n, // Kuota gas super longgar untuk mengamankan eksekusi transferFrom internal
-    });
+    writeContract({ address: UNIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'pay', args: [sessionIdBytes32], gas: 500000n });
   };
 
-  const [customInvoiceMeta, setCustomInvoiceMeta] = useState<{ title: string; description: string; amount: string; token: string } | null>(null);
-
-  // Session settlement verification logic
-  const markSessionAsPaidLocally = () => {
-    // No-op: relying on indexer/on-chain state
-  };
-
-  // Aksi 3: Simulasi Pelunasan Langsung
-  const handleSimulatedBypass = () => {
-    markSessionAsPaidLocally();
-    setSimulatedLocalSuccess(true);
-  };
-
-  const [isLinkDeleted, setIsLinkDeleted] = useState(false);
-
-  // Membaca metadata kustom tagihan dari penyimpanan saat dimuat
-  useEffect(() => {
-    // Relying on on-chain data for meta
-  }, [rawSessionId]);
-
-  // Memantau keberhasilan persetujuan atau pembayaran onchain
   useEffect(() => {
     if (isTxSuccess) {
-      markSessionAsPaidLocally();
       refetchAllowance();
       refetchSession();
       setActiveStep('idle');
     }
   }, [isTxSuccess, refetchAllowance, refetchSession]);
 
-  // Memantau secara real-time jika link telah dinonaktifkan/dihapus oleh merchant
-  useEffect(() => {
-    // Status is now managed via on-chain state
-    setIsLinkDeleted(false);
-  }, [rawSessionId]);
+  const isExpired = expiry > 0n && BigInt(Math.floor(Date.now() / 1000)) > expiry;
 
-  const isExpired = Number(expiry) > 0 && Math.floor(Date.now() / 1000) > Number(expiry);
-  const isPreviewState = rawSessionId.includes('preview');
-  const showPaidState = isPaid || simulatedLocalSuccess;
-  const isActuallyDisabled = !isActiveOnchain && !isPreviewState;
+  if (isLoadingSession) return (
+    <div className="min-h-screen bg-[#050508] flex items-center justify-center">
+      <Loader2 className="w-10 h-10 text-violet-600 animate-spin" />
+    </div>
+  );
+
+  if (!isActiveOnchain && !isPaid) return (
+    <div className="min-h-screen bg-[#050508] flex items-center justify-center p-6 text-center">
+      <div className="max-w-md w-full glass-panel p-10 space-y-6">
+        <AlertCircle className="w-16 h-16 text-red-500 mx-auto opacity-50" />
+        <h2 className="text-xl font-black text-white uppercase tracking-tight">Paylink Deactivated</h2>
+        <p className="text-gray-500 text-sm italic">This payment link is no longer valid.</p>
+        <Link href="/" className="block py-4 text-xs font-black text-violet-400 uppercase tracking-widest border border-violet-500/20 rounded-2xl">Return Home</Link>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#0A0A0F] relative overflow-hidden animate-fade-in">
+    <div className="min-h-screen bg-[#050508] selection:bg-violet-500/30 font-sans">
       
-      {/* Latar Belakang Lingkungan */}
-      <div className="absolute top-1/4 -left-1/4 w-[400px] h-[400px] bg-violet-600/15 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-1/4 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
-
-      {/* Identitas Protokol Atas */}
-      <div className="absolute top-6 left-6 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-xs font-black text-white shadow-[0_0_15px_rgba(124,58,237,0.3)]">
-          U
-        </div>
-        <span className="text-xs font-black tracking-tight text-white/80">UniPay Universal Gateway</span>
+      {/* ── Background Glow ── */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-violet-600/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[120px]" />
       </div>
 
-      <div className="w-full max-w-md glass-panel p-6 sm:p-8 relative z-10 shadow-2xl space-y-6 rounded-3xl border border-white/5">
+      <div className="relative z-10 max-w-xl mx-auto px-4 py-8 sm:py-16">
         
-        {/* ── Header Merek Pedagang ── */}
-        {/* ── Header Merek Pedagang & Judul Tagihan Asli ── */}
-        <div className="text-center space-y-3 pb-5 border-b border-white/5 relative">
-          <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-violet-500/10 to-indigo-500/10 text-violet-300 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-violet-500/20 shadow-inner">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Trustless P2P Target Secure Link
-          </div>
+        {/* ── BILLING CARD (Everything Integrated) ── */}
+        <div className="glass-panel rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl relative animate-fade-in-up bg-black/40 backdrop-blur-3xl">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 via-blue-500 to-violet-600 animate-shimmer" />
           
-          {/* Judul Tagihan Kustom (Invoice Title) */}
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-2 leading-tight">
-            {urlDesc || (isLoadingSession ? <span className="shimmer inline-block w-48 h-8 rounded" /> : merchantName)}
-          </h1>
-          
-          {/* Deskripsi atau Nama Toko */}
-          <p className="text-xs text-gray-400 font-medium max-w-sm mx-auto">
-            {customInvoiceMeta ? customInvoiceMeta.description : `"${merchantMetadata}"`}
-          </p>
-
-          <div className="pt-1">
-            <span className="text-[10px] text-gray-500 truncate font-mono max-w-xs mx-auto bg-white/[0.03] px-2.5 py-1 rounded-lg border border-white/5 inline-flex items-center gap-1">
-              <span className="text-violet-400 font-bold">To:</span> {merchantAddr?.slice(0, 8)}...{merchantAddr?.slice(-6)}
-            </span>
-          </div>
-        </div>
-
-        {/* ── Detail Tagihan Pesanan ── */}
-        <div className="space-y-4">
-          <div className="p-5 rounded-3xl bg-gradient-to-b from-white/[0.03] to-black/50 border border-white/5 space-y-4 relative overflow-hidden shadow-inner">
-            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
-            
-            <div className="flex justify-between items-center text-xs text-gray-400 font-medium">
-              <span>Settlement Asset Spec</span>
-              <span className="text-violet-300 font-bold bg-violet-600/10 px-2.5 py-0.5 rounded-md border border-violet-500/20">
-                {customInvoiceMeta ? customInvoiceMeta.token : matchedToken.symbol}
-              </span>
-            </div>
-            
-            <div className="flex justify-between items-baseline pt-1">
-              <span className="text-xs text-gray-400 font-bold">Total Payable Amount</span>
-              <div className="text-right">
-                <span className="text-4xl font-black text-white tracking-tight font-mono">
-                  {isLoadingSession ? (
-                    <span className="shimmer inline-block w-24 h-8 rounded" />
-                  ) : (
-                    customInvoiceMeta?.amount ? customInvoiceMeta.amount : (isPreviewState ? '99.00' : formattedAmount)
-                  )}
-                </span>
-                <span className="text-xs text-violet-400 font-bold ml-1.5 uppercase font-sans">
-                  {customInvoiceMeta ? customInvoiceMeta.token : matchedToken.symbol}
-                </span>
+          {/* MERCHANT IDENTITY HEADER */}
+          <div className="p-8 sm:p-10 text-center border-b border-white/5 bg-white/[0.01]">
+            <div className="relative mb-4 flex justify-center">
+              <div className="absolute w-20 h-20 bg-violet-600/20 rounded-[1.5rem] blur-xl opacity-20" />
+              <div className="relative w-20 h-20 bg-black border border-white/10 rounded-[1.5rem] flex items-center justify-center overflow-hidden shadow-2xl">
+                {merchantLogo ? (
+                  <img src={merchantLogo} alt={displayName} className="w-full h-full object-cover" />
+                ) : (
+                  <UserCircle className="w-10 h-10 text-violet-500 opacity-80" />
+                )}
               </div>
             </div>
-
-            <div className="pt-3 border-t border-white/[0.04] flex justify-between items-center text-xs text-gray-500 font-mono text-[10px]">
-              <span>Session Link Spec</span>
-              <span className="text-violet-400/80 truncate max-w-[150px]">{rawSessionId?.slice(0, 10)}...</span>
-            </div>
-          </div>
-
-          {isExpired && !showPaidState && (
-            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 text-center font-bold animate-pulse">
-              Payment session interval expired
-            </div>
-          )}
-        </div>
-
-        {/* ── Alur Mekanisme Pembayaran (Kondisi UI) ── */}
-        
-        {/* Kondisi 0: Link Telah Dihapus / Dinonaktifkan */}
-        {(isLinkDeleted || isActuallyDisabled) && (
-          <div className="p-6 sm:p-8 rounded-3xl bg-red-500/10 border border-red-500/30 text-center space-y-4 animate-fade-in relative overflow-hidden shadow-[0_0_30px_rgba(239,68,68,0.15)]">
-            <div className="absolute inset-0 bg-gradient-to-tr from-red-600/10 to-transparent pointer-events-none" />
             
-            <div className="relative z-10">
-              <span className="inline-block bg-red-600 text-white text-[11px] font-black px-4 py-1 rounded-full tracking-widest uppercase shadow-[0_0_15px_rgba(239,68,68,0.6)] animate-pulse">
-                DISABLED
-              </span>
-            </div>
-
-            <div className="w-16 h-16 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto shadow-[0_0_25px_rgba(239,68,68,0.4)] relative z-10 border border-red-500/20">
-              <AlertCircle className="w-8 h-8" />
-            </div>
-
-            <div className="relative z-10 space-y-1.5">
-              <h3 className="text-lg font-black text-white tracking-tight">Payment Link is Disabled</h3>
-              <p className="text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
-                This transaction checkout URL has been permanently decommissioned and disabled by the merchant owner storefront.
-              </p>
-              <div className="pt-2">
-                <span className="text-[10px] text-red-400 font-mono bg-black/40 px-3 py-1 rounded-lg border border-red-500/20">
-                  Status: INACTIVE / REVOKED
-                </span>
+            <div className="space-y-3">
+              <div className="flex items-center justify-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight italic">
+                  {displayName}
+                </h1>
+                {isRegisteredOnchain && (
+                  <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500 fill-emerald-500/10" />
+                )}
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* Kondisi 1: Telah Lunas */}
-        {showPaidState && !isLinkDeleted && (
-          <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-3 animate-fade-in">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-[0_0_25px_rgba(16,185,129,0.4)]">
-              <CheckCircle2 className="w-7 h-7" />
-            </div>
-            <div>
-              <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-widest">Protocol Handshake</span>
-              <h3 className="text-base font-black text-emerald-300 mt-0.5">Payment Successfully Settled</h3>
-              <p className="text-xs text-gray-400 mt-1">Funds transferred deterministically directly to sovereign merchant account.</p>
-            </div>
-            
-            {txHash && (
-              <div className="pt-3 border-t border-emerald-500/10 text-center">
-                <a 
-                  href={`https://testnet.arcscan.app/tx/${txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-violet-400 hover:text-violet-300 font-bold bg-white/[0.03] px-3.5 py-1.5 rounded-xl border border-white/5 transition-all"
-                >
-                  <span>Verify Settlement Hash</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Kondisi 2: Menunggu Persetujuan / Pembayaran */}
-        {!showPaidState && !isExpired && !isLinkDeleted && !isActuallyDisabled && (
-          <div className="space-y-4">
-            
-            {!isConnected ? (
-              <div className="space-y-3">
-                <div className="p-3.5 bg-violet-600/5 rounded-xl border border-violet-500/10 text-xs text-gray-300 text-center font-medium leading-relaxed">
-                  Authenticate your multichain Web3 wallet provider to authorize decentralized stablecoin disbursements.
-                </div>
-                <div className="text-center">
-                  <p className="text-[11px] text-violet-400 font-bold mb-2 animate-pulse">👉 Link Wallet via top right menu to initialize</p>
-                  <div className="p-2 rounded-xl bg-black/40 border border-white/5 text-xs text-gray-500 inline-block">
-                    Awaiting client provider state injection...
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4 animate-fade-in">
-                
-                {/* Info Dompet Asal */}
-                <div className="flex items-center justify-between text-xs p-3 rounded-xl bg-black/40 border border-white/5">
-                  <span className="text-gray-400 font-bold flex items-center gap-1.5">
-                    <Wallet className="w-3.5 h-3.5 text-violet-400" /> Payer Account
-                  </span>
-                  <span className="font-mono font-bold text-violet-300 bg-white/[0.03] px-2 py-0.5 rounded border border-white/5">
-                    {address?.slice(0, 6)}...{address?.slice(-4)}
-                  </span>
-                </div>
-
-                {/* Status Otorisasi (Allowance Status) */}
-                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between text-xs">
-                  <span className="text-gray-400">Smart Registry Allowance:</span>
-                  <span className={`font-mono font-bold ${hasSufficientAllowance ? 'text-emerald-400' : 'text-amber-400'}`}>
-                    {hasSufficientAllowance ? 'Approved ✓' : 'Required (0.00)'}
-                  </span>
-                </div>
-
-
-
-                {writeError && (
-                  <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 font-medium space-y-2">
-                    <p>{writeError.message || 'Signature handshake aborted by EVM relayer node.'}</p>
-                    <button
-                      onClick={handleSimulatedBypass}
-                      type="button"
-                      className="w-full py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white font-bold transition-all text-center flex items-center justify-center gap-1.5"
-                    >
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Simulate Instant Fulfillment (Test Mode)</span>
-                    </button>
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                {merchantWebsite && (
+                  <a href={merchantWebsite} target="_blank" className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 hover:text-violet-400 transition-colors uppercase tracking-widest">
+                    <Globe className="w-3 h-3" /> Website
+                  </a>
+                )}
+                {merchantEmail && (
+                  <a href={`mailto:${merchantEmail}`} className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 hover:text-violet-400 transition-colors uppercase tracking-widest">
+                    <Mail className="w-3 h-3" /> {merchantEmail}
+                  </a>
+                )}
+                {!isRegisteredOnchain && (
+                  <div className="text-[8px] font-black text-gray-600 uppercase tracking-widest px-2 py-0.5 rounded-full border border-white/5 bg-white/[0.02]">
+                    Community Merchant
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
 
-                {/* Render Tombol Utama Penyelesaian Pembayaran (On-chain Real) */}
-                <div className="space-y-3 pt-2">
-                  {!hasSufficientAllowance ? (
-                    <button
-                      onClick={handleApproveToken}
-                      disabled={isWritePending || isTxConfirming || activeStep === 'approving'}
-                      className="w-full btn-primary py-4 rounded-2xl flex items-center justify-center gap-2 text-sm font-black shadow-[0_0_30px_rgba(124,58,237,0.3)] hover:shadow-[0_0_40px_rgba(124,58,237,0.5)] transition-all transform hover:-translate-y-0.5 border border-violet-400/30"
-                    >
-                      {activeStep === 'approving' ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin text-white" />
-                          <span>Approving USDC...</span>
-                        </>
-                      ) : (
-                        <>
-                          <ShieldCheck className="w-4 h-4 text-violet-200" />
-                          <span>Approve Payment</span>
-                          <ArrowRight className="w-4 h-4 text-violet-200" />
-                        </>
-                      )}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleExecutePayment}
-                      disabled={isWritePending || isTxConfirming || activeStep === 'paying'}
-                      className="w-full btn-primary py-4 rounded-2xl flex items-center justify-center gap-2 text-sm font-black shadow-[0_0_30_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] transition-all transform hover:-translate-y-0.5 border border-emerald-400/30 !bg-emerald-600 hover:!bg-emerald-500"
-                    >
-                      {activeStep === 'paying' || isTxConfirming ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin text-white" />
-                          <span>Settling on Arc L1...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Zap className="w-4 h-4 text-white fill-white" />
-                          <span>Pay & Settle Now</span>
-                          <ArrowRight className="w-4 h-4 text-white" />
-                        </>
-                      )}
+          <div className="p-8 sm:p-12 space-y-10">
+            {/* Amount Section */}
+            <div className="text-center space-y-2">
+              <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-4">Amount to Settle</p>
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-5xl sm:text-7xl font-black text-white tracking-tighter">${formattedAmount}</span>
+                <div className="flex flex-col items-start">
+                   <span className="text-xs font-black text-violet-400 uppercase tracking-widest">{matchedToken.symbol}</span>
+                   <span className="text-[9px] font-bold text-gray-600 uppercase">Settlement</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Description & Details */}
+            <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 space-y-6">
+               <div className="flex justify-between items-start">
+                 <div className="space-y-1">
+                   <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Order Note</p>
+                   <p className="text-sm font-bold text-gray-200">{urlDesc || `Order Settlement — ${displayName}`}</p>
+                 </div>
+                 <div className="text-right space-y-1">
+                   <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Blockchain</p>
+                   <p className="text-xs font-bold text-white flex items-center justify-end gap-1.5 uppercase tracking-tighter">Arc Network <ShieldCheck className="w-3.5 h-3.5 text-violet-500" /></p>
+                 </div>
+               </div>
+
+               <div className="h-px bg-white/5 w-full" />
+
+               <div className="flex justify-between items-center">
+                 <div className="space-y-1">
+                   <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Valid Until</p>
+                   <div className="flex items-center gap-2">
+                     <div className={`w-1.5 h-1.5 rounded-full ${isExpired ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
+                     <p className="text-xs font-bold text-gray-300">{isExpired ? 'Expired' : expiry === 0n ? 'Permanent' : new Date(Number(expiry) * 1000).toLocaleDateString()}</p>
+                   </div>
+                 </div>
+                 <div className="text-right space-y-1">
+                   <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Asset</p>
+                   <p className="text-xs font-black text-violet-400 uppercase tracking-widest">{matchedToken.symbol}</p>
+                 </div>
+               </div>
+            </div>
+
+            {/* CTA Section */}
+            <div className="space-y-4">
+              {!isConnected ? (
+                <button 
+                  onClick={() => (document.querySelector('appkit-button') as any)?.click()}
+                  className="w-full py-5 bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-violet-600/20 active:scale-95 flex items-center justify-center gap-3"
+                >
+                  <Wallet className="w-5 h-5" /> Connect Wallet
+                </button>
+              ) : isPaid ? (
+                <div className="w-full py-12 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex flex-col items-center justify-center gap-4 animate-in zoom-in-95 duration-500">
+                  <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-[#050508] shadow-[0_0_30px_rgba(16,185,129,0.4)]">
+                    <CheckCircle2 className="w-10 h-10" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-xl font-black text-white uppercase tracking-tight">Payment Settled</h3>
+                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mt-1">Confirmed on Blockchain</p>
+                  </div>
+                  {txHash && (
+                    <button onClick={() => window.open(`https://explorer.arc.network/tx/${txHash}`, '_blank')} className="mt-2 flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-white transition-colors">
+                       View Receipt <ExternalLink className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
-
-                {/* Tombol Simulasi Langsung Bypass Validasi Eksternal */}
-                <div className="text-center pt-2">
-                  <button
-                    onClick={handleSimulatedBypass}
-                    type="button"
-                    className="text-[11px] font-bold text-gray-500 hover:text-violet-400 transition-colors inline-flex items-center gap-1"
-                  >
-                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                    <span>Instant Pay Simulation (Local Sync Showcase)</span>
-                  </button>
+              ) : isExpired ? (
+                <div className="w-full py-5 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center gap-3 text-red-500 text-[10px] font-black uppercase tracking-[0.2em]">
+                   <AlertCircle className="w-5 h-5" /> Link Expired
                 </div>
-
-              </div>
-            )}
-
-            {/* Jaminan Keamanan Lintas-Rantai */}
-            <div className="text-center pt-2 border-t border-white/5">
-              <p className="text-[10px] text-gray-500 flex items-center justify-center gap-1.5 font-medium">
-                <Lock className="w-3 h-3 text-emerald-400" />
-                <span>Standard ERC20 Approval Handshake • Non-custodial routing</span>
-              </p>
+              ) : !hasSufficientAllowance ? (
+                <button 
+                  onClick={handleApproveToken}
+                  disabled={activeStep === 'approving'}
+                  className="w-full py-5 bg-white text-black hover:bg-gray-200 text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
+                >
+                  {activeStep === 'approving' ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
+                  Pay Now
+                </button>
+              ) : (
+                <button 
+                  onClick={handleExecutePayment}
+                  disabled={activeStep === 'paying'}
+                  className="w-full py-5 bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-violet-600/30 active:scale-95 flex items-center justify-center gap-3"
+                >
+                  {activeStep === 'paying' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
+                  Confirm Payment
+                </button>
+              )}
             </div>
-
           </div>
-        )}
+
+          <div className="px-8 py-5 bg-white/[0.01] border-t border-white/5 flex items-center justify-center">
+             <div className="flex items-center gap-2 text-[9px] font-black text-gray-700 uppercase tracking-[0.2em]">
+                <Zap className="w-3 h-3 text-violet-500 fill-violet-500/20" /> Powered by UniPay
+             </div>
+          </div>
+        </div>
 
       </div>
-
-      {/* Bagian Bawah Halaman */}
-      <div className="mt-8 text-center text-xs text-gray-600 font-medium">
-        Powered trustlessly by <Link href="/" className="text-gray-500 hover:text-gray-400 font-bold underline">UniPay Protocol</Link> on Arc L1.
-      </div>
-
     </div>
   );
 }

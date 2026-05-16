@@ -227,7 +227,7 @@ export default function DashboardPage() {
 
             {!isLoadingRead && !isRegistered && (
               <Link 
-                href="/dashboard/account?tab=Merchant Setting"
+                href="/dashboard/account?tab=Merchant Profile"
                 className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 text-[8px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-black transition-all shrink-0"
               >
                 <ShieldAlert className="w-2.5 h-2.5" />
@@ -415,7 +415,7 @@ export default function DashboardPage() {
                                     className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-300 hover:text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
                                   >
                                     <span className="text-emerald-400 text-sm block">📋</span> 
-                                    <span>{copiedId === actualId ? 'Copied!' : 'Copy Link'}</span>
+                                    <span>{copiedId === actualId ? 'Copied!' : 'Copy Paylink'}</span>
                                   </button>
                                 </div>
 
@@ -433,7 +433,7 @@ export default function DashboardPage() {
                                     <span className="text-sm block group-hover/btn:scale-110 transition-transform">
                                       {(isDeactivating === actualId || isConfirmingDeactivate) ? '⏳' : '🗑️'}
                                     </span> 
-                                    <span>{(isDeactivating === actualId || isConfirmingDeactivate) ? 'Deactivating...' : 'Archive Paylink'}</span>
+                                    <span>{(isDeactivating === actualId || isConfirmingDeactivate) ? 'Deleting...' : 'Delete Paylink'}</span>
                                   </button>
                               </div>
                             )}

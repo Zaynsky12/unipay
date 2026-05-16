@@ -15,7 +15,10 @@ import {
   Sparkles,
   ExternalLink,
   ArrowUpRight,
-  Repeat
+  Repeat,
+  Zap,
+  ChevronRight,
+  Monitor
 } from 'lucide-react';
 import Link from 'next/link';
 import { 
@@ -50,11 +53,11 @@ export default function CreatePaymentPage() {
     query: { enabled: !!address }
   });
 
-  const isRegistered = merchantData ? merchantData[2] : false;
-  const merchantName = isRegistered ? (merchantData?.[0] || 'Merchant') : 'Anonymous';
+  const isRegistered = merchantData ? (merchantData as any)[2] : false;
+  const merchantName = isRegistered ? ((merchantData as any)?.[0] || 'Merchant') : 'Anonymous';
 
   // L1 Contract Execution
-  const { writeContract, data: txHash, isPending, error: writeError } = useWriteContract();
+  const { writeContract, data: txHash, isPending } = useWriteContract();
   
   const { isLoading: isTxConfirming, isSuccess, data: txReceipt } = useWaitForTransactionReceipt({
     hash: txHash,
@@ -69,9 +72,7 @@ export default function CreatePaymentPage() {
 
     if (paymentType === 'subscription') {
       const amountUnits = parseUnits(amount, tokenObj.decimals);
-      // subInterval is in days (as string)
       const intervalSec = BigInt(subInterval) * 86400n;
-
       writeContract({
         address: UNIPAY_REGISTRY_ADDRESS,
         abi: REGISTRY_ABI,
@@ -84,7 +85,6 @@ export default function CreatePaymentPage() {
 
     const amountUnits = parseUnits(amount, tokenObj.decimals);
     const expiryTimestamp = Math.floor(Date.now() / 1000) + Number(expiryDays) * 86400;
-
     writeContract({
       address: UNIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
@@ -98,7 +98,6 @@ export default function CreatePaymentPage() {
   useEffect(() => {
     if (isSuccess && txReceipt) {
       let extractedId = '';
-      
       if (txReceipt.logs && Array.isArray(txReceipt.logs)) {
         for (const log of txReceipt.logs) {
           if (log.topics && log.topics.length > 1) {
@@ -110,22 +109,15 @@ export default function CreatePaymentPage() {
           }
         }
       }
-      
       if (!extractedId || extractedId === '0x') {
         extractedId = txHash ? `${txHash.slice(0, 34)}...` : '0xsession' + Date.now().toString(16);
       }
-
       setCreatedSessionId(extractedId);
-
-      // Save to localStorage for instant optimistic display on dashboard
       if (extractedId) {
         try {
-          // Save description
           const descs = JSON.parse(localStorage.getItem('unipay_descriptions') || '{}');
           descs[extractedId] = description || `${selectedToken} Payment`;
           localStorage.setItem('unipay_descriptions', JSON.stringify(descs));
-
-          // Save optimistic session for instant dashboard display
           const tokenObj = SUPPORTED_TOKENS.find(t => t.symbol === selectedToken);
           const optimisticSession = {
             id: extractedId,
@@ -169,360 +161,247 @@ export default function CreatePaymentPage() {
     }
   };
 
-      {/* ── CONNECTION ALERT BANNER (Only if not connected) ── */}
-      {!isConnected && (
-        <div className="p-6 rounded-3xl bg-violet-600/10 border border-violet-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in shadow-[0_0_40px_rgba(124,58,237,0.1)]">
-          <div className="flex items-center gap-4 text-center sm:text-left">
-            <div className="w-12 h-12 rounded-2xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0 shadow-lg">
-              <LinkIcon className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-sm font-black text-white uppercase tracking-tight">Dispatcher Locked</h3>
-              <p className="text-[11px] text-gray-400 leading-relaxed max-w-sm">
-                Connect your Web3 account to issue tamper-proof digital payment endpoints and generate deterministic billing parameters.
-              </p>
-            </div>
-          </div>
-          <button 
-            onClick={() => {
-              const kitBtn = document.querySelector('appkit-button');
-              if (kitBtn) (kitBtn as any).click();
-            }}
-            className="px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-black rounded-xl border border-violet-400/30 shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all flex items-center gap-2 group whitespace-nowrap"
-          >
-            Connect Identity
-            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-          </button>
-        </div>
-      )}
-
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-16">
+    <div className="max-w-4xl mx-auto space-y-10 animate-fade-in pb-24 px-4 sm:px-0">
       
-      {/* ── Page Header ── */}
-      <div className="pb-4 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/20">
-              Payment Gateway
-            </span>
-            <span className="text-xs text-gray-500">• Stateless Dispatch</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Create Smart Billing Link</h1>
-        </div>
+      {/* ── Page Header (REFRESHED) ── */}
+      <div className="text-center sm:text-left space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-white/5 pb-8">
+           <div className="space-y-2">
+              <div className="flex items-center justify-center sm:justify-start gap-3 mb-1">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-600/10 border border-violet-500/20 shadow-[0_0_15px_rgba(124,58,237,0.1)]">
+                  <Zap className="w-3.5 h-3.5 text-violet-400 fill-violet-400/20" />
+                  <span className="text-[10px] font-black text-violet-400 uppercase tracking-[0.2em]">
+                    Payment Gateway
+                  </span>
+                </div>
+                <span className="hidden sm:inline text-xs text-gray-500 font-medium">• Stateless Dispatch</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase italic">
+                Create <span className="text-violet-500">Paylink</span>
+              </h1>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-widest sm:max-w-md">Issue professional cryptographic billing endpoints in seconds.</p>
+           </div>
 
-        {/* Mode Indicator */}
-        <div className="px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/5 text-[11px] text-gray-400 font-medium self-start sm:self-auto">
-          Mode: <span className="text-violet-400 font-bold">{paymentType === 'onetime' ? 'Instant Invoice Link' : 'Recurring Subscription'}</span>
+           {/* UI MODE SELECTOR (CENTERED IN MOBILE) */}
+           <div className="flex bg-[#0B0B12] p-1.5 rounded-2xl border border-white/10 w-full sm:w-[320px] shadow-2xl relative overflow-hidden">
+              <div 
+                className={`absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-6px)] bg-violet-600 rounded-xl transition-all duration-300 ease-out shadow-[0_0_20px_rgba(124,58,237,0.4)] ${paymentType === 'subscription' ? 'translate-x-full' : 'translate-x-0'}`}
+              />
+              <button 
+                onClick={() => { setPaymentType('onetime'); setCreatedSessionId(''); }}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest relative z-10 transition-colors duration-300 ${paymentType === 'onetime' ? 'text-white' : 'text-gray-500'}`}
+              >
+                Instant Link
+              </button>
+              <button 
+                onClick={() => { setPaymentType('subscription'); setCreatedSessionId(''); }}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest relative z-10 transition-colors duration-300 ${paymentType === 'subscription' ? 'text-white' : 'text-gray-500'}`}
+              >
+                Subscription
+              </button>
+           </div>
         </div>
       </div>
 
-      {!isRegistered && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-center gap-3 font-medium animate-fade-in">
-          <AlertCircle className="w-5 h-5 shrink-0 text-amber-400" />
-          <span>Notice: You are operating an unverified address. Customers will review your primary hexadecimal hash instead of a verified storefront alias.</span>
+      {!isConnected && (
+        <div className="p-6 rounded-3xl bg-amber-500/5 border border-amber-500/10 flex items-center justify-between gap-4 animate-pulse">
+           <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <p className="text-xs font-bold text-amber-500/80 uppercase tracking-widest">Connect Identity to Deploy Links</p>
+           </div>
+           <button onClick={() => (document.querySelector('appkit-button') as any)?.click()} className="text-[10px] font-black text-amber-500 underline uppercase tracking-widest hover:text-amber-400">Connect Now</button>
         </div>
       )}
 
-      {/* ── User-friendly & Pure UniPay Purple Tab Selector ── */}
-      <div className="flex bg-black/50 p-1.5 rounded-2xl border border-white/5 w-full max-w-md mx-auto lg:mx-0 shadow-inner">
-        <button 
-          onClick={() => { setPaymentType('onetime'); setCreatedSessionId(''); }}
-          className={`flex-1 py-3 text-xs font-black rounded-xl transition-all duration-300 ${
-            paymentType === 'onetime' 
-              ? 'bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]' 
-              : 'text-gray-400 hover:text-gray-200'
-          }`}
-        >
-          Instant Invoice Link
-        </button>
-        <button 
-          onClick={() => { setPaymentType('subscription'); setCreatedSessionId(''); }}
-          className={`flex-1 py-3 text-xs font-black rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 ${
-            paymentType === 'subscription' 
-              ? 'bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]' 
-              : 'text-gray-400 hover:text-gray-200'
-          }`}
-        >
-          <Repeat className="w-3.5 h-3.5" /> Recurring Subscription
-        </button>
-      </div>
+      {!isRegistered && isConnected && (
+        <div className="p-5 rounded-2xl bg-violet-600/5 border border-violet-500/10 text-[10px] text-gray-400 flex items-center gap-4 font-bold uppercase tracking-widest leading-relaxed">
+          <Sparkles className="w-5 h-5 text-violet-400 shrink-0" />
+          <span>Notice: Operating as Anonymous. You can verify your brand in the Account settings.</span>
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         
-        {/* ── Left Side: Specification Input Form (7 Columns) ── */}
-        <div className="lg:col-span-7 glass-panel p-6 sm:p-8 space-y-6 relative overflow-hidden transition-all duration-500 border-t-2 border-[#7C3AED]">
-          {/* Ambient Purple Glow Background Accent */}
-          <div className="absolute top-0 right-0 w-48 h-48 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="flex items-center justify-between pb-3 border-b border-white/5">
-            <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 text-violet-400">
-              <Sparkles className="w-4 h-4" /> {paymentType === 'onetime' ? 'Invoice Attributes' : 'Subscription Plan Setup'}
-            </span>
-            <span className="text-[10px] text-gray-500 font-mono">
-              {paymentType === 'onetime' ? 'L1 Gas Intercept' : 'Offchain Handshake'}
-            </span>
-          </div>
-
-          <form onSubmit={handleCreateSession} className="space-y-6 relative z-10">
-            
-            <div>
-              <label className="block text-xs font-black text-gray-400 mb-2 uppercase tracking-wider">
-                Select Currency *
-              </label>
-              <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-black/40 border border-white/5">
-                {SUPPORTED_TOKENS.map((t) => {
-                  const active = selectedToken === t.symbol;
-                  return (
-                    <button
-                      key={t.symbol}
-                      type="button"
-                      onClick={() => setSelectedToken(t.symbol as SupportedToken)}
-                      className={`py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                        active 
-                          ? 'bg-violet-600 text-white shadow-[0_0_15px_rgba(124,58,237,0.4)]'
-                          : 'text-gray-500 hover:text-gray-300'
-                      }`}
-                    >
-                      <Coins className={`w-4 h-4 ${active ? 'text-white' : 'text-gray-600'}`} />
-                      <span>{t.symbol}</span>
-                      <span className="text-[10px] opacity-70 font-normal">({t.decimals} dec)</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-black mb-2 uppercase tracking-wider text-violet-300/90">
-                {paymentType === 'onetime' ? 'Requested Settlement Amount *' : 'Interval Cycle Charge Amount *'}
-              </label>
-              <div className="relative rounded-2xl bg-black/50 border border-white/10 transition-all focus-within:border-violet-500 focus-within:shadow-[0_0_20px_rgba(124,58,237,0.15)]">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black select-none text-violet-400/50">
-                  $
-                </span>
-                <input
-                  type="number"
-                  step="any"
-                  min="0.000001"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full bg-transparent p-4 pl-10 pr-16 text-3xl font-black text-white outline-none placeholder:text-gray-700 font-mono tracking-tight"
-                  required
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black px-2.5 py-1 rounded border select-none text-violet-400 bg-violet-600/10 border-violet-500/20">
-                  {selectedToken}
-                </span>
-              </div>
-              <p className="text-[10px] text-gray-500 mt-2 flex items-center justify-between">
-                <span>Bridged instantly via Arc App Kit</span>
-                <span className="text-emerald-500/90 font-medium">Finality &lt; 1s settlement</span>
-              </p>
-            </div>
-
-            {paymentType === 'onetime' ? (
-              <>
-                <div>
-                  <label className="block text-xs font-black text-gray-400 mb-2 uppercase tracking-wider">
-                    Item Description / Invoice Notes
-                  </label>
-                  <input
-                    type="text"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="e.g. Premium Gateways API integration"
-                    className="input-field p-4 text-xs font-bold bg-black/40 border-white/10 text-white placeholder:text-gray-600 focus:border-violet-500/50 rounded-xl w-full"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-black text-gray-400 mb-2 uppercase tracking-wider">
-                    Link Expiration Limit
-                  </label>
-                  <div className="relative flex items-center">
-                    <Clock className="w-4 h-4 text-violet-400/80 absolute left-4" />
-                    <select
-                      value={expiryDays}
-                      onChange={(e) => setExpiryDays(e.target.value)}
-                      className="input-field p-4 pl-11 text-xs font-bold bg-black/40 border-white/10 text-white cursor-pointer outline-none focus:border-violet-500/50 rounded-xl w-full"
-                    >
-                      <option value="1" className="bg-[#0A0A0F] text-white">Valid for 24 Hours</option>
-                      <option value="3" className="bg-[#0A0A0F] text-white">Valid for 3 Days</option>
-                      <option value="7" className="bg-[#0A0A0F] text-white">Valid for 7 Days</option>
-                      <option value="30" className="bg-[#0A0A0F] text-white">Valid for 30 Days</option>
-                    </select>
+        {/* ── CREATE FORM (Left - 7 cols) ── */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="bg-[#0B0B12] border border-white/5 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative">
+            <form onSubmit={handleCreateSession} className="space-y-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Asset Amount</label>
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 font-bold">$</div>
+                    <input 
+                      type="number" 
+                      value={amount} 
+                      onChange={(e) => setAmount(e.target.value)} 
+                      placeholder="0.00"
+                      step="0.01"
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-10 pr-4 text-white text-lg font-black focus:border-violet-500 outline-none transition-all shadow-inner"
+                      required
+                    />
                   </div>
                 </div>
-              </>
-            ) : (
-              <div>
-                <label className="block text-xs font-black text-gray-400 mb-2 uppercase tracking-wider">
-                  Billing Interval Cycle
-                </label>
-                <div className="relative flex items-center">
-                  <Repeat className="w-4 h-4 text-violet-400/80 absolute left-4" />
-                  <select
-                    value={subInterval}
-                    onChange={(e) => setSubInterval(e.target.value)}
-                    className="input-field p-4 pl-11 text-xs font-bold bg-black/40 border-white/10 text-white cursor-pointer outline-none focus:border-violet-500/50 rounded-xl w-full"
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Settlement Token</label>
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-black/40 border border-white/10 rounded-2xl">
+                    {SUPPORTED_TOKENS.map((token) => (
+                      <button 
+                        key={token.symbol}
+                        type="button"
+                        onClick={() => setSelectedToken(token.symbol as SupportedToken)}
+                        className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedToken === token.symbol ? 'bg-violet-600 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
+                      >
+                        {token.symbol}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Order Description (Optional)</label>
+                <div className="relative group">
+                  <input 
+                    type="text" 
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)} 
+                    placeholder="e.g. Premium Digital Access"
+                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none transition-all shadow-inner"
+                  />
+                </div>
+              </div>
+
+              {paymentType === 'onetime' ? (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Expiration Period</label>
+                  <select 
+                    value={expiryDays} 
+                    onChange={(e) => setExpiryDays(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none appearance-none cursor-pointer"
                   >
-                    <option value="7" className="bg-[#0A0A0F] text-white">Every 7 Days (Weekly)</option>
-                    <option value="30" className="bg-[#0A0A0F] text-white">Every 30 Days (Monthly)</option>
-                    <option value="90" className="bg-[#0A0A0F] text-white">Every 90 Days (Quarterly)</option>
-                    <option value="365" className="bg-[#0A0A0F] text-white">Every 365 Days (Yearly)</option>
+                    <option value="1" className="bg-black">24 Hours</option>
+                    <option value="7" className="bg-black">7 Days (Recommended)</option>
+                    <option value="30" className="bg-black">30 Days</option>
+                    <option value="365" className="bg-black">1 Year</option>
                   </select>
                 </div>
-                
-                {/* Gasless Setup Explanation */}
-                <div className="p-3.5 mt-4 rounded-xl bg-violet-500/10 border border-violet-500/20 text-xs text-violet-300 font-medium leading-relaxed">
-                  <span className="font-bold text-violet-200">Gasless Execution Setup:</span> Generating this subscription parameter plan is completely free. Plans are formulated offchain using strict deterministic hashing and activate onchain automatically upon user authorization.
-                </div>
-              </div>
-            )}
-
-            {writeError && paymentType === 'onetime' && (
-              <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 font-medium">
-                {writeError.message || 'Transaction authorization aborted.'}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={(isPending || isTxConfirming) && paymentType === 'onetime' || !amount}
-              className="w-full py-4 flex items-center justify-center gap-2 text-xs uppercase tracking-wider rounded-xl font-black text-white transition-all duration-300 transform hover:-translate-y-0.5 mt-4 bg-violet-600 hover:bg-violet-500 shadow-[0_0_30px_rgba(124,58,237,0.35)]"
-            >
-              {(isPending || isTxConfirming) && paymentType === 'onetime' ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{isTxConfirming ? 'Writing Dispatch Block...' : 'Awaiting Wallet Handshake...'}</span>
-                </>
               ) : (
-                <span className="font-black">{paymentType === 'onetime' ? 'Generate Instant Billing Link' : 'Generate Subscription Link'}</span>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Billing Interval</label>
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="number" 
+                      value={subInterval} 
+                      onChange={(e) => setSubInterval(e.target.value)} 
+                      className="flex-1 bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none"
+                    />
+                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Days</span>
+                  </div>
+                </div>
               )}
-            </button>
-          </form>
+
+              <button 
+                type="submit" 
+                disabled={isPending || isTxConfirming || !amount || Number(amount) <= 0 || !isConnected}
+                className="w-full py-5 bg-violet-600 hover:bg-violet-500 disabled:bg-gray-800 disabled:text-gray-500 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl transition-all shadow-xl shadow-violet-600/30 flex items-center justify-center gap-3 active:scale-95"
+              >
+                {isPending || isTxConfirming ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" /> Finalizing on L1...</>
+                ) : (
+                  <><Sparkles className="w-4 h-4" /> Deploy Cryptographic Link</>
+                )}
+              </button>
+            </form>
+          </div>
         </div>
 
-        {/* ── Right Side: Output Links & Widget Cards (5 Columns) ── */}
+        {/* ── OUTPUT PREVIEW (Right - 5 cols) ── */}
         <div className="lg:col-span-5 space-y-6">
-          
-          {/* Integrated Success Notification Matrix */}
-          {createdSessionId && (
-            <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-3 animate-fade-in shadow-[0_0_30px_rgba(16,185,129,0.15)]">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                <h3 className="text-xs font-black text-emerald-300 tracking-tight uppercase">Endpoint Generated Successfully ✓</h3>
+          {!createdSessionId ? (
+            <div className="bg-white/[0.01] border border-white/5 border-dashed rounded-[2.5rem] p-12 text-center space-y-6 animate-pulse">
+               <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto">
+                  <Monitor className="w-10 h-10 text-gray-700" />
+               </div>
+               <div className="space-y-2">
+                 <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Ready to Dispatch</p>
+                 <p className="text-[9px] text-gray-700 uppercase font-bold leading-relaxed">Fill the form to generate your<br/>deterministic paylink endpoint.</p>
+               </div>
+            </div>
+          ) : (
+            <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+              {/* SUCCESS CARD */}
+              <div className="bg-[#0B0B12] border border-emerald-500/20 rounded-[2.5rem] p-8 space-y-8 shadow-[0_20px_50px_rgba(16,185,129,0.1)]">
+                <div className="flex items-center gap-4">
+                   <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-500">
+                      <CheckCircle2 className="w-6 h-6" />
+                   </div>
+                   <div>
+                      <h3 className="text-sm font-black text-white uppercase tracking-tight">Paylink Deployed</h3>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Permanent on-chain endpoint</p>
+                   </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 bg-black/60 border border-white/10 rounded-2xl group">
+                    <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-2 ml-1">Customer Access URL</p>
+                    <div className="flex items-center justify-between gap-3">
+                      <code className="text-[10px] text-violet-400 font-mono truncate">{paymentLink}</code>
+                      <button 
+                        onClick={() => copyToClipboard(paymentLink, 'link')}
+                        className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-all shrink-0"
+                      >
+                        {copiedLink ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Link 
+                      href={paymentLink}
+                      target="_blank"
+                      className="flex-1 py-3.5 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 transition-all"
+                    >
+                      Test Checkout <ExternalLink className="w-3.5 h-3.5" />
+                    </Link>
+                    <Link 
+                      href="/dashboard"
+                      className="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-all border border-white/5"
+                    >
+                      Dashboard <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                This link specification has been securely validated and synchronized directly into your <span className="text-white font-bold">Active Payments & Endpoints</span> table on the primary dashboard.
-              </p>
-              <div className="pt-1">
-                <Link
-                  href="/dashboard"
-                  className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 rounded-xl border border-emerald-500/20 transition-all"
-                >
-                  <span>← Review in Dashboard Matrix</span>
-                </Link>
+
+              {/* EMBED WIDGET CARD */}
+              <div className="bg-[#0B0B12] border border-white/5 rounded-[2rem] p-8 space-y-6">
+                 <div className="flex items-center gap-3">
+                   <Monitor className="w-5 h-5 text-violet-500" />
+                   <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Embed Web Widget</h4>
+                 </div>
+                 <div className="relative group">
+                    <pre className="bg-black/80 p-4 rounded-2xl text-[9px] font-mono text-gray-400 overflow-x-auto no-scrollbar border border-white/5 leading-relaxed">
+                      {embedSnippet}
+                    </pre>
+                    <button 
+                      onClick={() => copyToClipboard(embedSnippet, 'code')}
+                      className="absolute top-3 right-3 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all border border-white/10"
+                    >
+                      {copiedCode ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                 </div>
+                 <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest leading-relaxed">Drop this script into your frontend to enable native pop-up checkouts.</p>
               </div>
             </div>
           )}
-
-          {/* Card Output 1: Payment Link */}
-          <div className="glass-panel p-6 space-y-4 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-violet-600" />
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-violet-500/10 text-violet-400">
-                  <LinkIcon className="w-4 h-4" />
-                </div>
-                <span className="text-xs font-bold text-white uppercase tracking-wider">Payment URL Link</span>
-              </div>
-              {createdSessionId ? (
-                <span className="badge-success">Live Ready</span>
-              ) : (
-                <span className="badge-pending">Dry Preview</span>
-              )}
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-black border border-white/5 font-mono text-xs text-violet-300 break-all select-all leading-relaxed tracking-tight">
-              {paymentLink}
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                onClick={() => copyToClipboard(paymentLink, 'link')}
-                className="flex-1 btn-secondary py-2.5 text-xs flex items-center justify-center gap-2 hover:border-violet-500/30 transition-all font-bold"
-              >
-                {copiedLink ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span className="text-emerald-400">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4 text-gray-400" />
-                    <span>Copy URL Link</span>
-                  </>
-                )}
-              </button>
-
-              <Link
-                href={`/pay/${createdSessionId || 'preview_id'}`}
-                target="_blank"
-                className="px-3.5 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] rounded-xl border border-white/5 text-xs text-violet-300 font-bold transition-all flex items-center gap-1.5 shrink-0"
-              >
-                <span>Test Link</span>
-                <ExternalLink className="w-3 h-3" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Card Output 2: Sematan Web Component */}
-          <div className="glass-panel p-6 space-y-4 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600" />
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">
-                  <Code className="w-4 h-4" />
-                </div>
-                <span className="text-xs font-bold text-white uppercase tracking-wider">Web Component Widget</span>
-              </div>
-              <span className="text-[10px] bg-white/[0.04] px-2 py-0.5 rounded text-gray-400 font-mono border border-white/5">&lt;unipay-checkout&gt;</span>
-            </div>
-
-            <p className="text-[11px] text-gray-400 leading-relaxed">
-              Drop this standard web component tag inside any external frontend layout to display a modular checkout terminal automatically.
-            </p>
-
-            <div className="p-3.5 rounded-xl bg-black border border-white/5 font-mono text-[11px] text-indigo-300/90 whitespace-pre-wrap select-all overflow-x-auto leading-relaxed max-h-[160px]">
-              {embedSnippet}
-            </div>
-
-            <button
-              onClick={() => copyToClipboard(embedSnippet, 'code')}
-              className="w-full btn-secondary py-2.5 text-xs flex items-center justify-center gap-2 hover:border-indigo-500/30 transition-all font-bold mt-1"
-            >
-              {copiedCode ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span className="text-emerald-400">Snippet Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4 text-gray-400" />
-                  <span>Copy Embed Code</span>
-                </>
-              )}
-            </button>
-          </div>
-
         </div>
 
       </div>
-
     </div>
   );
 }

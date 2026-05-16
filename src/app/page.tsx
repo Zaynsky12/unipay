@@ -16,6 +16,8 @@ import {
   RefreshCw,
   Cpu,
   Activity,
+  Shield,
+  Puzzle,
   Sparkles
 } from 'lucide-react';
 import { useProtocolStats } from '@/lib/hooks/useProtocolStats';
@@ -42,7 +44,7 @@ export default function LandingPage() {
         
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs md:text-sm font-bold text-violet-400 mb-8 backdrop-blur-md animate-fade-in-down">
           <Zap className="w-4 h-4 fill-current text-violet-400 shrink-0" />
-          <span>Stateless Payment Protocol on Arc Network L1</span>
+          <span>Stateless Payment Protocol build on Arc</span>
         </div>
         
         <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-tight leading-[1.05] mb-8 max-w-5xl animate-fade-in-up">
@@ -87,27 +89,27 @@ export default function LandingPage() {
           {[
             {
               step: "01",
-              title: "Claim Namespace",
-              desc: "Bind your address to a sovereign alias via UniPayRegistry. Set up reusable logic profiles gaslessly.",
-              icon: UserPlus,
+              title: "Merchant Identity",
+              desc: "Establish a permanent business profile with your brand logo, website, and socials stored directly on the blockchain.",
+              icon: Shield,
             },
             {
               step: "02",
-              title: "Deploy Dispatch",
-              desc: "Issue parameter links or drop the modular <unipay-checkout> web widget straight into your application interface.",
-              icon: CreditCard,
+              title: "Stateless Routing",
+              desc: "Payments are processed without centralized servers. Your revenue is settled directly to your self-custody wallet.",
+              icon: Zap,
             },
             {
               step: "03",
-              title: "Unified Bridging",
-              desc: "Circle Arc App Kit extracts user balances seamlessly across arbitrary L2 instances without manual switching workflows.",
+              title: "Unified Assets",
+              desc: "Monitor and manage your USDC liquidity across Arc, Base, Arbitrum, and Optimism in one consolidated dashboard.",
               icon: RefreshCw,
             },
             {
               step: "04",
-              title: "Instant Finality",
-              desc: "Settlement triggers under microsecond speeds natively to your wallet address. Completely bypass central servers.",
-              icon: Banknote,
+              title: "Developer Ready",
+              desc: "Integrate custom checkout flows into your store with our upcoming SDK and webhook integration system.",
+              icon: Puzzle,
             }
           ].map((item, i) => (
             <div key={i} className="glass-panel p-8 rounded-3xl relative group hover:border-violet-500/30 transition-all duration-500 flex flex-col justify-between">
@@ -122,7 +124,7 @@ export default function LandingPage() {
                 <p className="text-gray-400 text-xs leading-relaxed">{item.desc}</p>
               </div>
               <div className="mt-6 pt-4 border-t border-white/[0.04] flex items-center gap-2 text-[11px] text-gray-500 font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5 text-violet-500" /> Stateless operation guarantee
+                <CheckCircle2 className="w-3.5 h-3.5 text-violet-500" /> Fully On-chain Identity Verified
               </div>
             </div>
           ))}
@@ -154,10 +156,10 @@ export default function LandingPage() {
             
             <div className="space-y-3 pt-2">
               {[
-                "High-performance indexed database (Goldsky)",
-                "Recurring Subscription Autopay Engine",
-                "ERC-2771 Gasless Meta-Transactions",
-                "Instant programmatic cross-chain route detection",
+                "On-chain Merchant Profile (Logo, Website, Email)",
+                "Consolidated Multi-Chain Asset Management",
+                "Real-time Business Performance Analytics",
+                "Direct On-chain Finality & SDK Ready",
               ].map((point, i) => (
                 <div key={i} className="flex items-center gap-3 text-xs sm:text-sm text-gray-300 font-bold bg-white/[0.02] p-3 rounded-xl border border-white/5">
                   <ShieldCheck className="w-4 h-4 text-violet-400 shrink-0" />
