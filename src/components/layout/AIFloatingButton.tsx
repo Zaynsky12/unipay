@@ -24,7 +24,7 @@ type Message = {
 const QUICK_PROMPTS = [
   "How do I create a new smart Paylink?",
   "What is the purpose of the UniPay Registry?",
-  "How can I withdraw my sales funds to my wallet?",
+  "Do I need to manually withdraw my funds?",
   "Is the UniPay Protocol fully non-custodial?"
 ];
 
