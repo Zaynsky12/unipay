@@ -70,12 +70,13 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   const rawMerchantName = (merchantData as any)?.[0] || '';
   const rawMerchantMetadata = (merchantData as any)?.[1] || '';
   const isRegisteredOnchain = (merchantData as any)?.[2] || false;
+  const isVerified = isRegisteredOnchain && !!rawMerchantName && rawMerchantName !== 'Anonymous';
   
   let merchantLogo = '';
   let merchantWebsite = '';
   let merchantEmail = '';
   
-  const displayName = (rawMerchantName && rawMerchantName !== 'Anonymous') 
+  const displayName = isVerified 
     ? rawMerchantName 
     : `${merchantAddr.slice(0, 6)}...${merchantAddr.slice(-4)}`;
 
@@ -180,7 +181,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                 <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight italic">
                   {displayName}
                 </h1>
-                {isRegisteredOnchain && (
+                {isVerified && (
                   <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500 fill-emerald-500/10" />
                 )}
               </div>
@@ -196,7 +197,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                     <Mail className="w-3 h-3" /> {merchantEmail}
                   </a>
                 )}
-                {!isRegisteredOnchain && (
+                {!isVerified && (
                   <div className="text-[8px] font-black text-gray-600 uppercase tracking-widest px-2 py-0.5 rounded-full border border-white/5 bg-white/[0.02]">
                     Community Merchant
                   </div>
