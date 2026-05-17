@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
+import { goldskyClient, GET_SESSION } from '@/lib/goldsky';
 
 export default function PaymentPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const resolvedParams = use(params);
@@ -36,6 +37,24 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
       if (desc) setUrlDesc(decodeURIComponent(desc));
     }
   }, []);
+
+  // Fetch description from Goldsky Subgraph if not provided in the URL or as a backup/sync
+  useEffect(() => {
+    const fetchSessionDescription = async () => {
+      try {
+        const idLower = rawSessionId.toLowerCase();
+        const data: any = await goldskyClient.request(GET_SESSION, { id: idLower });
+        if (data?.paymentSession?.description) {
+          setUrlDesc(data.paymentSession.description);
+        }
+      } catch (err) {
+        console.error("Failed to fetch session description from Goldsky:", err);
+      }
+    };
+    if (rawSessionId) {
+      fetchSessionDescription();
+    }
+  }, [rawSessionId]);
 
   // 1. Membaca tuple state sesi onchain
   const { data: sessionData, isLoading: isLoadingSession, refetch: refetchSession } = useReadContract({
@@ -198,8 +217,8 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   </a>
                 )}
                 {!isVerified && (
-                  <div className="text-[8px] font-black text-gray-600 uppercase tracking-widest px-2 py-0.5 rounded-full border border-white/5 bg-white/[0.02]">
-                    Community Merchant
+                  <div className="text-[8px] font-black text-amber-500 uppercase tracking-widest px-2.5 py-0.5 rounded-full border border-amber-500/20 bg-amber-500/5">
+                    Unverified Merchant
                   </div>
                 )}
               </div>

@@ -96,6 +96,7 @@ export const GET_SESSION = gql`
       expiresAt
       paid
       payer
+      description
       createdAt
     }
   }
