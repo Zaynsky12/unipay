@@ -86,10 +86,31 @@ function AccountContent() {
     }
   }, [isRegistered, currentName, currentMetadataRaw]);
 
-  const { writeContract, data: txHash, isPending, error: writeError } = useWriteContract();
-  const { isLoading: isTxConfirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
-  useEffect(() => { if (isSuccess) refetch(); }, [isSuccess, refetch]);
+  const { writeContract, data: txHash, isPending, error: writeError } = useWriteContract();
+  const { isLoading: isTxConfirming, isSuccess, error: confirmError } = useWaitForTransactionReceipt({ hash: txHash });
+
+  useEffect(() => {
+    if (isSuccess) {
+      refetch();
+      setShowSuccessToast(true);
+      const timer = setTimeout(() => setShowSuccessToast(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess, refetch]);
+
+  const getErrorMessage = () => {
+    const err = writeError || confirmError;
+    if (!err) return null;
+    if (err.message.includes('User rejected')) {
+      return 'Transaction rejected by user in wallet.';
+    }
+    if (err.message.includes('exceeds the limit') || err.message.includes('out of gas') || err.message.includes('gas limit')) {
+      return 'Transaction failed: Image payload is too large for blockchain gas limits. Try a smaller/optimized image.';
+    }
+    return err.message.substring(0, 100) + '...';
+  };
 
   // Balances
   const { data: rawArcBalance } = useReadContract({ address: USDC_ADDRESS as `0x${string}`, abi: ERC20_ABI, functionName: 'balanceOf', args: address ? [address] : undefined, query: { enabled: !!address } });
@@ -104,20 +125,67 @@ function AccountContent() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 200 * 1024) {
-      setLogoError("Image size exceeds the 200 KB limit.");
-      return;
-    }
-
     if (!file.type.startsWith('image/')) {
       setLogoError("Please upload a valid image file.");
       return;
     }
 
     const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setMerchantLogo(event.target.result as string);
+    reader.onload = () => {
+      if (reader.result) {
+        const img = new Image();
+        img.src = reader.result as string;
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 128;
+            const MAX_HEIGHT = 128;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height = Math.round((height * MAX_WIDTH) / width);
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width = Math.round((width * MAX_HEIGHT) / height);
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              if (file.size > 200 * 1024) {
+                setLogoError("Image size exceeds the 200 KB limit.");
+                return;
+              }
+              setMerchantLogo(reader.result as string);
+              return;
+            }
+
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            
+            const sizeInBytes = Math.round((compressedDataUrl.length * 3) / 4);
+            if (sizeInBytes > 200 * 1024) {
+              setLogoError("Compressed image size exceeds 200 KB limit.");
+              return;
+            }
+            
+            setMerchantLogo(compressedDataUrl);
+          } catch (err) {
+            console.error("Image compression error:", err);
+            if (file.size > 200 * 1024) {
+              setLogoError("Image size exceeds the 200 KB limit.");
+              return;
+            }
+            setMerchantLogo(reader.result as string);
+          }
+        };
       }
     };
     reader.readAsDataURL(file);
@@ -396,6 +464,28 @@ function AccountContent() {
                     <input type="url" value={merchantWebsite} onChange={(e) => setMerchantWebsite(e.target.value)} placeholder="https://brand.com" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none transition-colors" />
                   </div>
                </div>
+               {/* Error Display */}
+               {(writeError || confirmError) && (
+                 <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 animate-in fade-in slide-in-from-top-2 duration-300">
+                   <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
+                   <div className="text-left">
+                     <p className="text-[10px] font-black uppercase tracking-widest text-red-500 mb-0.5">Transaction Failed</p>
+                     <p className="text-xs font-semibold text-gray-300">{getErrorMessage()}</p>
+                   </div>
+                 </div>
+               )}
+
+               {/* Success Display */}
+               {showSuccessToast && (
+                 <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3 text-emerald-400 animate-in fade-in slide-in-from-top-2 duration-300">
+                   <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500" />
+                   <div className="text-left">
+                     <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-0.5">Profile Saved</p>
+                     <p className="text-xs font-semibold text-gray-300">Your merchant profile and settings have been successfully secured on-chain.</p>
+                   </div>
+                 </div>
+               )}
+
                <div className="pt-4 flex flex-col sm:flex-row gap-4">
                   <button type="submit" disabled={isPending || isTxConfirming || !merchantName} className="flex-1 py-4 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black uppercase rounded-2xl transition-all shadow-xl shadow-violet-600/20 flex items-center justify-center gap-3">
                     {isPending || isTxConfirming ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-4 h-4" />Save Profile</>}
