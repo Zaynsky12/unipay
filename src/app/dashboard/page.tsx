@@ -236,7 +236,7 @@ export default function DashboardPage() {
 
             {!isLoadingRead && !isRegistered && (
               <Link 
-                href="/dashboard/account?tab=Merchant Profile"
+                href="/dashboard/account?tab=Merchant Setting"
                 className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 text-[8px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-black transition-all shrink-0"
               >
                 <ShieldAlert className="w-2.5 h-2.5" />

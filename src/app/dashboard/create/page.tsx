@@ -71,6 +71,14 @@ export default function CreatePaymentPage() {
   const [description, setDescription] = useState('');
   const [expiryDays, setExpiryDays] = useState('7');
   const [subInterval, setSubInterval] = useState('30');
+  const [intervalType, setIntervalType] = useState('30'); // '7', '30', '90', '365', 'custom'
+
+  const handleIntervalTypeChange = (value: string) => {
+    setIntervalType(value);
+    if (value !== 'custom') {
+      setSubInterval(value);
+    }
+  };
 
   // Output Link/Session State
   const [createdSessionId, setCreatedSessionId] = useState<string>('');
@@ -327,14 +335,33 @@ export default function CreatePaymentPage() {
               ) : (
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Billing Interval</label>
-                  <div className="flex items-center gap-3">
-                    <input 
-                      type="number" 
-                      value={subInterval} 
-                      onChange={(e) => setSubInterval(e.target.value)} 
-                      className="flex-1 bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none"
-                    />
-                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Days</span>
+                  <div className="space-y-3">
+                    <select 
+                      value={intervalType} 
+                      onChange={(e) => handleIntervalTypeChange(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="7" className="bg-black">7 Days (Weekly)</option>
+                      <option value="30" className="bg-black">30 Days (Monthly — Recommended)</option>
+                      <option value="90" className="bg-black">90 Days (Quarterly)</option>
+                      <option value="365" className="bg-black">365 Days (Yearly)</option>
+                      <option value="custom" className="bg-black">Custom Days...</option>
+                    </select>
+                    
+                    {intervalType === 'custom' && (
+                      <div className="flex items-center gap-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <input 
+                          type="number" 
+                          value={subInterval === '7' || subInterval === '30' || subInterval === '90' || subInterval === '365' ? '' : subInterval} 
+                          onChange={(e) => setSubInterval(e.target.value)} 
+                          placeholder="Enter custom number of days"
+                          min="1"
+                          className="flex-1 bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none"
+                          required
+                        />
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Days</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

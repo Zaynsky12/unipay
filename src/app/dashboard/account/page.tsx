@@ -25,7 +25,9 @@ import {
   Image as ImageIcon,
   UserCog,
   Save,
-  Activity
+  Activity,
+  Upload,
+  Trash2
 } from 'lucide-react';
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, USDC_ADDRESS, ERC20_ABI } from '@/lib/constants';
 import { formatUnits } from 'viem';
@@ -49,6 +51,7 @@ function AccountContent() {
   const [merchantLogo, setMerchantLogo] = useState('');
   const [merchantWebsite, setMerchantWebsite] = useState('');
   const [merchantEmail, setMerchantEmail] = useState('');
+  const [logoError, setLogoError] = useState<string | null>(null);
 
   const { data: merchantData, isLoading: isLoadingRead, refetch } = useReadContract({
     address: UNIPAY_REGISTRY_ADDRESS,
@@ -95,6 +98,30 @@ function AccountContent() {
   const { data: optBalance } = useReadContract({ address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', abi: ERC20_ABI, functionName: 'balanceOf', args: address ? [address] : undefined, chainId: 10, query: { enabled: !!address } });
 
   const formatB = (val: any) => val ? Number(formatUnits(val as bigint, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLogoError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 200 * 1024) {
+      setLogoError("Image size exceeds the 200 KB limit.");
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setLogoError("Please upload a valid image file.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setMerchantLogo(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,10 +212,21 @@ function AccountContent() {
                   {isRegistered ? currentName : 'Anonymous'}
                 </h1>
                 <div className="flex flex-col items-center gap-2">
-                  <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border ${isRegistered ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
-                    {isRegistered ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                    {isRegistered ? 'Verified Merchant' : 'Unverified Identity'}
-                  </div>
+                  {isRegistered ? (
+                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Verified Merchant
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setActiveTab('Merchant Setting')}
+                      className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500 hover:text-black transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                      title="Click to Register"
+                    >
+                      <Clock className="w-3.5 h-3.5 animate-pulse" />
+                      Register
+                    </button>
+                  )}
                   {isRegistered && (
                     <div className="flex flex-wrap justify-center gap-4 mt-2">
                       {merchantWebsite && (
@@ -278,22 +316,84 @@ function AccountContent() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
+               {/* Premium Avatar/Logo Upload Zone di Bagian Atas */}
+               <div className="flex flex-col items-center justify-center p-6 bg-black/20 border border-white/5 rounded-3xl gap-4">
+                  <div className="relative group">
+                     {/* Efek glow ambient ungu di belakang logo */}
+                     <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-60 transition duration-500" />
+                     
+                     <label className="relative block w-28 h-28 bg-black/60 border border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center text-violet-500 shadow-2xl overflow-hidden group-hover:border-violet-500/50 transition-all duration-300 cursor-pointer">
+                        {merchantLogo ? (
+                          <>
+                            <img src={merchantLogo} alt="logo preview" className="w-full h-full object-cover animate-fade-in" />
+                            {/* Hover overlay dengan tombol edit dan hapus */}
+                            <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-all duration-300 backdrop-blur-xs">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-violet-400">Change Image</span>
+                              <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                <label className="cursor-pointer p-2 bg-violet-600 hover:bg-violet-500 text-white rounded-full transition-all hover:scale-110 shadow-lg">
+                                  <Upload className="w-4 h-4" />
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={handleLogoChange} 
+                                    className="hidden" 
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => setMerchantLogo('')}
+                                  className="p-2 bg-red-600/80 hover:bg-red-600 text-white rounded-full transition-all hover:scale-110 shadow-lg"
+                                  title="Remove Logo"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center gap-2 px-4 text-center">
+                            <div className="w-10 h-10 rounded-full bg-violet-600/10 flex items-center justify-center text-violet-400 group-hover:scale-110 transition-transform">
+                              <Upload className="w-5 h-5" />
+                            </div>
+                            <span className="text-[9px] font-black uppercase tracking-wider text-gray-400 group-hover:text-violet-400 transition-colors">Upload Logo</span>
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={handleLogoChange} 
+                              className="hidden" 
+                            />
+                          </div>
+                        )}
+                     </label>
+                  </div>
+                  
+                  <div className="text-center space-y-1">
+                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Brand Logo</span>
+                     <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">
+                       Supports PNG, JPG, GIF, SVG. Max size: 200 KB.
+                     </p>
+                     {logoError && (
+                       <div className="flex items-center gap-1.5 text-xs text-red-400 font-bold mt-1 justify-center animate-in fade-in slide-in-from-top-1 duration-200">
+                         <AlertCircle className="w-4 h-4 animate-bounce" />
+                         <span>{logoError}</span>
+                       </div>
+                     )}
+                  </div>
+               </div>
+
+               {/* Grid Input Fields di Bawah Logo */}
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Brand Name</label>
-                    <input type="text" value={merchantName} onChange={(e) => setMerchantName(e.target.value)} placeholder="Acme Corp" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none" required />
+                    <input type="text" value={merchantName} onChange={(e) => setMerchantName(e.target.value)} placeholder="Acme Corp" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none transition-colors" required />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Business Email</label>
-                    <input type="email" value={merchantEmail} onChange={(e) => setMerchantEmail(e.target.value)} placeholder="contact@brand.com" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none" />
+                    <input type="email" value={merchantEmail} onChange={(e) => setMerchantEmail(e.target.value)} placeholder="contact@brand.com" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none transition-colors" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Official Website</label>
-                    <input type="url" value={merchantWebsite} onChange={(e) => setMerchantWebsite(e.target.value)} placeholder="https://brand.com" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Logo URL</label>
-                    <input type="text" value={merchantLogo} onChange={(e) => setMerchantLogo(e.target.value)} placeholder="https://brand.com/logo.png" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none" />
+                    <input type="url" value={merchantWebsite} onChange={(e) => setMerchantWebsite(e.target.value)} placeholder="https://brand.com" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none transition-colors" />
                   </div>
                </div>
                <div className="pt-4 flex flex-col sm:flex-row gap-4">
