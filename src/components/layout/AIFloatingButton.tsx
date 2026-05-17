@@ -91,8 +91,8 @@ export function AIFloatingButton() {
       </button>
 
       {/* ── CHAT MODAL ── */}
-      <div className={`fixed bottom-24 right-6 sm:bottom-12 sm:right-12 z-[101] w-full max-w-[400px] transition-all duration-500 origin-bottom-right ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}>
-        <div className="bg-[#0B0B12] border border-white/10 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.8)] flex flex-col h-[550px] overflow-hidden">
+      <div className={`fixed bottom-24 left-4 right-4 sm:left-auto sm:right-12 sm:bottom-12 z-[101] sm:w-full sm:max-w-[400px] transition-all duration-500 origin-bottom-right ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}>
+        <div className="bg-[#0B0B12] border border-white/10 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.8)] flex flex-col h-[550px] max-h-[calc(100vh-8rem)] overflow-hidden">
           
           {/* Header */}
           <div className="p-6 bg-gradient-to-r from-violet-900/40 to-indigo-900/40 border-b border-white/5 flex items-center justify-between">
