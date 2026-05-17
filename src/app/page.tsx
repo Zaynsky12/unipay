@@ -69,7 +69,7 @@ export default function LandingPage() {
             href="/dashboard"
             className="group relative px-8 py-4 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl transition-all flex items-center justify-center gap-3 overflow-hidden shadow-[0_0_35px_rgba(124,58,237,0.4)]"
           >
-            <span>{isConnected ? 'Launch Merchant App' : 'Connect to Launch App'}</span>
+            <span>Launch Merchant App</span>
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
           <a 
