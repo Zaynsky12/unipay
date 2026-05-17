@@ -117,7 +117,7 @@ export function AIFloatingButton() {
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar scroll-smooth">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2`}>
-                <div className={`max-w-[85%] p-4 rounded-2xl text-[11px] leading-relaxed ${
+                <div className={`max-w-[85%] p-4 rounded-2xl text-[11px] leading-relaxed whitespace-pre-wrap ${
                   msg.role === 'user' 
                     ? 'bg-violet-600 text-white rounded-tr-none' 
                     : 'bg-white/[0.03] border border-white/10 text-gray-300 rounded-tl-none'

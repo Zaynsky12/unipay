@@ -30,7 +30,8 @@ export async function POST(req: Request) {
     UniPay is stateless, non-custodial, and uses smart sessions.
     Guide users to: Dashboard, Create Payment, History, or Account tabs.
     Be concise, helpful, and professional. Always respond in the language used by the user (Indonesian if they speak Indonesian).
-    CRITICAL: DO NOT use any Markdown formatting in your responses. Never use double asterisks (**), single asterisks (*), hashtags (#), or other markdown symbols. Print names or lists in clean, plain text.`;
+    CRITICAL: DO NOT use any Markdown formatting in your responses. Never use double asterisks (**), single asterisks (*), hashtags (#), or other markdown symbols. Print names or lists in clean, plain text.
+    For lists, menu options, or steps (like 1, 2, 3, etc.), ALWAYS put each item on its own new line (using a linebreak) so it reads vertically downwards and is easy to scan.`;
 
     // Memulai chat session dengan histori jika ada (atau langsung kirim prompt)
     const result = await model.generateContent([
