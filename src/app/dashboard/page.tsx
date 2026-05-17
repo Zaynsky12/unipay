@@ -566,7 +566,7 @@ export default function DashboardPage() {
                                     className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-300 hover:text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
                                   >
                                     <span className="text-emerald-400 text-sm block">📋</span> 
-                                    <span>{copiedId === actualId ? 'Copied!' : 'Copy Link'}</span>
+                                    <span>{copiedId === actualId ? 'Copied!' : 'Copy Paylink'}</span>
                                   </button>
                                 </div>
 
@@ -577,7 +577,7 @@ export default function DashboardPage() {
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      if (window.confirm("Are you sure you want to archive this payment link? This action cannot be undone on the blockchain.")) {
+                                      if (window.confirm("Are you sure you want to delete this payment link? This action cannot be undone on the blockchain.")) {
                                         handleDeleteSession(actualId);
                                       }
                                       setActiveDropdown(null);
@@ -587,7 +587,7 @@ export default function DashboardPage() {
                                     <span className="text-sm block group-hover/btn:scale-110 transition-transform">
                                       {(isDeactivating === actualId || isConfirmingDeactivate) ? '⏳' : '🗑️'}
                                     </span> 
-                                    <span>{(isDeactivating === actualId || isConfirmingDeactivate) ? 'Deactivating...' : 'Archive Paylink'}</span>
+                                    <span>{(isDeactivating === actualId || isConfirmingDeactivate) ? 'Deleting...' : 'Delete Paylink'}</span>
                                   </button>
                                 </div>
                               </div>
