@@ -36,8 +36,35 @@ export function AIFloatingButton() {
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: "Hello! I'm your UniPay Assistant. How can I help you navigate the protocol today?" }
   ]);
+  const [messageCount, setMessageCount] = useState(0);
+  const MAX_DAILY_MESSAGES = 10;
   
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Load message count on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const today = new Date().toDateString();
+      const stored = localStorage.getItem('unipay_ai_limit');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.date === today) {
+            setMessageCount(parsed.count || 0);
+          } else {
+            localStorage.setItem('unipay_ai_limit', JSON.stringify({ date: today, count: 0 }));
+            setMessageCount(0);
+          }
+        } catch (e) {
+          localStorage.setItem('unipay_ai_limit', JSON.stringify({ date: today, count: 0 }));
+          setMessageCount(0);
+        }
+      } else {
+        localStorage.setItem('unipay_ai_limit', JSON.stringify({ date: today, count: 0 }));
+        setMessageCount(0);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -49,6 +76,27 @@ export function AIFloatingButton() {
 
   const handleSend = async (text: string) => {
     if (!text.trim()) return;
+
+    // Check limit
+    const today = new Date().toDateString();
+    const stored = localStorage.getItem('unipay_ai_limit');
+    let currentCount = 0;
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.date === today) {
+          currentCount = parsed.count || 0;
+        }
+      } catch (e) {}
+    }
+
+    if (currentCount >= MAX_DAILY_MESSAGES) {
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: "⚠️ Batas Harian Tercapai! Anda telah menggunakan kuota 10 pertanyaan AI gratis untuk hari ini. Batas akan di-reset besok." 
+      }]);
+      return;
+    }
 
     const userMsg: Message = { role: 'user', content: text };
     setMessages(prev => [...prev, userMsg]);
@@ -64,6 +112,11 @@ export function AIFloatingButton() {
 
       const data = await response.json();
       setMessages(prev => [...prev, { role: 'assistant', content: data.text }]);
+      
+      // Increment and save count ONLY on successful message delivery
+      const newCount = currentCount + 1;
+      localStorage.setItem('unipay_ai_limit', JSON.stringify({ date: today, count: newCount }));
+      setMessageCount(newCount);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting to my neural network. Please check your internet or API key." }]);
     } finally {
@@ -141,14 +194,27 @@ export function AIFloatingButton() {
                {QUICK_PROMPTS.map((p, i) => (
                  <button 
                   key={i} 
-                  onClick={() => handleSend(p)}
-                  className="px-3 py-1.5 bg-white/[0.02] border border-white/5 hover:border-violet-500/50 rounded-lg text-[9px] font-bold text-gray-500 hover:text-white transition-all"
+                  onClick={() => messageCount < MAX_DAILY_MESSAGES && handleSend(p)}
+                  disabled={messageCount >= MAX_DAILY_MESSAGES}
+                  className={`px-3 py-1.5 border rounded-lg text-[9px] font-bold transition-all ${
+                    messageCount >= MAX_DAILY_MESSAGES 
+                      ? 'bg-white/[0.01] border-white/5 text-gray-700 cursor-not-allowed opacity-40'
+                      : 'bg-white/[0.02] border-white/5 hover:border-violet-500/50 text-gray-500 hover:text-white'
+                  }`}
                  >
                    {p}
                  </button>
                ))}
             </div>
           )}
+
+          {/* Daily Usage tracker */}
+          <div className="px-6 pb-3 flex items-center justify-between text-[9px] font-black uppercase tracking-widest">
+            <span className="text-gray-500">Daily AI Usage</span>
+            <span className={messageCount >= MAX_DAILY_MESSAGES ? "text-rose-500 animate-pulse font-bold" : "text-violet-400 font-bold"}>
+              {messageCount} / {MAX_DAILY_MESSAGES} Queries
+            </span>
+          </div>
 
           {/* Input Area */}
           <div className="p-6 pt-0">
@@ -157,13 +223,23 @@ export function AIFloatingButton() {
                 type="text" 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend(input)}
-                placeholder="Ask something..."
-                className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-5 pr-12 text-xs font-bold text-white focus:border-violet-500 outline-none transition-all"
+                onKeyDown={(e) => e.key === 'Enter' && messageCount < MAX_DAILY_MESSAGES && handleSend(input)}
+                placeholder={messageCount >= MAX_DAILY_MESSAGES ? "Daily limit reached (10/10)..." : "Ask something..."}
+                disabled={messageCount >= MAX_DAILY_MESSAGES}
+                className={`w-full bg-black/40 border rounded-2xl py-4 pl-5 pr-12 text-xs font-bold text-white focus:border-violet-500 outline-none transition-all ${
+                  messageCount >= MAX_DAILY_MESSAGES
+                    ? 'border-white/5 opacity-50 cursor-not-allowed placeholder-gray-600'
+                    : 'border-white/10'
+                }`}
               />
               <button 
-                onClick={() => handleSend(input)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl shadow-lg transition-all active:scale-90"
+                onClick={() => messageCount < MAX_DAILY_MESSAGES && handleSend(input)}
+                disabled={messageCount >= MAX_DAILY_MESSAGES || !input.trim()}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-xl shadow-lg transition-all active:scale-90 ${
+                  messageCount >= MAX_DAILY_MESSAGES || !input.trim()
+                    ? 'bg-white/[0.02] text-gray-600 cursor-not-allowed shadow-none'
+                    : 'bg-violet-600 hover:bg-violet-500 text-white'
+                }`}
               >
                 <Send className="w-4 h-4" />
               </button>
