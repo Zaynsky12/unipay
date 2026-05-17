@@ -65,19 +65,13 @@ export default function LandingPage() {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto animate-fade-in-up delay-200">
-          <button 
-            onClick={() => {
-              if (isConnected) {
-                router.push('/dashboard');
-              } else {
-                open();
-              }
-            }}
+          <Link 
+            href="/dashboard"
             className="group relative px-8 py-4 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl transition-all flex items-center justify-center gap-3 overflow-hidden shadow-[0_0_35px_rgba(124,58,237,0.4)]"
           >
             <span>{isConnected ? 'Launch Merchant App' : 'Connect to Launch App'}</span>
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </button>
+          </Link>
           <a 
             href="#how-it-works" 
             className="px-8 py-4 bg-white/[0.03] hover:bg-white/[0.08] text-white font-bold rounded-xl border border-white/10 transition-all flex items-center justify-center backdrop-blur-xl"
