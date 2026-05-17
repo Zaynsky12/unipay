@@ -22,10 +22,10 @@ type Message = {
 };
 
 const QUICK_PROMPTS = [
-  "How to create a Paylink?",
-  "What is UniPay Registry?",
-  "How to withdraw my funds?",
-  "Is UniPay non-custodial?"
+  "How do I create a new smart Paylink?",
+  "What is the purpose of the UniPay Registry?",
+  "How can I withdraw my sales funds to my wallet?",
+  "Is the UniPay Protocol fully non-custodial?"
 ];
 
 export function AIFloatingButton() {
@@ -37,7 +37,7 @@ export function AIFloatingButton() {
     { role: 'assistant', content: "Hello! I'm your UniPay Assistant. How can I help you navigate the protocol today?" }
   ]);
   const [messageCount, setMessageCount] = useState(0);
-  const MAX_DAILY_MESSAGES = 10;
+  const MAX_DAILY_MESSAGES = 15;
   
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -93,7 +93,7 @@ export function AIFloatingButton() {
     if (currentCount >= MAX_DAILY_MESSAGES) {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "⚠️ Batas Harian Tercapai! Anda telah menggunakan kuota 10 pertanyaan AI gratis untuk hari ini. Batas akan di-reset besok." 
+        content: `⚠️ Batas Harian Tercapai! Anda telah menggunakan kuota ${MAX_DAILY_MESSAGES} pertanyaan AI gratis untuk hari ini. Batas akan di-reset besok.` 
       }]);
       return;
     }
@@ -224,7 +224,7 @@ export function AIFloatingButton() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && messageCount < MAX_DAILY_MESSAGES && handleSend(input)}
-                placeholder={messageCount >= MAX_DAILY_MESSAGES ? "Daily limit reached (10/10)..." : "Ask something..."}
+                placeholder={messageCount >= MAX_DAILY_MESSAGES ? `Daily limit reached (${MAX_DAILY_MESSAGES}/${MAX_DAILY_MESSAGES})...` : "Ask something..."}
                 disabled={messageCount >= MAX_DAILY_MESSAGES}
                 className={`w-full bg-black/40 border rounded-2xl py-4 pl-5 pr-12 text-xs font-bold text-white focus:border-violet-500 outline-none transition-all ${
                   messageCount >= MAX_DAILY_MESSAGES
