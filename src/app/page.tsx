@@ -106,12 +106,20 @@ export default function LandingPage() {
           <div className="absolute top-0 left-0 bottom-0 w-16 sm:w-40 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
           <div className="absolute top-0 right-0 bottom-0 w-16 sm:w-40 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
 
-          <div className="animate-marquee gap-4 sm:gap-6 py-2">
+          <div className="animate-marquee-quarter gap-4 sm:gap-6 py-2">
             {[
               { label: 'Active Merchants', value: isLoading ? '...' : totalMerchants.toString(), desc: 'Verified on-chain profiles', icon: Store },
               { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
               { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
-              // Duplicate for seamless infinite scrolling
+              // Duplicate 2
+              { label: 'Active Merchants', value: isLoading ? '...' : totalMerchants.toString(), desc: 'Verified on-chain profiles', icon: Store },
+              { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
+              { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
+              // Duplicate 3
+              { label: 'Active Merchants', value: isLoading ? '...' : totalMerchants.toString(), desc: 'Verified on-chain profiles', icon: Store },
+              { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
+              { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
+              // Duplicate 4
               { label: 'Active Merchants', value: isLoading ? '...' : totalMerchants.toString(), desc: 'Verified on-chain profiles', icon: Store },
               { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
               { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },

@@ -491,6 +491,10 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+@keyframes marquee-quarter {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-25%); }
+}
 
 .animate-marquee {
   display: flex;
@@ -498,6 +502,13 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
   animation: marquee 25s linear infinite reverse;
 }
 
-.animate-marquee:hover {
+.animate-marquee-quarter {
+  display: flex;
+  width: max-content;
+  animation: marquee-quarter 30s linear infinite reverse;
+}
+
+.animate-marquee:hover,
+.animate-marquee-quarter:hover {
   animation-play-state: paused;
 }
