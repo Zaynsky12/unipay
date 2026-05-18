@@ -103,10 +103,10 @@ export default function LandingPage() {
       </motion.section>
 
       {/* Premium Stats Ticker Belt (Perfect 3D transition between sections) */}
-      <div className="w-full overflow-hidden bg-slate-900 border-y border-slate-800 py-5 sm:py-6 shadow-[0_8px_40px_rgba(0,0,0,0.08)] z-20 pointer-events-auto relative mt-16 sm:mt-24">
+      <div className="w-full overflow-hidden bg-gray-50/80 backdrop-blur-md border-y border-gray-200/80 py-5 sm:py-6 shadow-[0_4px_30px_rgba(0,0,0,0.02)] z-20 pointer-events-auto relative mt-16 sm:mt-24">
         {/* Gradient fade on edges for smooth scrolling effect */}
-        <div className="absolute top-0 left-0 bottom-0 w-16 sm:w-40 bg-gradient-to-r from-slate-900 to-transparent z-10 pointer-events-none" />
-        <div className="absolute top-0 right-0 bottom-0 w-16 sm:w-40 bg-gradient-to-l from-slate-900 to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 left-0 bottom-0 w-16 sm:w-40 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 right-0 bottom-0 w-16 sm:w-40 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
 
         <div className="animate-marquee-quarter gap-4 sm:gap-6 py-2">
           {[
