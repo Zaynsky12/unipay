@@ -61,8 +61,8 @@ export default function VerifyPage() {
           <CheckCircle2 className="w-12 h-12 text-emerald-500 animate-bounce" />
         </div>
         <div className="space-y-3">
-          <h1 className="text-3xl font-black text-white tracking-tight">Verification Successful!</h1>
-          <p className="text-gray-400">Your merchant identity is now secured on the Arc Network. Redirecting you to the command center...</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Verification Successful!</h1>
+          <p className="text-gray-500">Your merchant identity is now secured on the Arc Network. Redirecting you to the command center...</p>
         </div>
       </div>
     );
@@ -74,16 +74,16 @@ export default function VerifyPage() {
         
         {/* LEFT: INFO & BENEFITS */}
         <div className="space-y-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-600/10 border border-violet-500/20">
-            <ShieldCheck className="w-4 h-4 text-violet-500" />
-            <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest">Merchant Onboarding</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fc5000]/10 border border-violet-500/20">
+            <ShieldCheck className="w-4 h-4 text-[#fc5000]" />
+            <span className="text-[10px] font-black text-[#fc5000] uppercase tracking-widest">Merchant Onboarding</span>
           </div>
           
-          <h1 className="text-4xl sm:text-5xl font-black text-white leading-tight tracking-tight">
+          <h1 className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight tracking-tight">
             Claim Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-blue-500">Business Identity</span>
           </h1>
           
-          <p className="text-gray-400 text-lg leading-relaxed">
+          <p className="text-gray-500 text-lg leading-relaxed">
             Register your merchant profile to build trust with your customers. Verified merchants receive customized checkout pages and enhanced transaction visibility.
           </p>
 
@@ -94,10 +94,10 @@ export default function VerifyPage() {
               { icon: CheckCircle2, text: 'Access to AI Sales Insights' }
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-4 group">
-                <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center group-hover:border-violet-500/50 transition-colors">
-                  <item.icon className="w-5 h-5 text-violet-500" />
+                <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-gray-200 flex items-center justify-center group-hover:border-violet-500/50 transition-colors">
+                  <item.icon className="w-5 h-5 text-[#fc5000]" />
                 </div>
-                <span className="text-sm font-bold text-gray-300">{item.text}</span>
+                <span className="text-sm font-bold text-gray-600">{item.text}</span>
               </div>
             ))}
           </div>
@@ -106,7 +106,7 @@ export default function VerifyPage() {
         {/* RIGHT: REGISTRATION FORM */}
         <div className="relative group">
           <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-blue-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-          <div className="relative bg-[#0B0B12] border border-white/10 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl">
+          <div className="relative bg-[#0B0B12] border border-gray-200 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl">
             
             <form onSubmit={handleRegister} className="space-y-6">
               <div className="space-y-2">
@@ -118,7 +118,7 @@ export default function VerifyPage() {
                     value={merchantName}
                     onChange={(e) => setMerchantName(e.target.value)}
                     placeholder="e.g. Satoshi Coffee"
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white text-sm font-bold focus:border-violet-500 outline-none transition-all placeholder:text-gray-700"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 pl-12 pr-4 text-slate-900 text-sm font-bold focus:border-violet-500 outline-none transition-all placeholder:text-gray-700"
                     required
                   />
                 </div>
@@ -133,7 +133,7 @@ export default function VerifyPage() {
                     value={merchantMetadata}
                     onChange={(e) => setMerchantMetadata(e.target.value)}
                     placeholder="e.g. Best beans in Arc Network"
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white text-xs font-medium focus:border-violet-500 outline-none transition-all placeholder:text-gray-700"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 pl-12 pr-4 text-slate-900 text-xs font-medium focus:border-violet-500 outline-none transition-all placeholder:text-gray-700"
                   />
                 </div>
               </div>
@@ -150,7 +150,7 @@ export default function VerifyPage() {
               <button
                 type="submit"
                 disabled={isPending || isTxConfirming || !merchantName}
-                className="w-full py-5 bg-gradient-to-r from-violet-600 to-indigo-700 hover:from-violet-500 hover:to-indigo-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-violet-600/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-5 bg-gradient-to-r from-violet-600 to-indigo-700 hover:from-violet-500 hover:to-indigo-600 text-slate-900 text-xs font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-violet-600/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isPending || isTxConfirming ? (
                   <div className="flex items-center justify-center gap-2">

@@ -169,33 +169,36 @@ export default function DashboardPage() {
 
       {/* ── CONNECTION ALERT BANNER (Only if not connected) ── */}
   if (!isConnected) return (
-    <div className="fixed inset-0 z-[100] bg-[#0A0A0F] flex items-center justify-center p-6 animate-fade-in overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[120px] opacity-60 pointer-events-none" />
-      <div className="absolute bottom-1/3 -right-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] opacity-50 pointer-events-none" />
-      
-      <div className="max-w-md w-full glass-panel p-10 rounded-[3rem] border border-white/5 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
-        <div className="w-20 h-20 bg-violet-600/20 rounded-[2rem] border border-violet-500/30 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-violet-600/10">
-          <Shield className="w-10 h-10 text-violet-400" />
+    <div className="fixed inset-0 z-[100] bg-[#FEF7ED] flex items-center justify-center p-6 animate-fade-in overflow-hidden pixel-grid">
+      {/* Background glows */}
+      <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-[#fc5000]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/3 -right-1/4 w-[400px] h-[400px] bg-[#fc5000]/6 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="max-w-md w-full caldera-card p-10 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] animate-pop-in">
+        {/* Orange accent top line */}
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000] via-[#fc5000] to-transparent rounded-t-[2.5rem]" />
+
+        <div className="w-20 h-20 bg-[#fc5000]/15 rounded-[2rem] border border-[#fc5000]/30 flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(104,54,232,0.20)]">
+          <Shield className="w-10 h-10 text-[#fc5000]" />
         </div>
-        
-        <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-4">Identity Required</h2>
-        <p className="text-sm text-gray-400 leading-relaxed mb-10">
+
+        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Identity Required</h2>
+        <p className="text-sm text-gray-500 leading-relaxed mb-10 font-medium">
           To access the UniPay Merchant App, you must connect your Web3 identity. This ensures all your transactions and merchant data remain secure and self-custodial.
         </p>
-        
-        <button 
+
+        <button
           onClick={() => {
             const kitBtn = document.querySelector('appkit-button');
             if (kitBtn) (kitBtn as any).click();
           }}
-          className="w-full py-4 bg-violet-600 hover:bg-violet-500 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-violet-600/20 transition-all flex items-center justify-center gap-3 group"
+          className="btn-orange w-full py-4 text-white text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 group"
         >
           <span>Connect Identity</span>
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </button>
 
-        <Link href="/" className="inline-block mt-8 text-[10px] font-black text-gray-600 hover:text-gray-400 uppercase tracking-widest transition-colors">
+        <Link href="/" className="inline-block mt-8 text-[10px] font-black text-gray-600 hover:text-gray-500 uppercase tracking-widest transition-colors">
           &larr; Back to Landing Page
         </Link>
       </div>
@@ -217,32 +220,42 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
-      
-      {/* ── DASHBOARD HEADER (SLIM MOBILE) ── */}
+
+      {/* ── DASHBOARD HEADER ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-40">
         <div className="flex flex-col gap-1">
-          <p className="text-[8px] font-black text-violet-400 uppercase tracking-[0.3em] ml-1 opacity-70">
-            {isRegistered ? 'Verified Merchant' : 'Unverified Identity'}
-          </p>
-          
+          {/* Status tag — Caldera pill style */}
+          <div className="flex items-center gap-2 mb-1">
+            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+              isRegistered
+                ? 'bg-[#34D399]/10 border-[#34D399]/25 text-[#34D399]'
+                : 'bg-[#fc5000]/10 border-[#fc5000]/25 text-[#fc5000]'
+            }`}>
+              <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                isRegistered ? 'bg-[#34D399]' : 'bg-[#fc5000]'
+              }`} />
+              {isRegistered ? 'Verified Merchant' : 'Unverified Identity'}
+            </div>
+          </div>
+
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tighter flex items-center gap-2">
+            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight flex items-center gap-2" style={{ fontFamily: 'var(--font-dm-sans)', letterSpacing: '-0.02em' }}>
               {isLoadingRead ? (
-                <div className="h-7 w-24 bg-white/5 animate-pulse rounded-lg" />
+                <div className="h-8 w-28 bg-white/[0.05] animate-pulse rounded-2xl" />
               ) : (
                 <>
                   {isRegistered ? name : 'Anonymous'}
-                  {isRegistered && <BadgeCheck className="w-5 h-5 sm:w-7 sm:h-7 text-emerald-400 shrink-0" />}
+                  {isRegistered && <BadgeCheck className="w-5 h-5 sm:w-7 sm:h-7 text-[#34D399] shrink-0" />}
                 </>
               )}
             </h1>
 
             {!isLoadingRead && !isRegistered && (
-              <Link 
+              <Link
                 href="/dashboard/account?tab=Merchant Setting"
-                className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 text-[8px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-black transition-all shrink-0"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#fc5000]/10 border border-[#fc5000]/25 rounded-full text-[#fc5000] text-[10px] font-black uppercase tracking-widest hover:bg-[#fc5000] hover:text-white transition-all shrink-0"
               >
-                <ShieldAlert className="w-2.5 h-2.5" />
+                <ShieldAlert className="w-3 h-3" />
                 Register
               </Link>
             )}
@@ -250,45 +263,47 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
-           <Link 
-             href="/dashboard/create"
-             className="flex-1 md:flex-none btn-primary px-4 py-2.5 sm:px-6 rounded-xl flex items-center justify-center gap-2 text-[10px] sm:text-xs font-black shadow-lg shadow-violet-600/20 transition-all hover:-translate-y-0.5 active:scale-95"
-           >
-             <Plus className="w-3.5 h-3.5" />
-             <span>New Paylink</span>
-           </Link>
+          <Link
+            href="/dashboard/create"
+            className="flex-1 md:flex-none btn-orange px-5 py-2.5 sm:px-6 flex items-center justify-center gap-2 text-[10px] sm:text-xs font-black"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Paylink</span>
+          </Link>
 
-           <button 
-             onClick={async () => {
-               setIsRefreshing(true);
-               refetchMerchant();
-               await refetchHistory();
-               setTimeout(() => setIsRefreshing(false), 600);
-             }}
-             disabled={isRefreshing}
-             className="p-2.5 bg-white/[0.04] hover:bg-white/[0.08] rounded-xl border border-white/5 text-gray-400 hover:text-white transition-all flex items-center justify-center h-[40px] w-[40px] disabled:opacity-60"
-             title="Refresh"
-           >
-             <RefreshCw className={`w-3.5 h-3.5 transition-all ${isRefreshing ? 'animate-spin text-violet-400' : ''}`} />
-           </button>
+          <button
+            onClick={async () => {
+              setIsRefreshing(true);
+              refetchMerchant();
+              await refetchHistory();
+              setTimeout(() => setIsRefreshing(false), 600);
+            }}
+            disabled={isRefreshing}
+            className="p-2.5 bg-gray-50 hover:bg-white/[0.07] rounded-full border border-white/[0.07] text-gray-500 hover:text-slate-900 transition-all flex items-center justify-center h-[40px] w-[40px] disabled:opacity-60"
+            title="Refresh"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 transition-all ${isRefreshing ? 'animate-spin text-[#fc5000]' : ''}`} />
+          </button>
         </div>
       </div>
 
       {/* ── OPERATIONAL METRICS ── */}
       <div className={`space-y-6 animate-fade-in transition-opacity duration-300 ${isRefreshing ? 'opacity-40' : 'opacity-100'}`}>
         
-        {/* UPPER PANE: Wadah Tunggal Etalase Payments */}
+        {/* UPPER PANE: Payments */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-30">
-          
-          {/* Kolom Penuh: Payments Card */}
-          <div className="lg:col-span-12 glass-panel p-6 rounded-3xl border border-white/5 flex flex-col justify-between relative z-30 bg-gradient-to-b from-white/[0.03] via-[#0A0A0F] to-[#0A0A0F]">
+
+          {/* Payments Card — Caldera chunky */}
+          <div className="lg:col-span-12 caldera-card p-6 flex flex-col justify-between relative z-30">
+            {/* Orange top accent bar */}
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000]/60 via-[#fc5000]/40 to-transparent rounded-t-[2.5rem]" />
             <div>
-              <h2 className="text-lg font-black text-white tracking-tight mb-4">Payments</h2>
+              <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Payments</h2>
               
               {/* DESKTOP & TABLET VIEW: 12-Column Grid Table */}
               <div className="hidden md:block overflow-visible">
                 {/* Header Kolom Mini */}
-                <div className="grid grid-cols-12 text-[9px] font-black text-gray-500 uppercase tracking-widest pb-2 border-b border-white/5">
+                <div className="grid grid-cols-12 text-[9px] font-black text-gray-500 uppercase tracking-widest pb-2 border-b border-gray-200">
                   <span className="col-span-5">PAYMENTS</span>
                   <span className="col-span-2 text-center">PRICE</span>
                   <span className="col-span-2 text-center">VOLUME</span>
@@ -316,19 +331,19 @@ export default function DashboardPage() {
                       const isNakedAmt = s.amount ? `$${formatUnits(BigInt(s.amount), 6)}` : 'N/A';
 
                       return (
-                        <div key={actualId || idx} className={`grid grid-cols-12 items-center gap-2 group py-1.5 border-b border-white/[0.02] last:border-0 relative ${activeDropdown === actualId ? 'z-50' : 'z-10'}`}>
+                        <div key={actualId || idx} className={`grid grid-cols-12 items-center gap-2 group py-2 border-b border-white/[0.03] last:border-0 relative ${activeDropdown === actualId ? 'z-50' : 'z-10'}`}>
                           {/* 1. PAYMENTS */}
-                          <Link 
+                          <Link
                             href={`/pay/${actualId}`}
                             target="_blank"
                             className="col-span-5 flex items-center gap-3 min-w-0 transition-opacity hover:opacity-80"
                             title="Open Live Payment Link (Checkout Page)"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-violet-600 flex items-center justify-center text-white shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                            <div className="w-8 h-8 rounded-2xl bg-[#fc5000] flex items-center justify-center text-slate-900 shrink-0 shadow-[0_0_12px_rgba(104,54,232,0.35)] group-hover:scale-105 group-hover:shadow-[0_0_18px_rgba(104,54,232,0.50)] transition-all">
                               <ExternalLink className="w-3.5 h-3.5" />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-xs font-bold text-white truncate group-hover:text-violet-400 transition-colors">
+                              <p className="text-xs font-bold text-slate-900 truncate group-hover:text-[#fc5000] transition-colors">
                                 {getSavedDescription(actualId, s.description) || resolveTokenSymbol(s.token) + ' Paylink'}
                               </p>
                               <p className="text-[9px] text-gray-500 truncate">
@@ -339,57 +354,57 @@ export default function DashboardPage() {
 
                           {/* 2. PRICE */}
                           <div className="col-span-2 text-center">
-                            <span className="text-xs font-bold text-gray-400">{isNakedAmt}</span>
+                            <span className="text-xs font-bold text-gray-500">{isNakedAmt}</span>
                           </div>
 
                           {/* 3. VOLUME */}
                           <div className="col-span-2 text-center leading-tight">
-                            <span className="text-xs font-bold text-white block">${salesSum.toFixed(0)}</span>
-                            <span className="text-[8px] text-violet-400 font-bold block">USDC</span>
+                            <span className="text-xs font-bold text-slate-900 block">${salesSum.toFixed(0)}</span>
+                            <span className="text-[8px] text-[#fc5000] font-bold block">USDC</span>
                           </div>
 
                           {/* 4. SALES */}
                           <div className="col-span-2 text-center leading-tight">
-                            <span className="text-xs font-bold text-gray-300 block font-mono">{linkBuyers.length}</span>
+                            <span className="text-xs font-bold text-gray-600 block font-mono">{linkBuyers.length}</span>
                             <span className="text-[8px] text-gray-500 font-bold block">orders</span>
                           </div>
 
                           {/* 5. MANAGE */}
                           <div className="col-span-1 flex items-center justify-end gap-0.5 relative z-50">
-                            <button 
+                            <button
                               onClick={() => {
                                 const linkName = getSavedDescription(actualId, s.description) || resolveTokenSymbol(s.token) + ' Paylink';
                                 router.push(`/dashboard/history?filter=${actualId}&name=${encodeURIComponent(linkName)}`);
                               }}
-                              className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-violet-400 transition-all rounded-lg hover:bg-white/[0.05]"
+                              className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-[#fc5000] transition-all rounded-xl hover:bg-[#fc5000]/10"
                               title="View Buyers / History"
                             >
                               <Users className="w-3.5 h-3.5" />
                             </button>
 
-                            <button 
+                            <button
                               type="button"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 setActiveDropdown(prev => prev === actualId ? null : actualId);
-                              }} 
-                              className={`w-7 h-7 flex items-center justify-center transition-all rounded-lg border cursor-pointer ${
-                                activeDropdown === actualId 
-                                  ? 'bg-violet-500/20 text-violet-300 border-violet-500/30 shadow-sm' 
-                                  : 'text-gray-400 hover:text-white border-transparent hover:bg-white/[0.08]'
+                              }}
+                              className={`w-7 h-7 flex items-center justify-center transition-all rounded-xl border cursor-pointer ${
+                                activeDropdown === actualId
+                                  ? 'bg-[#fc5000]/15 text-[#fc5000] border-[#fc5000]/30 shadow-sm'
+                                  : 'text-gray-500 hover:text-slate-900 border-transparent hover:bg-white/[0.07]'
                               }`}
                               title="Manage Paylink Options"
                             >
                               <span className="text-sm font-black leading-none block">⋮</span>
                             </button>
 
-                            {/* DROPDOWN MENU PREMIUM GLASSMORPHISM DENGAN HOVER MULTI-WARNA */}
+                            {/* DROPDOWN MENU — Caldera dark panel */}
                             {activeDropdown === actualId && (
-                              <div className="absolute right-0 top-9 w-52 rounded-2xl bg-[#0B0B12]/95 backdrop-blur-2xl border border-violet-500/30 ring-1 ring-white/5 shadow-[0_20px_60px_rgba(0,0,0,0.9)] py-2 z-[100] animate-fade-in text-left divide-y divide-white/[0.04] pointer-events-auto cursor-default">
+                              <div className="absolute right-0 top-9 w-52 rounded-[1.5rem] bg-white/98 backdrop-blur-2xl border-[1.5px] border-gray-200 shadow-[0_20px_60px_rgba(0,0,0,0.9)] py-2 z-[100] animate-pop-in text-left divide-y divide-white/[0.05] pointer-events-auto cursor-default">
                                 <div className="px-3 py-1.5 bg-gradient-to-r from-violet-500/10 to-transparent">
-                                  <span className="text-[8px] font-black text-violet-400 uppercase tracking-widest block">Manage Paylink</span>
-                                  <span className="text-[9px] font-mono text-gray-400 truncate block mt-0.5">{actualId}</span>
+                                  <span className="text-[8px] font-black text-[#fc5000] uppercase tracking-widest block">Manage Paylink</span>
+                                  <span className="text-[9px] font-mono text-gray-500 truncate block mt-0.5">{actualId}</span>
                                 </div>
 
                                 <div className="py-1.5 space-y-0.5 px-1.5">
@@ -406,9 +421,9 @@ export default function DashboardPage() {
                                       e.preventDefault();
                                       e.stopPropagation();
                                     }}
-                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-300 hover:text-violet-300 hover:bg-violet-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
+                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-600 hover:text-[#fc5000] hover:bg-[#fc5000]/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
                                   >
-                                    <span className="text-violet-400 text-sm block">👥</span> 
+                                    <span className="text-[#fc5000] text-sm block">👥</span> 
                                     <span>View Buyers</span>
                                   </button>
 
@@ -424,7 +439,7 @@ export default function DashboardPage() {
                                       e.preventDefault();
                                       e.stopPropagation();
                                     }}
-                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-300 hover:text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
+                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-600 hover:text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
                                   >
                                     <span className="text-emerald-400 text-sm block">📋</span> 
                                     <span>{copiedId === actualId ? 'Copied!' : 'Copy Paylink'}</span>
@@ -477,7 +492,7 @@ export default function DashboardPage() {
                     const isNakedAmt = s.amount ? `$${formatUnits(BigInt(s.amount), 6)}` : 'N/A';
 
                     return (
-                      <div key={`mob-${actualId || idx}`} className={`p-4 rounded-2xl bg-white/[0.02] border border-white/[0.04] space-y-3 relative group ${activeDropdown === actualId ? 'z-50 ring-1 ring-violet-500/30' : 'z-10'}`}>
+                      <div key={`mob-${actualId || idx}`} className={`p-4 rounded-2xl bg-white border border-white/[0.04] space-y-3 relative group ${activeDropdown === actualId ? 'z-50 ring-1 ring-violet-500/30' : 'z-10'}`}>
                         {/* Top Bar: Title & Actions */}
                         <div className="flex items-start justify-between gap-2">
                           <Link 
@@ -485,11 +500,11 @@ export default function DashboardPage() {
                             target="_blank"
                             className="flex items-center gap-3 min-w-0 transition-opacity hover:opacity-80"
                           >
-                            <div className="w-8 h-8 rounded-xl bg-violet-600 flex items-center justify-center text-white shrink-0 shadow-md">
+                            <div className="w-8 h-8 rounded-xl bg-[#fc5000] flex items-center justify-center text-slate-900 shrink-0 shadow-md">
                               <ExternalLink className="w-3.5 h-3.5" />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-xs font-bold text-white truncate">
+                              <p className="text-xs font-bold text-slate-900 truncate">
                                 {getSavedDescription(actualId, s.description) || resolveTokenSymbol(s.token) + ' Paylink'}
                               </p>
                               <p className="text-[9px] text-gray-500 truncate">
@@ -505,7 +520,7 @@ export default function DashboardPage() {
                                 const linkName = getSavedDescription(actualId, s.description) || resolveTokenSymbol(s.token) + ' Paylink';
                                 router.push(`/dashboard/history?filter=${actualId}&name=${encodeURIComponent(linkName)}`);
                               }}
-                              className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-violet-400 transition-all rounded-xl hover:bg-white/[0.05]"
+                              className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-[#fc5000] transition-all rounded-xl hover:bg-white/[0.05]"
                             >
                               <Users className="w-3.5 h-3.5" />
                             </button>
@@ -519,8 +534,8 @@ export default function DashboardPage() {
                               }} 
                               className={`w-8 h-8 flex items-center justify-center transition-all rounded-xl border cursor-pointer ${
                                 activeDropdown === actualId 
-                                  ? 'bg-violet-500/20 text-violet-300 border-violet-500/30 shadow-sm' 
-                                  : 'text-gray-400 hover:text-white border-transparent hover:bg-white/[0.08]'
+                                  ? 'bg-[#fc5000]/20 text-[#fc5000] border-violet-500/30 shadow-sm' 
+                                  : 'text-gray-500 hover:text-slate-900 border-transparent hover:bg-gray-100'
                               }`}
                             >
                               <span className="text-base font-black leading-none block">⋮</span>
@@ -528,10 +543,10 @@ export default function DashboardPage() {
 
                             {/* Dropdown Mobile */}
                             {activeDropdown === actualId && (
-                              <div className="absolute right-0 top-9 w-52 rounded-2xl bg-[#0B0B12]/98 backdrop-blur-3xl border border-violet-500/30 ring-1 ring-white/5 shadow-2xl py-2 z-[100] animate-fade-in text-left divide-y divide-white/[0.04] pointer-events-auto cursor-default">
+                              <div className="absolute right-0 top-9 w-52 rounded-2xl bg-white/98 backdrop-blur-3xl border border-violet-500/30 ring-1 ring-white/5 shadow-2xl py-2 z-[100] animate-fade-in text-left divide-y divide-white/[0.04] pointer-events-auto cursor-default">
                                 <div className="px-3 py-1.5 bg-gradient-to-r from-violet-500/10 to-transparent">
-                                  <span className="text-[8px] font-black text-violet-400 uppercase tracking-widest block">Manage Paylink</span>
-                                  <span className="text-[9px] font-mono text-gray-400 truncate block mt-0.5">{actualId}</span>
+                                  <span className="text-[8px] font-black text-[#fc5000] uppercase tracking-widest block">Manage Paylink</span>
+                                  <span className="text-[9px] font-mono text-gray-500 truncate block mt-0.5">{actualId}</span>
                                 </div>
 
                                 <div className="py-1.5 space-y-0.5 px-1.5">
@@ -548,9 +563,9 @@ export default function DashboardPage() {
                                       e.preventDefault();
                                       e.stopPropagation();
                                     }}
-                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-300 hover:text-violet-300 hover:bg-violet-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
+                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-600 hover:text-[#fc5000] hover:bg-[#fc5000]/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
                                   >
-                                    <span className="text-violet-400 text-sm block">👥</span> 
+                                    <span className="text-[#fc5000] text-sm block">👥</span> 
                                     <span>View Buyers</span>
                                   </button>
 
@@ -566,7 +581,7 @@ export default function DashboardPage() {
                                       e.preventDefault();
                                       e.stopPropagation();
                                     }}
-                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-300 hover:text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
+                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-600 hover:text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
                                   >
                                     <span className="text-emerald-400 text-sm block">📋</span> 
                                     <span>{copiedId === actualId ? 'Copied!' : 'Copy Paylink'}</span>
@@ -602,15 +617,15 @@ export default function DashboardPage() {
                         <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/[0.02]">
                           <div className="bg-white/[0.01] p-2 rounded-xl text-center border border-white/[0.02]">
                             <span className="text-[8px] font-bold text-gray-500 block uppercase tracking-wider">Price</span>
-                            <span className="text-xs font-bold text-gray-300 mt-0.5 block">{isNakedAmt}</span>
+                            <span className="text-xs font-bold text-gray-600 mt-0.5 block">{isNakedAmt}</span>
                           </div>
                           <div className="bg-white/[0.01] p-2 rounded-xl text-center border border-white/[0.02]">
-                            <span className="text-[8px] font-bold text-violet-400 block uppercase tracking-wider">Volume</span>
-                            <span className="text-xs font-black text-white mt-0.5 block">${salesSum.toFixed(0)}</span>
+                            <span className="text-[8px] font-bold text-[#fc5000] block uppercase tracking-wider">Volume</span>
+                            <span className="text-xs font-black text-slate-900 mt-0.5 block">${salesSum.toFixed(0)}</span>
                           </div>
                           <div className="bg-white/[0.01] p-2 rounded-xl text-center border border-white/[0.02]">
                             <span className="text-[8px] font-bold text-gray-500 block uppercase tracking-wider">Orders</span>
-                            <span className="text-xs font-bold text-gray-300 mt-0.5 block">{linkBuyers.length}</span>
+                            <span className="text-xs font-bold text-gray-600 mt-0.5 block">{linkBuyers.length}</span>
                           </div>
                         </div>
                       </div>
@@ -623,17 +638,19 @@ export default function DashboardPage() {
 
         </div>
 
-        {/* BOTTOM PANE: Transactions Container */}
-        <div className="w-full glass-panel p-8 rounded-3xl border border-white/5 bg-[#0A0A0F] text-center relative overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+        {/* BOTTOM PANE: Transactions */}
+        <div className="w-full caldera-card p-8 text-center relative overflow-hidden">
+          {/* Orange-purple accent bar */}
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#fc5000]/30 to-[#fc5000]/40 rounded-t-[2.5rem]" />
           {/* Ikon Rantai 3D Bergradasi Ungu/Metalik di Tengah */}
           <div className="w-16 h-16 mx-auto mb-3 relative flex items-center justify-center">
-            <div className="absolute inset-0 bg-violet-600/10 rounded-full blur-xl animate-pulse" />
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600/20 via-black to-violet-400/10 border border-violet-500/30 flex items-center justify-center shadow-lg relative z-10 rotate-12 group-hover:rotate-0 transition-transform">
-              <LinkIcon className="w-5 h-5 text-violet-400 stroke-[2.5]" />
+            <div className="absolute inset-0 bg-[#fc5000]/8 rounded-full blur-xl animate-pulse" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#fc5000]/20 via-gray-50 to-[#fc5000]/10 border border-[#fc5000]/25 flex items-center justify-center shadow-lg relative z-10 rotate-12 group-hover:rotate-0 transition-transform">
+              <LinkIcon className="w-5 h-5 text-[#fc5000] stroke-[2.5]" />
             </div>
           </div>
 
-          <h3 className="text-base font-black text-white tracking-tight">History Transaction</h3>
+          <h3 className="text-base font-black text-slate-900 uppercase tracking-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>History Transaction</h3>
 
           {filteredRecentPayments.length === 0 ? (
             <p className="text-xs text-gray-500 mt-1 font-semibold">No history transactions found.</p>
@@ -641,7 +658,7 @@ export default function DashboardPage() {
             <div className="mt-6 text-left overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="text-gray-500 uppercase tracking-wider text-[9px] border-b border-white/5">
+                  <tr className="text-gray-500 uppercase tracking-wider text-[9px] border-b border-gray-200">
                     <th className="pb-3 font-bold px-2">Session Hash</th>
                     <th className="pb-3 font-bold px-2">Payer Identity</th>
                     <th className="pb-3 font-bold px-2">Settled Asset</th>
@@ -649,7 +666,7 @@ export default function DashboardPage() {
                     <th className="pb-3 font-bold text-right px-2">Verification Registry</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 font-medium text-gray-300">
+                <tbody className="divide-y divide-white/5 font-medium text-gray-600">
                   {filteredRecentPayments.slice(0, 10).map((p: any, idx: number) => {
                     const pAmountFormatted = p.amount ? formatUnits(BigInt(p.amount), 6) : '0.00';
                     const txHash = p.id || '';
@@ -661,11 +678,11 @@ export default function DashboardPage() {
                     const customTitle = matchedSession ? (matchedSession.description || matchedSession.token) : null;
 
                     return (
-                      <tr key={idx} className="hover:bg-white/[0.02] transition-colors group">
-                        <td className="py-3 px-2 font-mono text-violet-300/90 font-semibold">
+                      <tr key={idx} className="hover:bg-white transition-colors group">
+                        <td className="py-3 px-2 font-mono text-[#fc5000]/90 font-semibold">
                           <div className="space-y-0.5">
                             {customTitle && (
-                              <span className="text-[9px] font-bold text-white bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/5 block font-sans w-fit truncate max-w-[120px]">
+                              <span className="text-[9px] font-bold text-slate-900 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 block font-sans w-fit truncate max-w-[120px]">
                                 {customTitle}
                               </span>
                             )}
@@ -676,15 +693,15 @@ export default function DashboardPage() {
                           </div>
                         </td>
 
-                        <td className="py-3 px-2 font-mono text-gray-400">
-                          <span className="bg-white/[0.02] px-1.5 py-0.5 rounded border border-white/5">
+                        <td className="py-3 px-2 font-mono text-gray-500">
+                          <span className="bg-white px-1.5 py-0.5 rounded border border-gray-200">
                             {p.payer ? `${p.payer.slice(0, 8)}...${p.payer.slice(-4)}` : 'Unknown'}
                           </span>
                         </td>
 
                         <td className="py-3 px-2">
-                          <span className="font-black text-white">${pAmountFormatted}</span>
-                          <span className="text-[9px] text-violet-400 font-bold ml-1">USDC</span>
+                          <span className="font-black text-slate-900">${pAmountFormatted}</span>
+                          <span className="text-[9px] text-[#fc5000] font-bold ml-1">USDC</span>
                         </td>
 
                         <td className="py-3 px-2 text-gray-500">
@@ -696,7 +713,7 @@ export default function DashboardPage() {
                             href={`https://testnet.arcscan.app/tx/${txHash}`} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-violet-400 hover:text-violet-300 font-bold bg-white/[0.03] hover:bg-white/[0.06] px-2 py-0.5 rounded border border-white/5 transition-all"
+                            className="inline-flex items-center gap-1 text-[11px] text-[#fc5000] hover:text-[#fc5000] font-bold bg-white/[0.03] hover:bg-white px-2 py-0.5 rounded border border-gray-200 transition-all"
                           >
                             <span>ArcScan L1</span>
                             <ExternalLink className="w-2.5 h-2.5" />
@@ -708,7 +725,7 @@ export default function DashboardPage() {
                 </tbody>
               </table>
               <div className="mt-4 text-center">
-                <Link href="/dashboard/history" className="text-xs text-violet-400 hover:text-violet-300 font-bold hover:underline">
+                <Link href="/dashboard/history" className="text-xs text-[#fc5000] hover:text-[#fc5000] font-bold hover:underline">
                   View Complete History →
                 </Link>
               </div>

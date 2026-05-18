@@ -152,7 +152,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   if (isLoadingSession) return (
     <div className="min-h-screen bg-[#050508] flex items-center justify-center">
-      <Loader2 className="w-10 h-10 text-violet-600 animate-spin" />
+      <Loader2 className="w-10 h-10 text-[#fc5000] animate-spin" />
     </div>
   );
 
@@ -160,7 +160,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
     <div className="min-h-screen bg-[#050508] flex items-center justify-center p-6 text-center">
       <div className="max-w-md w-full glass-panel p-10 space-y-6">
         <AlertCircle className="w-16 h-16 text-red-500 mx-auto opacity-50" />
-        <h2 className="text-xl font-black text-white uppercase tracking-tight">Paylink Deactivated</h2>
+        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Paylink Deactivated</h2>
         <p className="text-gray-500 text-sm italic">This payment link is no longer valid.</p>
         <Link href="/" className="block py-4 text-xs font-black text-violet-400 uppercase tracking-widest border border-violet-500/20 rounded-2xl">Return Home</Link>
       </div>
@@ -172,21 +172,21 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
       
       {/* ── Background Glow ── */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-violet-600/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-[#fc5000]/6 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[120px]" />
       </div>
 
       <div className="relative z-10 max-w-xl mx-auto px-4 py-8 sm:py-16">
         
         {/* ── BILLING CARD (Everything Integrated) ── */}
-        <div className="glass-panel rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl relative animate-fade-in-up bg-black/40 backdrop-blur-3xl">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-600 via-blue-500 to-violet-600 animate-shimmer" />
+        <div className="glass-panel rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-2xl relative animate-fade-in-up bg-gray-50 backdrop-blur-3xl">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#fc5000] via-[#6836e8] to-[#fc5000] animate-shimmer" />
           
           {/* MERCHANT IDENTITY HEADER */}
-          <div className="p-8 sm:p-10 text-center border-b border-white/5 bg-white/[0.01]">
+          <div className="p-8 sm:p-10 text-center border-b border-gray-200 bg-white/[0.01]">
             <div className="relative mb-4 flex justify-center">
-              <div className="absolute w-20 h-20 bg-violet-600/20 rounded-[1.5rem] blur-xl opacity-20" />
-              <div className="relative w-20 h-20 bg-black border border-white/10 rounded-[1.5rem] flex items-center justify-center overflow-hidden shadow-2xl">
+              <div className="absolute w-20 h-20 bg-[#fc5000]/12 rounded-[1.5rem] blur-xl opacity-20" />
+              <div className="relative w-20 h-20 bg-white border border-gray-200 rounded-[1.5rem] flex items-center justify-center overflow-hidden shadow-2xl">
                 {merchantLogo ? (
                   <img src={merchantLogo} alt={displayName} className="w-full h-full object-cover" />
                 ) : (
@@ -197,7 +197,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
             
             <div className="space-y-3">
               <div className="flex items-center justify-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight italic">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight italic">
                   {displayName}
                 </h1>
                 {isVerified && (
@@ -230,7 +230,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
             <div className="text-center space-y-2">
               <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-4">Amount to Settle</p>
               <div className="flex items-center justify-center gap-3">
-                <span className="text-5xl sm:text-7xl font-black text-white tracking-tighter">${formattedAmount}</span>
+                <span className="text-5xl sm:text-7xl font-black text-slate-900 tracking-tighter">${formattedAmount}</span>
                 <div className="flex flex-col items-start">
                    <span className="text-xs font-black text-violet-400 uppercase tracking-widest">{matchedToken.symbol}</span>
                    <span className="text-[9px] font-bold text-gray-600 uppercase">Settlement</span>
@@ -239,7 +239,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
             </div>
 
             {/* Description & Details */}
-            <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 space-y-6">
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 space-y-6">
                <div className="flex justify-between items-start">
                  <div className="space-y-1">
                    <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Order Note</p>
@@ -247,18 +247,18 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                  </div>
                  <div className="text-right space-y-1">
                    <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Blockchain</p>
-                   <p className="text-xs font-bold text-white flex items-center justify-end gap-1.5 uppercase tracking-tighter">Arc Network <ShieldCheck className="w-3.5 h-3.5 text-violet-500" /></p>
+                   <p className="text-xs font-bold text-slate-900 flex items-center justify-end gap-1.5 uppercase tracking-tighter">Arc Network <ShieldCheck className="w-3.5 h-3.5 text-violet-500" /></p>
                  </div>
                </div>
 
-               <div className="h-px bg-white/5 w-full" />
+               <div className="h-px bg-gray-50 w-full" />
 
                <div className="flex justify-between items-center">
                  <div className="space-y-1">
                    <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Valid Until</p>
                    <div className="flex items-center gap-2">
                      <div className={`w-1.5 h-1.5 rounded-full ${isExpired ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
-                     <p className="text-xs font-bold text-gray-300">{isExpired ? 'Expired' : expiry === 0n ? 'Permanent' : new Date(Number(expiry) * 1000).toLocaleDateString()}</p>
+                     <p className="text-xs font-bold text-gray-600">{isExpired ? 'Expired' : expiry === 0n ? 'Permanent' : new Date(Number(expiry) * 1000).toLocaleDateString()}</p>
                    </div>
                  </div>
                  <div className="text-right space-y-1">
@@ -273,7 +273,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
               {!isConnected ? (
                 <button 
                   onClick={() => (document.querySelector('appkit-button') as any)?.click()}
-                  className="w-full py-5 bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-violet-600/20 active:scale-95 flex items-center justify-center gap-3"
+                  className="btn-orange w-full py-5 text-white text-[11px] font-black uppercase tracking-[0.2em] active:scale-95 flex items-center justify-center gap-3"
                 >
                   <Wallet className="w-5 h-5" /> Connect Wallet
                 </button>
@@ -283,11 +283,11 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                     <CheckCircle2 className="w-10 h-10" />
                   </div>
                   <div className="text-center">
-                    <h3 className="text-xl font-black text-white uppercase tracking-tight">Payment Settled</h3>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Payment Settled</h3>
                     <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mt-1">Confirmed on Blockchain</p>
                   </div>
                   {txHash && (
-                    <button onClick={() => window.open(`https://explorer.arc.network/tx/${txHash}`, '_blank')} className="mt-2 flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-white transition-colors">
+                    <button onClick={() => window.open(`https://explorer.arc.network/tx/${txHash}`, '_blank')} className="mt-2 flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
                        View Receipt <ExternalLink className="w-3.5 h-3.5" />
                     </button>
                   )}
@@ -309,7 +309,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                 <button 
                   onClick={handleExecutePayment}
                   disabled={activeStep === 'paying'}
-                  className="w-full py-5 bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-violet-600/30 active:scale-95 flex items-center justify-center gap-3"
+                  className="btn-orange w-full py-5 text-white text-[11px] font-black uppercase tracking-[0.2em] active:scale-95 flex items-center justify-center gap-3"
                 >
                   {activeStep === 'paying' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
                   Confirm Payment
@@ -318,7 +318,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
             </div>
           </div>
 
-          <div className="px-8 py-5 bg-white/[0.01] border-t border-white/5 flex items-center justify-center">
+          <div className="px-8 py-5 bg-white/[0.01] border-t border-gray-200 flex items-center justify-center">
              <div className="flex items-center gap-2 text-[9px] font-black text-gray-700 uppercase tracking-[0.2em]">
                 <Zap className="w-3 h-3 text-violet-500 fill-violet-500/20" /> Powered by UniPay
              </div>

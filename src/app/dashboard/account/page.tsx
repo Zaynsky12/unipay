@@ -207,30 +207,30 @@ function AccountContent() {
   };
 
   if (!isConnected) return (
-    <div className="fixed inset-0 z-[100] bg-[#0A0A0F] flex items-center justify-center p-6 animate-fade-in overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[120px] opacity-60 pointer-events-none" />
-      <div className="absolute bottom-1/3 -right-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] opacity-50 pointer-events-none" />
-      
-      <div className="max-w-md w-full glass-panel p-10 rounded-[3rem] border border-white/5 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
-        <div className="w-20 h-20 bg-violet-600/20 rounded-[2rem] border border-violet-500/30 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-violet-600/10">
-          <Shield className="w-10 h-10 text-violet-400" />
+    <div className="fixed inset-0 z-[100] bg-[#FEF7ED] flex items-center justify-center p-6 animate-fade-in overflow-hidden pixel-grid">
+      <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-[#fc5000]/8 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/3 -right-1/4 w-[400px] h-[400px] bg-[#fc5000]/6 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="max-w-md w-full caldera-card p-10 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] animate-pop-in">
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000] via-[#fc5000] to-transparent rounded-t-[2.5rem]" />
+        <div className="w-20 h-20 bg-[#fc5000]/12 rounded-[2rem] border border-[#fc5000]/25 flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(252,80,0,0.15)]">
+          <Shield className="w-10 h-10 text-[#fc5000]" />
         </div>
-        
-        <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-4">Identity Required</h2>
-        <p className="text-sm text-gray-400 leading-relaxed mb-10">
+
+        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Identity Required</h2>
+        <p className="text-sm text-gray-500 leading-relaxed mb-10 font-medium">
           To access the Account Center, you must connect your Web3 identity. This ensures your merchant profile and settlement data are secured by your own wallet.
         </p>
-        
-        <button 
+
+        <button
           onClick={() => (document.querySelector('appkit-button') as any)?.click()}
-          className="w-full py-4 bg-violet-600 hover:bg-violet-500 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-violet-600/20 transition-all flex items-center justify-center gap-3 group"
+          className="btn-orange w-full py-4 text-white text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 group"
         >
           <span>Connect Identity</span>
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </button>
 
-        <Link href="/" className="inline-block mt-8 text-[10px] font-black text-gray-600 hover:text-gray-400 uppercase tracking-widest transition-colors">
+        <Link href="/" className="inline-block mt-8 text-[10px] font-black text-gray-600 hover:text-gray-500 uppercase tracking-widest transition-colors">
           &larr; Back to Landing Page
         </Link>
       </div>
@@ -239,21 +239,21 @@ function AccountContent() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 animate-fade-in pb-24 font-sans">
-      
+
       <div className="mb-8 sm:mb-10 space-y-6">
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight px-1 italic uppercase text-center sm:text-left">Account <span className="text-violet-500">Center</span></h1>
-        <div className="flex items-center gap-2 sm:gap-12 border-b border-white/5 px-2 overflow-x-auto no-scrollbar scroll-smooth">
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight px-1 uppercase text-center sm:text-left" style={{ fontFamily: 'var(--font-dm-sans)' }}>Account <span className="gradient-text-orange">Center</span></h1>
+        <div className="flex items-center gap-2 sm:gap-12 border-b border-gray-200 px-2 overflow-x-auto no-scrollbar scroll-smooth">
           {(['Account', 'Merchant Setting', 'Integrations'] as TabType[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`pb-4 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all relative flex-1 sm:flex-none text-center sm:text-left whitespace-nowrap ${
-                activeTab === tab ? 'text-violet-400' : 'text-gray-500 hover:text-gray-300'
+                activeTab === tab ? 'text-[#fc5000]' : 'text-gray-500 hover:text-gray-600'
               }`}
             >
               {tab}
               {activeTab === tab && (
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-violet-500 shadow-[0_0_15px_rgba(139,92,246,0.6)]" />
+                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#fc5000] shadow-[0_0_12px_rgba(252,80,0,0.5)]" />
               )}
             </button>
           ))}
@@ -262,11 +262,11 @@ function AccountContent() {
 
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
         {activeTab === 'Account' && (
-          <div className="bg-[#0B0B12] border border-white/10 rounded-3xl sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
-            <div className="p-10 sm:p-14 flex flex-col items-center text-center border-b border-white/5 space-y-6">
+          <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
+            <div className="p-10 sm:p-14 flex flex-col items-center text-center border-b border-gray-200 space-y-6">
               <div className="relative group">
-                <div className="absolute -inset-4 bg-violet-600/20 rounded-full blur-2xl group-hover:bg-violet-600/30 transition duration-500" />
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28 bg-black border-2 border-white/10 rounded-[2.5rem] flex items-center justify-center text-violet-500 shadow-2xl overflow-hidden group-hover:border-violet-500/50 transition-all duration-500">
+                <div className="absolute -inset-4 bg-[#fc5000]/10 rounded-full blur-2xl group-hover:bg-[#fc5000]/18 transition duration-500" />
+                <div className="relative w-24 h-24 sm:w-28 sm:h-28 bg-white border-[1.5px] border-gray-200 rounded-[2.5rem] flex items-center justify-center text-gray-500 shadow-2xl overflow-hidden group-hover:border-[#fc5000]/30 transition-all duration-500">
                   {merchantLogo ? (
                     <img src={merchantLogo} alt="logo" className="w-full h-full object-cover" />
                   ) : (
@@ -276,7 +276,7 @@ function AccountContent() {
               </div>
               
               <div className="space-y-3 w-full">
-                <h1 className="text-3xl font-black text-white uppercase tracking-tighter truncate max-w-[280px] sm:max-w-none">
+                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter truncate max-w-[280px] sm:max-w-none">
                   {isRegistered ? currentName : 'Anonymous'}
                 </h1>
                 <div className="flex flex-col items-center gap-2">
@@ -299,13 +299,13 @@ function AccountContent() {
                     <div className="flex flex-wrap justify-center gap-4 mt-2">
                       {merchantWebsite && (
                         <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-500 uppercase tracking-widest">
-                          <Globe className="w-3 h-3 text-violet-500" />
+                          <Globe className="w-3 h-3 text-[#fc5000]" />
                           {merchantWebsite.replace('https://','').replace('http://','')}
                         </div>
                       )}
                       {merchantEmail && (
                         <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-500 uppercase tracking-widest">
-                          <Mail className="w-3 h-3 text-blue-500" />
+                          <Mail className="w-3 h-3 text-[#fc5000]" />
                           {merchantEmail}
                         </div>
                       )}
@@ -315,9 +315,9 @@ function AccountContent() {
               </div>
             </div>
 
-            <div className="p-8 sm:p-10 border-b border-white/5 space-y-8">
+            <div className="p-8 sm:p-10 border-b border-gray-200 space-y-8">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[10px] font-black text-blue-400 uppercase tracking-widest">
+                <div className="flex items-center gap-2 text-[10px] font-black text-[#fc5000] uppercase tracking-widest">
                   <TrendingUp className="w-4 h-4" />
                   Live Performance
                 </div>
@@ -325,7 +325,7 @@ function AccountContent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-end">
                 <div className="space-y-4 text-center md:text-left">
                   <div className="flex flex-col md:flex-row md:items-baseline gap-2">
-                    <span className="text-5xl sm:text-6xl font-black text-white tracking-tighter">
+                    <span className="text-5xl sm:text-6xl font-black text-slate-900 tracking-tighter">
                       ${formatUnits(totalReceived, 6)}
                     </span>
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Total Revenue</span>
@@ -346,8 +346,8 @@ function AccountContent() {
               </div>
             </div>
 
-            <div className="p-8 sm:p-10 bg-white/[0.01] space-y-6">
-              <div className="flex items-center gap-2 text-[10px] font-black text-blue-400 uppercase tracking-widest">
+            <div className="p-8 sm:p-10 bg-gray-50/50 space-y-6">
+              <div className="flex items-center gap-2 text-[10px] font-black text-[#fc5000] uppercase tracking-widest">
                 <Globe2 className="w-4 h-4" />
                 My Asset
               </div>
@@ -358,12 +358,12 @@ function AccountContent() {
                   { n: 'ARB', b: formatB(arbBalance), i: '💙' },
                   { n: 'OPT', b: formatB(optBalance), i: '🔴' },
                 ].map((c) => (
-                  <div key={c.n} className="bg-[#12121A] border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-colors">
+                  <div key={c.n} className="bg-white border border-gray-200 rounded-2xl p-4 hover:border-gray-300 shadow-sm transition-colors">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-[10px]">{c.i}</div>
-                      <span className="text-[8px] font-black text-gray-600 uppercase">{c.n}</span>
+                      <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px]">{c.i}</div>
+                      <span className="text-[8px] font-black text-gray-500 uppercase">{c.n}</span>
                     </div>
-                    <div className="text-sm font-black text-white">${c.b}</div>
+                    <div className="text-sm font-black text-slate-900">${c.b}</div>
                   </div>
                 ))}
               </div>
@@ -372,33 +372,33 @@ function AccountContent() {
         )}
 
         {activeTab === 'Merchant Setting' && (
-          <div className="bg-[#0B0B12] border border-white/10 rounded-3xl sm:rounded-[2.5rem] p-8 sm:p-12 space-y-10">
+          <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] p-8 sm:p-12 space-y-10">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-violet-600/10 flex items-center justify-center text-violet-500">
+              <div className="w-12 h-12 rounded-2xl bg-[#fc5000]/10 border border-[#fc5000]/20 flex items-center justify-center text-[#fc5000]">
                 <UserCog className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-black text-white uppercase tracking-tight">Merchant Identity</h2>
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Merchant Identity</h2>
                 <p className="text-gray-500 text-xs uppercase tracking-widest leading-relaxed">Setup your business identity on-chain.</p>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
                {/* Premium Avatar/Logo Upload Zone di Bagian Atas */}
-               <div className="flex flex-col items-center justify-center p-6 bg-black/20 border border-white/5 rounded-3xl gap-4">
+               <div className="flex flex-col items-center justify-center p-6 bg-white border border-gray-200 rounded-3xl gap-4">
                   <div className="relative group">
                      {/* Efek glow ambient ungu di belakang logo */}
                      <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-60 transition duration-500" />
                      
-                     <label className="relative block w-28 h-28 bg-black/60 border border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center text-violet-500 shadow-2xl overflow-hidden group-hover:border-violet-500/50 transition-all duration-300 cursor-pointer">
+                     <label className="relative block w-28 h-28 bg-gray-50 border border-gray-200 rounded-[2.5rem] flex flex-col items-center justify-center text-[#fc5000] shadow-2xl overflow-hidden group-hover:border-violet-500/50 transition-all duration-300 cursor-pointer">
                         {merchantLogo ? (
                           <>
                             <img src={merchantLogo} alt="logo preview" className="w-full h-full object-cover animate-fade-in" />
                             {/* Hover overlay dengan tombol edit dan hapus */}
-                            <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-all duration-300 backdrop-blur-xs">
-                              <span className="text-[9px] font-black uppercase tracking-widest text-violet-400">Change Image</span>
+                            <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-all duration-300 backdrop-blur-xs">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-[#fc5000]">Change Image</span>
                               <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                                <label className="cursor-pointer p-2 bg-violet-600 hover:bg-violet-500 text-white rounded-full transition-all hover:scale-110 shadow-lg">
+                                <label className="cursor-pointer p-2 bg-[#fc5000] hover:bg-[#fc5000] text-slate-900 rounded-full transition-all hover:scale-110 shadow-lg">
                                   <Upload className="w-4 h-4" />
                                   <input 
                                     type="file" 
@@ -410,7 +410,7 @@ function AccountContent() {
                                 <button
                                   type="button"
                                   onClick={() => setMerchantLogo('')}
-                                  className="p-2 bg-red-600/80 hover:bg-red-600 text-white rounded-full transition-all hover:scale-110 shadow-lg"
+                                  className="p-2 bg-red-600/80 hover:bg-red-600 text-slate-900 rounded-full transition-all hover:scale-110 shadow-lg"
                                   title="Remove Logo"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -420,10 +420,10 @@ function AccountContent() {
                           </>
                         ) : (
                           <div className="flex flex-col items-center justify-center gap-2 px-4 text-center">
-                            <div className="w-10 h-10 rounded-full bg-violet-600/10 flex items-center justify-center text-violet-400 group-hover:scale-110 transition-transform">
+                            <div className="w-10 h-10 rounded-full bg-[#fc5000]/10 flex items-center justify-center text-[#fc5000] group-hover:scale-110 transition-transform">
                               <Upload className="w-5 h-5" />
                             </div>
-                            <span className="text-[9px] font-black uppercase tracking-wider text-gray-400 group-hover:text-violet-400 transition-colors">Upload Logo</span>
+                            <span className="text-[9px] font-black uppercase tracking-wider text-gray-500 group-hover:text-[#fc5000] transition-colors">Upload Logo</span>
                             <input 
                               type="file" 
                               accept="image/*" 
@@ -436,7 +436,7 @@ function AccountContent() {
                   </div>
                   
                   <div className="text-center space-y-1">
-                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Brand Logo</span>
+                     <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Brand Logo</span>
                      <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">
                        Supports PNG, JPG, GIF, SVG. Max size: 200 KB.
                      </p>
@@ -453,15 +453,15 @@ function AccountContent() {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Brand Name</label>
-                    <input type="text" value={merchantName} onChange={(e) => setMerchantName(e.target.value)} placeholder="Acme Corp" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none transition-colors" required />
+                    <input type="text" value={merchantName} onChange={(e) => setMerchantName(e.target.value)} placeholder="Acme Corp" className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-5 text-slate-900 text-sm font-bold focus:border-violet-500 outline-none transition-colors" required />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Business Email</label>
-                    <input type="email" value={merchantEmail} onChange={(e) => setMerchantEmail(e.target.value)} placeholder="contact@brand.com" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none transition-colors" />
+                    <input type="email" value={merchantEmail} onChange={(e) => setMerchantEmail(e.target.value)} placeholder="contact@brand.com" className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-5 text-slate-900 text-sm font-bold focus:border-violet-500 outline-none transition-colors" />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Official Website</label>
-                    <input type="url" value={merchantWebsite} onChange={(e) => setMerchantWebsite(e.target.value)} placeholder="https://brand.com" className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none transition-colors" />
+                    <input type="url" value={merchantWebsite} onChange={(e) => setMerchantWebsite(e.target.value)} placeholder="https://brand.com" className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-5 text-slate-900 text-sm font-bold focus:border-violet-500 outline-none transition-colors" />
                   </div>
                </div>
                {/* Error Display */}
@@ -470,7 +470,7 @@ function AccountContent() {
                    <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
                    <div className="text-left">
                      <p className="text-[10px] font-black uppercase tracking-widest text-red-500 mb-0.5">Transaction Failed</p>
-                     <p className="text-xs font-semibold text-gray-300">{getErrorMessage()}</p>
+                     <p className="text-xs font-semibold text-gray-600">{getErrorMessage()}</p>
                    </div>
                  </div>
                )}
@@ -481,13 +481,13 @@ function AccountContent() {
                    <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500" />
                    <div className="text-left">
                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-0.5">Profile Saved</p>
-                     <p className="text-xs font-semibold text-gray-300">Your merchant profile and settings have been successfully secured on-chain.</p>
+                     <p className="text-xs font-semibold text-gray-600">Your merchant profile and settings have been successfully secured on-chain.</p>
                    </div>
                  </div>
                )}
 
                <div className="pt-4 flex flex-col sm:flex-row gap-4">
-                  <button type="submit" disabled={isPending || isTxConfirming || !merchantName} className="flex-1 py-4 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black uppercase rounded-2xl transition-all shadow-xl shadow-violet-600/20 flex items-center justify-center gap-3">
+                  <button type="submit" disabled={isPending || isTxConfirming || !merchantName} className="btn-orange flex-1 py-4 text-white text-[10px] font-black uppercase flex items-center justify-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed">
                     {isPending || isTxConfirming ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-4 h-4" />Save Profile</>}
                   </button>
                   <button type="button" onClick={handleReset} className="px-8 py-4 bg-red-500/5 hover:bg-red-500/10 text-red-500 text-[10px] font-black uppercase rounded-2xl border border-red-500/20 transition-all">Reset</button>
@@ -497,9 +497,9 @@ function AccountContent() {
         )}
 
         {activeTab === 'Integrations' && (
-          <div className="bg-[#0B0B12] border border-white/10 rounded-3xl py-16 text-center space-y-4 px-6">
-            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/5 text-gray-600"><Puzzle className="w-8 h-8" /></div>
-            <h2 className="text-lg font-black text-white uppercase tracking-tight">Coming Soon</h2>
+          <div className="bg-white border border-gray-200 rounded-3xl py-16 text-center space-y-4 px-6">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto border border-gray-200 text-gray-600"><Puzzle className="w-8 h-8" /></div>
+            <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Coming Soon</h2>
           </div>
         )}
       </div>
@@ -512,7 +512,7 @@ export default function AccountPage() {
   return (
     <Suspense fallback={
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-8 h-8 text-violet-600 animate-spin" />
+      <Loader2 className="w-8 h-8 text-[#fc5000] animate-spin" />
         <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Loading Account Center...</p>
       </div>
     }>

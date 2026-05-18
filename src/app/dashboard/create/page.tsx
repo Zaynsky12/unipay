@@ -37,30 +37,30 @@ export default function CreatePaymentPage() {
   const { address, isConnected } = useAccount();
 
   if (!isConnected) return (
-    <div className="fixed inset-0 z-[100] bg-[#0A0A0F] flex items-center justify-center p-6 animate-fade-in overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[120px] opacity-60 pointer-events-none" />
-      <div className="absolute bottom-1/3 -right-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] opacity-50 pointer-events-none" />
-      
-      <div className="max-w-md w-full glass-panel p-10 rounded-[3rem] border border-white/5 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
-        <div className="w-20 h-20 bg-violet-600/20 rounded-[2rem] border border-violet-500/30 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-violet-600/10">
-          <Shield className="w-10 h-10 text-violet-400" />
+    <div className="fixed inset-0 z-[100] bg-[#FEF7ED] flex items-center justify-center p-6 animate-fade-in overflow-hidden pixel-grid">
+      <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-[#fc5000]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/3 -right-1/4 w-[400px] h-[400px] bg-[#fc5000]/6 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="max-w-md w-full caldera-card p-10 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] animate-pop-in">
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000] via-[#fc5000] to-transparent rounded-t-[2.5rem]" />
+        <div className="w-20 h-20 bg-[#fc5000]/12 rounded-[2rem] border border-[#fc5000]/25 flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(252,80,0,0.15)]">
+          <Shield className="w-10 h-10 text-[#fc5000]" />
         </div>
-        
-        <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-4">Identity Required</h2>
-        <p className="text-sm text-gray-400 leading-relaxed mb-10">
+
+        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Identity Required</h2>
+        <p className="text-sm text-gray-500 leading-relaxed mb-10 font-medium">
           To create payment links, you must connect your Web3 identity. This ensures you can receive settlements directly into your self-custody wallet.
         </p>
-        
-        <button 
+
+        <button
           onClick={() => (document.querySelector('appkit-button') as any)?.click()}
-          className="w-full py-4 bg-violet-600 hover:bg-violet-500 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-violet-600/20 transition-all flex items-center justify-center gap-3 group"
+          className="btn-orange w-full py-4 text-white text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 group"
         >
           <span>Connect Identity</span>
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </button>
 
-        <Link href="/" className="inline-block mt-8 text-[10px] font-black text-gray-600 hover:text-gray-400 uppercase tracking-widest transition-colors">
+        <Link href="/" className="inline-block mt-8 text-[10px] font-black text-gray-600 hover:text-gray-500 uppercase tracking-widest transition-colors">
           &larr; Back to Landing Page
         </Link>
       </div>
@@ -213,10 +213,13 @@ export default function CreatePaymentPage() {
 
   if (!selectedMenu) {
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-0 pt-10 pb-24 animate-fade-in">
+      <div className="max-w-3xl mx-auto px-4 sm:px-0 pt-10 pb-24 animate-pop-in">
         <div className="text-center space-y-3 mb-10">
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight px-1 italic uppercase">
-            Create a <span className="text-violet-500">Payment</span>
+          <h1
+            className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight px-1 uppercase"
+            style={{ fontFamily: 'var(--font-dm-sans)', letterSpacing: '-0.02em' }}
+          >
+            Create a <span className="gradient-text-orange">Payment</span>
           </h1>
           <p className="text-sm text-gray-500 font-medium">
             Set up a Checkout, Invoice, Subscription, or Tip in just a few clicks.
@@ -224,57 +227,33 @@ export default function CreatePaymentPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button 
-            onClick={() => { setSelectedMenu('invoices'); setPaymentType('onetime'); }}
-            className="flex items-start gap-5 p-6 bg-[#0B0B12] hover:bg-white/[0.04] border border-white/5 hover:border-violet-500/30 rounded-3xl transition-all text-left group"
-          >
-            <div className="w-12 h-12 bg-violet-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-violet-500/20 group-hover:scale-110 transition-transform shadow-lg shadow-violet-500/5">
-              <LinkIcon className="w-6 h-6 text-violet-400" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-white capitalize tracking-tight mb-1 group-hover:text-violet-400 transition-colors">invoices</h3>
-              <p className="text-xs text-gray-500 font-medium leading-relaxed">A hosted shareable link</p>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => { setSelectedMenu('checkouts'); setPaymentType('onetime'); }}
-            className="flex items-start gap-5 p-6 bg-[#0B0B12] hover:bg-white/[0.04] border border-white/5 hover:border-violet-500/30 rounded-3xl transition-all text-left group"
-          >
-            <div className="w-12 h-12 bg-violet-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-violet-500/20 group-hover:scale-110 transition-transform shadow-lg shadow-violet-500/5">
-              <Settings className="w-6 h-6 text-violet-400" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-white capitalize tracking-tight mb-1 group-hover:text-violet-400 transition-colors">checkouts</h3>
-              <p className="text-xs text-gray-500 font-medium leading-relaxed">Embed directly into your site or app</p>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => { setSelectedMenu('subscribtion'); setPaymentType('subscription'); }}
-            className="flex items-start gap-5 p-6 bg-[#0B0B12] hover:bg-white/[0.04] border border-white/5 hover:border-violet-500/30 rounded-3xl transition-all text-left group"
-          >
-            <div className="w-12 h-12 bg-violet-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-violet-500/20 group-hover:scale-110 transition-transform shadow-lg shadow-violet-500/5">
-              <Zap className="w-6 h-6 text-violet-400" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-white capitalize tracking-tight mb-1 group-hover:text-violet-400 transition-colors">subscribtion</h3>
-              <p className="text-xs text-gray-500 font-medium leading-relaxed">Recurring billing</p>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => { setSelectedMenu('tip'); setPaymentType('onetime'); }}
-            className="flex items-start gap-5 p-6 bg-[#0B0B12] hover:bg-white/[0.04] border border-white/5 hover:border-violet-500/30 rounded-3xl transition-all text-left group"
-          >
-            <div className="w-12 h-12 bg-violet-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-violet-500/20 group-hover:scale-110 transition-transform shadow-lg shadow-violet-500/5">
-              <QrCode className="w-6 h-6 text-violet-400" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-white capitalize tracking-tight mb-1 group-hover:text-violet-400 transition-colors">tip</h3>
-              <p className="text-xs text-gray-500 font-medium leading-relaxed">Accept spontaneous contributions</p>
-            </div>
-          </button>
+          {[
+            { menu: 'invoices', type: 'onetime', icon: LinkIcon, label: 'Invoices', desc: 'A hosted shareable link', accent: '#fc5000' },
+            { menu: 'checkouts', type: 'onetime', icon: Settings, label: 'Checkouts', desc: 'Embed directly into your site or app', accent: '#fc5000' },
+            { menu: 'subscribtion', type: 'subscription', icon: Zap, label: 'Subscription', desc: 'Recurring billing', accent: '#fc5000' },
+            { menu: 'tip', type: 'onetime', icon: QrCode, label: 'Tip', desc: 'Accept spontaneous contributions', accent: '#fc5000' },
+          ].map((item) => (
+            <button
+              key={item.menu}
+              onClick={() => { setSelectedMenu(item.menu as any); setPaymentType(item.type as any); }}
+              className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 p-6 caldera-card hover-lift text-center sm:text-left group w-full"
+            >
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border group-hover:scale-110 transition-transform"
+                style={{
+                  background: `${item.accent}15`,
+                  borderColor: `${item.accent}30`,
+                  color: item.accent,
+                }}
+              >
+                <item.icon className="w-6 h-6" />
+              </div>
+              <div className="flex flex-col items-center sm:items-start">
+                <h3 className="text-base font-black text-slate-900 capitalize tracking-tight mb-1 group-hover:text-[#fc5000] transition-colors uppercase">{item.label}</h3>
+                <p className="text-xs text-gray-500 font-medium leading-relaxed">{item.desc}</p>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
     );
@@ -287,23 +266,23 @@ export default function CreatePaymentPage() {
       <div className="text-center sm:text-left space-y-4">
         <button 
           onClick={() => setSelectedMenu(null)}
-          className="text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-2 mb-4"
+          className="text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-slate-900 transition-colors flex items-center gap-2 mb-4"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to options
         </button>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-white/5 pb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-gray-200 pb-8">
            <div className="space-y-2">
               <div className="flex items-center justify-center sm:justify-start gap-3 mb-1">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-600/10 border border-violet-500/20 shadow-[0_0_15px_rgba(124,58,237,0.1)]">
-                  <Zap className="w-3.5 h-3.5 text-violet-400 fill-violet-400/20" />
-                  <span className="text-[10px] font-black text-violet-400 uppercase tracking-[0.2em]">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fc5000]/10 border border-[#fc5000]/20 shadow-[0_0_12px_rgba(252,80,0,0.08)]">
+                  <Zap className="w-3.5 h-3.5 text-[#fc5000] fill-violet-400/20" />
+                  <span className="text-[10px] font-black text-[#fc5000] uppercase tracking-[0.2em]">
                     Payment Gateway
                   </span>
                 </div>
                 <span className="hidden sm:inline text-xs text-gray-500 font-medium">• Stateless Dispatch</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight px-1 italic uppercase">
-                Create <span className="text-violet-500">{selectedMenu}</span>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight px-1 italic uppercase">
+                Create <span className="text-[#fc5000]">{selectedMenu}</span>
               </h1>
               <p className="text-xs text-gray-500 font-medium uppercase tracking-widest sm:max-w-md">Issue professional cryptographic billing endpoints in seconds.</p>
            </div>
@@ -323,8 +302,8 @@ export default function CreatePaymentPage() {
       )}
 
       {!isRegistered && isConnected && (
-        <div className="p-5 rounded-2xl bg-violet-600/5 border border-violet-500/10 text-[10px] text-gray-400 flex items-center gap-4 font-bold uppercase tracking-widest leading-relaxed">
-          <Sparkles className="w-5 h-5 text-violet-400 shrink-0" />
+        <div className="p-5 rounded-2xl bg-[#fc5000]/5 border border-[#fc5000]/10 text-[10px] text-gray-500 flex items-center gap-4 font-bold uppercase tracking-widest leading-relaxed">
+          <Sparkles className="w-5 h-5 text-[#fc5000] shrink-0" />
           <span>Notice: Operating as Anonymous. You can verify your brand in the Account settings.</span>
         </div>
       )}
@@ -333,20 +312,21 @@ export default function CreatePaymentPage() {
         
         {/* ── CREATE FORM (Left - 7 cols) ── */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="bg-[#0B0B12] border border-white/5 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative">
+          <div className="caldera-card p-8 sm:p-10 shadow-2xl relative">
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000]/60 via-[#fc5000]/40 to-transparent rounded-t-[2.5rem]" />
             <form onSubmit={handleCreateSession} className="space-y-8">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Asset Amount</label>
                   <div className="relative group">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 font-bold">$</div>
-                    <input 
-                      type="number" 
-                      value={amount} 
-                      onChange={(e) => setAmount(e.target.value)} 
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
                       placeholder="0.00"
                       step="0.01"
-                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-10 pr-4 text-white text-lg font-black focus:border-violet-500 outline-none transition-all shadow-inner"
+                      className="w-full bg-white border-[1.5px] border-gray-200 rounded-2xl py-4 pl-10 pr-4 text-slate-900 text-lg font-black focus:border-[#fc5000] focus:shadow-[0_0_0_3px_rgba(104,54,232,0.15)] outline-none transition-all"
                       required
                     />
                   </div>
@@ -354,13 +334,17 @@ export default function CreatePaymentPage() {
 
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Settlement Token</label>
-                  <div className="grid grid-cols-2 gap-2 p-1 bg-black/40 border border-white/10 rounded-2xl">
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-white border-[1.5px] border-gray-200 rounded-2xl">
                     {SUPPORTED_TOKENS.map((token) => (
-                      <button 
+                      <button
                         key={token.symbol}
                         type="button"
                         onClick={() => setSelectedToken(token.symbol as SupportedToken)}
-                        className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedToken === token.symbol ? 'bg-violet-600 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
+                        className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                          selectedToken === token.symbol
+                            ? 'bg-[#fc5000] text-slate-900 shadow-[0_0_16px_rgba(104,54,232,0.40)]'
+                            : 'text-gray-500 hover:text-gray-600 hover:bg-gray-50'
+                        }`}
                       >
                         {token.symbol}
                       </button>
@@ -371,56 +355,54 @@ export default function CreatePaymentPage() {
 
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">{selectedMenu} Description (Optional)</label>
-                <div className="relative group">
-                  <input 
-                    type="text" 
-                    value={description} 
-                    onChange={(e) => setDescription(e.target.value)} 
-                    placeholder="e.g. Premium Digital Access"
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none transition-all shadow-inner"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="e.g. Premium Digital Access"
+                  className="w-full bg-white border-[1.5px] border-gray-200 rounded-2xl py-4 px-5 text-slate-900 text-sm font-bold focus:border-[#fc5000] focus:shadow-[0_0_0_3px_rgba(104,54,232,0.15)] outline-none transition-all"
+                />
               </div>
 
               {paymentType === 'onetime' ? (
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Expiration Period</label>
-                  <select 
-                    value={expiryDays} 
+                  <select
+                    value={expiryDays}
                     onChange={(e) => setExpiryDays(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none appearance-none cursor-pointer"
+                    className="w-full bg-white border-[1.5px] border-gray-200 rounded-2xl py-4 px-5 text-slate-900 text-sm font-bold focus:border-[#fc5000] outline-none appearance-none cursor-pointer"
                   >
-                    <option value="1" className="bg-black">24 Hours</option>
-                    <option value="7" className="bg-black">7 Days (Recommended)</option>
-                    <option value="30" className="bg-black">30 Days</option>
-                    <option value="365" className="bg-black">1 Year</option>
+                    <option value="1" className="bg-white">24 Hours</option>
+                    <option value="7" className="bg-white">7 Days (Recommended)</option>
+                    <option value="30" className="bg-white">30 Days</option>
+                    <option value="365" className="bg-white">1 Year</option>
                   </select>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Billing Interval</label>
                   <div className="space-y-3">
-                    <select 
-                      value={intervalType} 
+                    <select
+                      value={intervalType}
                       onChange={(e) => handleIntervalTypeChange(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none appearance-none cursor-pointer"
+                      className="w-full bg-white border-[1.5px] border-gray-200 rounded-2xl py-4 px-5 text-slate-900 text-sm font-bold focus:border-[#fc5000] outline-none appearance-none cursor-pointer"
                     >
-                      <option value="7" className="bg-black">7 Days (Weekly)</option>
-                      <option value="30" className="bg-black">30 Days (Monthly — Recommended)</option>
-                      <option value="90" className="bg-black">90 Days (Quarterly)</option>
-                      <option value="365" className="bg-black">365 Days (Yearly)</option>
-                      <option value="custom" className="bg-black">Custom Days...</option>
+                      <option value="7" className="bg-white">7 Days (Weekly)</option>
+                      <option value="30" className="bg-white">30 Days (Monthly — Recommended)</option>
+                      <option value="90" className="bg-white">90 Days (Quarterly)</option>
+                      <option value="365" className="bg-white">365 Days (Yearly)</option>
+                      <option value="custom" className="bg-white">Custom Days...</option>
                     </select>
-                    
+
                     {intervalType === 'custom' && (
                       <div className="flex items-center gap-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <input 
-                          type="number" 
-                          value={subInterval === '7' || subInterval === '30' || subInterval === '90' || subInterval === '365' ? '' : subInterval} 
-                          onChange={(e) => setSubInterval(e.target.value)} 
+                        <input
+                          type="number"
+                          value={subInterval === '7' || subInterval === '30' || subInterval === '90' || subInterval === '365' ? '' : subInterval}
+                          onChange={(e) => setSubInterval(e.target.value)}
                           placeholder="Enter custom number of days"
                           min="1"
-                          className="flex-1 bg-black/40 border border-white/10 rounded-2xl py-4 px-5 text-white text-sm font-bold focus:border-violet-500 outline-none"
+                          className="flex-1 bg-white border-[1.5px] border-gray-200 rounded-2xl py-4 px-5 text-slate-900 text-sm font-bold focus:border-[#fc5000] outline-none"
                           required
                         />
                         <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Days</span>
@@ -430,10 +412,10 @@ export default function CreatePaymentPage() {
                 </div>
               )}
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isPending || isTxConfirming || !amount || Number(amount) <= 0 || !isConnected}
-                className="w-full py-5 bg-violet-600 hover:bg-violet-500 disabled:bg-gray-800 disabled:text-gray-500 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl transition-all shadow-xl shadow-violet-600/30 flex items-center justify-center gap-3 active:scale-95"
+                className="btn-orange w-full py-5 text-white text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isPending || isTxConfirming ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Finalizing on L1...</>
@@ -448,8 +430,8 @@ export default function CreatePaymentPage() {
         {/* ── OUTPUT PREVIEW (Right - 5 cols) ── */}
         <div className="lg:col-span-5 space-y-6">
           {!createdSessionId ? (
-            <div className="bg-white/[0.01] border border-white/5 border-dashed rounded-[2.5rem] p-12 text-center space-y-6 animate-pulse">
-               <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto">
+            <div className="bg-white/[0.01] border border-gray-200 border-dashed rounded-[2.5rem] p-12 text-center space-y-6 animate-pulse">
+               <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
                   <Monitor className="w-10 h-10 text-gray-700" />
                </div>
                <div className="space-y-2">
@@ -460,25 +442,25 @@ export default function CreatePaymentPage() {
           ) : (
             <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
               {/* SUCCESS CARD */}
-              <div className="bg-[#0B0B12] border border-emerald-500/20 rounded-[2.5rem] p-8 space-y-8 shadow-[0_20px_50px_rgba(16,185,129,0.1)]">
+              <div className="bg-white border border-emerald-500/20 rounded-[2.5rem] p-8 space-y-8 shadow-[0_20px_50px_rgba(16,185,129,0.1)]">
                 <div className="flex items-center gap-4">
                    <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-500">
                       <CheckCircle2 className="w-6 h-6" />
                    </div>
                    <div>
-                      <h3 className="text-sm font-black text-white uppercase tracking-tight">Paylink Deployed</h3>
+                      <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Paylink Deployed</h3>
                       <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Permanent on-chain endpoint</p>
                    </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="p-4 bg-black/60 border border-white/10 rounded-2xl group">
+                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl group">
                     <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-2 ml-1">Customer Access URL</p>
                     <div className="flex items-center justify-between gap-3">
-                      <code className="text-[10px] text-violet-400 font-mono truncate">{paymentLink}</code>
+                      <code className="text-[10px] text-[#fc5000] font-mono truncate">{paymentLink}</code>
                       <button 
                         onClick={() => copyToClipboard(paymentLink, 'link')}
-                        className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-all shrink-0"
+                        className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-slate-900 transition-all shrink-0"
                       >
                         {copiedLink ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                       </button>
@@ -495,7 +477,7 @@ export default function CreatePaymentPage() {
                     </Link>
                     <Link 
                       href="/dashboard"
-                      className="flex-1 py-3.5 bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-all border border-white/5"
+                      className="flex-1 py-3.5 bg-gray-50 hover:bg-gray-100 text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-all border border-gray-200"
                     >
                       Dashboard <ChevronRight className="w-3.5 h-3.5" />
                     </Link>
@@ -504,18 +486,18 @@ export default function CreatePaymentPage() {
               </div>
 
               {/* EMBED WIDGET CARD */}
-              <div className="bg-[#0B0B12] border border-white/5 rounded-[2rem] p-8 space-y-6">
+              <div className="bg-white border border-gray-200 rounded-[2rem] p-8 space-y-6">
                  <div className="flex items-center gap-3">
-                   <Monitor className="w-5 h-5 text-violet-500" />
-                   <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Embed Web Widget</h4>
+                   <Monitor className="w-5 h-5 text-[#fc5000]" />
+                   <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Embed Web Widget</h4>
                  </div>
                  <div className="relative group">
-                    <pre className="bg-black/80 p-4 rounded-2xl text-[9px] font-mono text-gray-400 overflow-x-auto no-scrollbar border border-white/5 leading-relaxed">
+                    <pre className="bg-white p-4 rounded-2xl text-[9px] font-mono text-gray-500 overflow-x-auto no-scrollbar border border-gray-200 leading-relaxed">
                       {embedSnippet}
                     </pre>
                     <button 
                       onClick={() => copyToClipboard(embedSnippet, 'code')}
-                      className="absolute top-3 right-3 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all border border-white/10"
+                      className="absolute top-3 right-3 p-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-slate-900 opacity-0 group-hover:opacity-100 transition-all border border-gray-200"
                     >
                       {copiedCode ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
