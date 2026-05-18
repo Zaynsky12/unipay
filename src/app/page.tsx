@@ -62,8 +62,7 @@ export default function LandingPage() {
           className="text-5xl sm:text-7xl md:text-8xl text-slate-900 tracking-tight leading-none mb-8 max-w-5xl animate-fade-in-up uppercase"
           style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 900, letterSpacing: '-0.02em' }}
         >
-          Accept USDC from{' '}
-          <br className="hidden sm:block" />
+          Accept USDC from<br />
           <span className="gradient-text-orange">any chain.</span>
         </h1>
 
@@ -155,7 +154,7 @@ export default function LandingPage() {
             className="text-3xl md:text-5xl font-black text-slate-900 mb-5 uppercase tracking-tight"
             style={{ fontFamily: 'var(--font-dm-sans)' }}
           >
-            Decentralized Checkout in <span className="gradient-text-orange">4 Phases</span>
+            Decentralized Checkout in <br className="block sm:hidden" /> <span className="gradient-text-orange">4 Phases</span>
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto text-sm leading-relaxed font-medium">
             Instantly accept cross-chain stablecoins inside any dynamic frontend architecture without handling raw keys.
@@ -244,8 +243,7 @@ export default function LandingPage() {
               className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 leading-tight uppercase tracking-tight"
               style={{ fontFamily: 'var(--font-dm-sans)' }}
             >
-              Payers from any chain,{' '}
-              <br />
+              Payers from any chain,<br className="hidden sm:block" />{' '}
               <span className="gradient-text-orange">Unified settlement.</span>
             </h2>
 
