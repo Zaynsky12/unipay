@@ -232,7 +232,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
 
           {/* Left: Text */}
-          <div className="lg:col-span-6 space-y-6">
+          <div className="lg:col-span-6 space-y-6 text-center lg:text-left flex flex-col items-center lg:items-start">
             {/* Orange section tag */}
             <div className="inline-flex items-center gap-2 caldera-tag">
               <Sparkles className="w-3 h-3" />
@@ -253,7 +253,7 @@ export default function LandingPage() {
               , UniPay identifies a user&apos;s USDC balance across arbitrary layer-2 networks and automatically bridges them instantly into the Arc Network for microsecond transaction checkout.
             </p>
 
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-2 w-full">
               {[
                 "On-chain Merchant Profile (Logo, Website, Email)",
                 "Consolidated Multi-Chain Asset Management",
