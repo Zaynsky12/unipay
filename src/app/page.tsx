@@ -100,49 +100,50 @@ export default function LandingPage() {
           </a>
         </div>
 
-        {/* Premium Stats Ticker Belt (Perfect 3D transition between sections) */}
-        <div className="mt-20 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-white/50 backdrop-blur-md border-y border-gray-200/80 py-5 sm:py-6 shadow-[0_4px_30px_rgba(0,0,0,0.02)] z-20 pointer-events-auto animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-          {/* Gradient fade on edges for smooth scrolling effect */}
-          <div className="absolute top-0 left-0 bottom-0 w-16 sm:w-40 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
-          <div className="absolute top-0 right-0 bottom-0 w-16 sm:w-40 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
-
-          <div className="animate-marquee-quarter gap-4 sm:gap-6 py-2">
-            {[
-              { label: 'Active Merchants', value: isLoading ? '...' : totalMerchants.toString(), desc: 'Verified on-chain profiles', icon: Store },
-              { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
-              { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
-              // Duplicate 2
-              { label: 'Active Merchants', value: isLoading ? '...' : totalMerchants.toString(), desc: 'Verified on-chain profiles', icon: Store },
-              { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
-              { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
-              // Duplicate 3
-              { label: 'Active Merchants', value: isLoading ? '...' : totalMerchants.toString(), desc: 'Verified on-chain profiles', icon: Store },
-              { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
-              { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
-              // Duplicate 4
-              { label: 'Active Merchants', value: isLoading ? '...' : totalMerchants.toString(), desc: 'Verified on-chain profiles', icon: Store },
-              { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
-              { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
-            ].map((stat, i) => (
-              <div key={i} className="caldera-card p-3.5 sm:p-5 flex flex-row items-center gap-3 sm:gap-4 hover:-translate-y-1 transition-transform relative overflow-hidden group w-[240px] sm:w-[320px] shrink-0 bg-white/80">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#fc5000]/5 rounded-full blur-[40px] group-hover:bg-[#fc5000]/10 transition-colors pointer-events-none" />
-                
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#fc5000]/10 border border-[#fc5000]/20 flex items-center justify-center shrink-0 shadow-inner">
-                  <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#fc5000]" />
-                </div>
-                
-                <div className="flex-1 flex flex-col items-center text-center sm:pr-6">
-                  <div className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                    {stat.value}
-                  </div>
-                  <div className="text-[9px] sm:text-[11px] font-bold text-[#fc5000] uppercase tracking-widest mt-1 mb-0.5">{stat.label}</div>
-                  <div className="text-[8px] sm:text-[10px] text-gray-500 font-medium leading-tight">{stat.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </motion.section>
+
+      {/* Premium Stats Ticker Belt (Perfect 3D transition between sections) */}
+      <div className="w-full overflow-hidden bg-white/50 backdrop-blur-md border-y border-gray-200/80 py-5 sm:py-6 shadow-[0_4px_30px_rgba(0,0,0,0.02)] z-20 pointer-events-auto relative">
+        {/* Gradient fade on edges for smooth scrolling effect */}
+        <div className="absolute top-0 left-0 bottom-0 w-16 sm:w-40 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 right-0 bottom-0 w-16 sm:w-40 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
+
+        <div className="animate-marquee-quarter gap-4 sm:gap-6 py-2">
+          {[
+            { label: 'Active Merchants', value: isLoading ? '...' : totalMerchants.toString(), desc: 'Verified on-chain profiles', icon: Store },
+            { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
+            { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
+            // Duplicate 2
+            { label: 'Active Merchants', value: isLoading ? '...' : totalMerchants.toString(), desc: 'Verified on-chain profiles', icon: Store },
+            { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
+            { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
+            // Duplicate 3
+            { label: 'Active Merchants', value: isLoading ? '...' : totalMerchants.toString(), desc: 'Verified on-chain profiles', icon: Store },
+            { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
+            { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
+            // Duplicate 4
+            { label: 'Active Merchants', value: isLoading ? '...' : totalMerchants.toString(), desc: 'Verified on-chain profiles', icon: Store },
+            { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
+            { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
+          ].map((stat, i) => (
+            <div key={i} className="caldera-card p-3.5 sm:p-5 flex flex-row items-center gap-3 sm:gap-4 hover:-translate-y-1 transition-transform relative overflow-hidden group w-[240px] sm:w-[320px] shrink-0 bg-white/80">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#fc5000]/5 rounded-full blur-[40px] group-hover:bg-[#fc5000]/10 transition-colors pointer-events-none" />
+              
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#fc5000]/10 border border-[#fc5000]/20 flex items-center justify-center shrink-0 shadow-inner">
+                <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#fc5000]" />
+              </div>
+              
+              <div className="flex-1 flex flex-col items-center text-center sm:pr-6">
+                <div className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                  {stat.value}
+                </div>
+                <div className="text-[9px] sm:text-[11px] font-bold text-[#fc5000] uppercase tracking-widest mt-1 mb-0.5">{stat.label}</div>
+                <div className="text-[8px] sm:text-[10px] text-gray-500 font-medium leading-tight">{stat.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* ── How It Works Section ── */}
       <motion.section 
