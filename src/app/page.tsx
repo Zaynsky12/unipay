@@ -94,7 +94,7 @@ export default function LandingPage() {
             href="https://docs.arc.network/"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-ghost px-8 py-4 font-bold text-sm flex items-center justify-center"
+            className="px-8 py-4 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 text-slate-700 hover:text-slate-900 font-bold text-sm flex items-center justify-center rounded-full transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 w-full sm:w-auto"
           >
             Documentation
           </a>
