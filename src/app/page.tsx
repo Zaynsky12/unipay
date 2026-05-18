@@ -103,10 +103,10 @@ export default function LandingPage() {
       </motion.section>
 
       {/* Premium Stats Ticker Belt (Perfect 3D transition between sections) */}
-      <div className="w-full overflow-hidden bg-gray-50/90 backdrop-blur-md border-y border-gray-200/80 py-5 sm:py-6 shadow-[0_4px_30px_rgba(0,0,0,0.02)] z-20 pointer-events-auto relative mt-16 sm:mt-24">
+      <div className="w-full overflow-hidden bg-slate-900 border-y border-slate-800 py-5 sm:py-6 shadow-[0_8px_40px_rgba(0,0,0,0.08)] z-20 pointer-events-auto relative mt-16 sm:mt-24">
         {/* Gradient fade on edges for smooth scrolling effect */}
-        <div className="absolute top-0 left-0 bottom-0 w-16 sm:w-40 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
-        <div className="absolute top-0 right-0 bottom-0 w-16 sm:w-40 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 left-0 bottom-0 w-16 sm:w-40 bg-gradient-to-r from-slate-900 to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 right-0 bottom-0 w-16 sm:w-40 bg-gradient-to-l from-slate-900 to-transparent z-10 pointer-events-none" />
 
         <div className="animate-marquee-quarter gap-4 sm:gap-6 py-2">
           {[
@@ -126,7 +126,7 @@ export default function LandingPage() {
             { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
             { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
           ].map((stat, i) => (
-            <div key={i} className="caldera-card p-3.5 sm:p-5 flex flex-row items-center gap-3 sm:gap-4 hover:-translate-y-1 transition-transform relative overflow-hidden group w-[240px] sm:w-[320px] shrink-0 bg-white/80">
+            <div key={i} className="caldera-card p-3.5 sm:p-5 flex flex-row items-center gap-3 sm:gap-4 hover:-translate-y-1 transition-transform relative overflow-hidden group w-[240px] sm:w-[320px] shrink-0 bg-white">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#fc5000]/5 rounded-full blur-[40px] group-hover:bg-[#fc5000]/10 transition-colors pointer-events-none" />
               
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#fc5000]/10 border border-[#fc5000]/20 flex items-center justify-center shrink-0 shadow-inner">
