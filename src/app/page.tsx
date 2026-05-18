@@ -100,11 +100,11 @@ export default function LandingPage() {
           </a>
         </div>
 
-        {/* Premium Stats Cards (Marquee) */}
-        <div className="mt-16 sm:mt-20 w-full overflow-hidden animate-fade-in-up relative" style={{ animationDelay: '0.3s' }}>
+        {/* Premium Stats Ticker Belt (Perfect 3D transition between sections) */}
+        <div className="mt-20 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden bg-white/50 backdrop-blur-md border-y border-gray-200/80 py-5 sm:py-6 shadow-[0_4px_30px_rgba(0,0,0,0.02)] z-20 pointer-events-auto animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
           {/* Gradient fade on edges for smooth scrolling effect */}
-          <div className="absolute top-0 left-0 bottom-0 w-8 sm:w-20 bg-gradient-to-r from-[#FEF7ED] to-transparent z-10 pointer-events-none" />
-          <div className="absolute top-0 right-0 bottom-0 w-8 sm:w-20 bg-gradient-to-l from-[#FEF7ED] to-transparent z-10 pointer-events-none" />
+          <div className="absolute top-0 left-0 bottom-0 w-16 sm:w-40 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
+          <div className="absolute top-0 right-0 bottom-0 w-16 sm:w-40 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
 
           <div className="animate-marquee gap-4 sm:gap-6 py-2">
             {[
@@ -116,7 +116,7 @@ export default function LandingPage() {
               { label: 'Total Volume', value: isLoading ? '...' : `$${formattedVolume}`, desc: 'Across USDC & EURC', icon: Activity },
               { label: 'Global Transactions', value: isLoading ? '...' : totalTransactions.toString(), desc: 'Direct P2P settlements', icon: Zap },
             ].map((stat, i) => (
-              <div key={i} className="caldera-card p-3.5 sm:p-5 flex flex-row items-center gap-3 sm:gap-4 hover:-translate-y-1 transition-transform relative overflow-hidden group w-[240px] sm:w-[320px] shrink-0">
+              <div key={i} className="caldera-card p-3.5 sm:p-5 flex flex-row items-center gap-3 sm:gap-4 hover:-translate-y-1 transition-transform relative overflow-hidden group w-[240px] sm:w-[320px] shrink-0 bg-white/80">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#fc5000]/5 rounded-full blur-[40px] group-hover:bg-[#fc5000]/10 transition-colors pointer-events-none" />
                 
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#fc5000]/10 border border-[#fc5000]/20 flex items-center justify-center shrink-0 shadow-inner">
@@ -143,7 +143,7 @@ export default function LandingPage() {
         viewport={{ once: true, margin: "-50px" }} 
         transition={{ duration: 0.6, ease: "easeOut" }} 
         id="how-it-works" 
-        className="w-full max-w-6xl mx-auto px-6 py-28 border-t border-gray-200 mt-8"
+        className="w-full max-w-6xl mx-auto px-6 py-24 mt-4"
       >
         <div className="text-center mb-16">
           {/* Orange section tag */}
