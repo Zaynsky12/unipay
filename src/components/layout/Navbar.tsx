@@ -32,7 +32,7 @@ export function Navbar() {
   return (
     <>
       {/* ── Top Navbar ── */}
-      <header className="w-full bg-[#0A0A0F]/80 border-b border-white/5 backdrop-blur-xl fixed top-0 z-50">
+      <header className="w-full bg-[#080d18]/95 border-b border-[#162040]/40 backdrop-blur-xl fixed top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
@@ -84,7 +84,7 @@ export function Navbar() {
       </header>
 
       {!isLandingPage && (
-        <div className="md:hidden fixed bottom-0 left-0 w-full bg-[#0A0A0F]/95 backdrop-blur-xl border-t border-white/10 z-50 animate-fade-in">
+        <div className="md:hidden fixed bottom-0 left-0 w-full bg-[#080d18]/98 backdrop-blur-xl border-t border-[#162040]/40 z-50 animate-fade-in">
           <nav className="flex items-center justify-around px-1 py-1.5 max-w-md mx-auto">
             {navItems.map((item) => {
               const active = isActive(item.href);

@@ -36,7 +36,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#0A0A0F] text-gray-100 selection:bg-violet-600 selection:text-white overflow-x-hidden">
+      <body className="min-h-full flex flex-col bg-[#050810] text-gray-100 selection:bg-violet-600 selection:text-white overflow-x-hidden">
         <Web3Provider>
           {/* Ambient glow background */}
           <div className="glow-bg" />
