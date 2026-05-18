@@ -20,7 +20,10 @@ import {
   ChevronRight,
   Monitor,
   Shield,
-  ArrowRight
+  ArrowRight,
+  ArrowLeft,
+  Settings,
+  QrCode
 } from 'lucide-react';
 import Link from 'next/link';
 import { 
@@ -66,6 +69,7 @@ export default function CreatePaymentPage() {
   
   // Form State
   const [paymentType, setPaymentType] = useState<'onetime' | 'subscription'>('onetime');
+  const [selectedMenu, setSelectedMenu] = useState<'checkouts' | 'invoices' | 'subscribtion' | 'tip' | null>(null);
   const [amount, setAmount] = useState('');
   const [selectedToken, setSelectedToken] = useState<SupportedToken>('USDC');
   const [description, setDescription] = useState('');
@@ -126,11 +130,15 @@ export default function CreatePaymentPage() {
 
     const amountUnits = parseUnits(amount, tokenObj.decimals);
     const expiryTimestamp = Math.floor(Date.now() / 1000) + Number(expiryDays) * 86400;
+    const fallbackDesc = selectedMenu 
+      ? `${selectedMenu.charAt(0).toUpperCase() + selectedMenu.slice(1)} — ${merchantName}` 
+      : `Payment — ${merchantName}`;
+
     writeContract({
       address: UNIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: 'createSession',
-      args: [amountUnits, tokenObj.address, description || `Instant Invoice — ${merchantName}`, BigInt(expiryTimestamp)],
+      args: [amountUnits, tokenObj.address, description || fallbackDesc, BigInt(expiryTimestamp)],
       gas: 500000n,
     });
   };
@@ -203,11 +211,86 @@ export default function CreatePaymentPage() {
     }
   };
 
+  if (!selectedMenu) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-0 pt-10 pb-24 animate-fade-in">
+        <div className="text-center space-y-3 mb-10">
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight px-1 italic uppercase">
+            Create a <span className="text-violet-500">Payment</span>
+          </h1>
+          <p className="text-sm text-gray-500 font-medium">
+            Set up a Checkout, Invoice, Subscription, or Tip in just a few clicks.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <button 
+            onClick={() => { setSelectedMenu('invoices'); setPaymentType('onetime'); }}
+            className="flex items-start gap-5 p-6 bg-[#0B0B12] hover:bg-white/[0.04] border border-white/5 hover:border-violet-500/30 rounded-3xl transition-all text-left group"
+          >
+            <div className="w-12 h-12 bg-violet-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-violet-500/20 group-hover:scale-110 transition-transform shadow-lg shadow-violet-500/5">
+              <LinkIcon className="w-6 h-6 text-violet-400" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-white capitalize tracking-tight mb-1 group-hover:text-violet-400 transition-colors">invoices</h3>
+              <p className="text-xs text-gray-500 font-medium leading-relaxed">A hosted shareable link</p>
+            </div>
+          </button>
+
+          <button 
+            onClick={() => { setSelectedMenu('checkouts'); setPaymentType('onetime'); }}
+            className="flex items-start gap-5 p-6 bg-[#0B0B12] hover:bg-white/[0.04] border border-white/5 hover:border-violet-500/30 rounded-3xl transition-all text-left group"
+          >
+            <div className="w-12 h-12 bg-violet-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-violet-500/20 group-hover:scale-110 transition-transform shadow-lg shadow-violet-500/5">
+              <Settings className="w-6 h-6 text-violet-400" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-white capitalize tracking-tight mb-1 group-hover:text-violet-400 transition-colors">checkouts</h3>
+              <p className="text-xs text-gray-500 font-medium leading-relaxed">Embed directly into your site or app</p>
+            </div>
+          </button>
+
+          <button 
+            onClick={() => { setSelectedMenu('subscribtion'); setPaymentType('subscription'); }}
+            className="flex items-start gap-5 p-6 bg-[#0B0B12] hover:bg-white/[0.04] border border-white/5 hover:border-violet-500/30 rounded-3xl transition-all text-left group"
+          >
+            <div className="w-12 h-12 bg-violet-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-violet-500/20 group-hover:scale-110 transition-transform shadow-lg shadow-violet-500/5">
+              <Zap className="w-6 h-6 text-violet-400" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-white capitalize tracking-tight mb-1 group-hover:text-violet-400 transition-colors">subscribtion</h3>
+              <p className="text-xs text-gray-500 font-medium leading-relaxed">Recurring billing</p>
+            </div>
+          </button>
+
+          <button 
+            onClick={() => { setSelectedMenu('tip'); setPaymentType('onetime'); }}
+            className="flex items-start gap-5 p-6 bg-[#0B0B12] hover:bg-white/[0.04] border border-white/5 hover:border-violet-500/30 rounded-3xl transition-all text-left group"
+          >
+            <div className="w-12 h-12 bg-violet-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-violet-500/20 group-hover:scale-110 transition-transform shadow-lg shadow-violet-500/5">
+              <QrCode className="w-6 h-6 text-violet-400" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-white capitalize tracking-tight mb-1 group-hover:text-violet-400 transition-colors">tip</h3>
+              <p className="text-xs text-gray-500 font-medium leading-relaxed">Accept spontaneous contributions</p>
+            </div>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-fade-in pb-24 px-4 sm:px-0">
       
       {/* ── Page Header (REFRESHED) ── */}
       <div className="text-center sm:text-left space-y-4">
+        <button 
+          onClick={() => setSelectedMenu(null)}
+          className="text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-2 mb-4"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to options
+        </button>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-white/5 pb-8">
            <div className="space-y-2">
               <div className="flex items-center justify-center sm:justify-start gap-3 mb-1">
@@ -219,29 +302,10 @@ export default function CreatePaymentPage() {
                 </div>
                 <span className="hidden sm:inline text-xs text-gray-500 font-medium">• Stateless Dispatch</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase italic">
-                Create <span className="text-violet-500">Paylink</span>
+              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight px-1 italic uppercase">
+                Create <span className="text-violet-500">{selectedMenu}</span>
               </h1>
               <p className="text-xs text-gray-500 font-medium uppercase tracking-widest sm:max-w-md">Issue professional cryptographic billing endpoints in seconds.</p>
-           </div>
-
-           {/* UI MODE SELECTOR (CENTERED IN MOBILE) */}
-           <div className="flex bg-[#0B0B12] p-1.5 rounded-2xl border border-white/10 w-full sm:w-[320px] shadow-2xl relative overflow-hidden">
-              <div 
-                className={`absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-6px)] bg-violet-600 rounded-xl transition-all duration-300 ease-out shadow-[0_0_20px_rgba(124,58,237,0.4)] ${paymentType === 'subscription' ? 'translate-x-full' : 'translate-x-0'}`}
-              />
-              <button 
-                onClick={() => { setPaymentType('onetime'); setCreatedSessionId(''); }}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest relative z-10 transition-colors duration-300 ${paymentType === 'onetime' ? 'text-white' : 'text-gray-500'}`}
-              >
-                Instant Link
-              </button>
-              <button 
-                onClick={() => { setPaymentType('subscription'); setCreatedSessionId(''); }}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest relative z-10 transition-colors duration-300 ${paymentType === 'subscription' ? 'text-white' : 'text-gray-500'}`}
-              >
-                Subscription
-              </button>
            </div>
         </div>
       </div>
@@ -306,7 +370,7 @@ export default function CreatePaymentPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Order Description (Optional)</label>
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">{selectedMenu} Description (Optional)</label>
                 <div className="relative group">
                   <input 
                     type="text" 

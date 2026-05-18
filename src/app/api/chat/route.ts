@@ -35,6 +35,11 @@ export async function POST(req: Request) {
       2. Checkout Sessions (Sesi Pembayaran): Merchants create smart checkout sessions on-chain with specific amounts, tokens, descriptions, and expiration timestamps. Buyers fulfill them by calling the 'pay' function, triggering instant P2P settlement.
       3. Recurring Subscriptions (Langganan Berkala): Uses a secure "Pull Payment" model. Payer approves the UniPay contract once via ERC20 allowance, then merchant or an automated relayer calls 'executeSubscription' to pull the designated amount automatically at each interval (e.g. monthly) without manual popups.
       4. Fully On-chain Indexing: All operations emit blockchain events, indexed in real-time by Goldsky Subgraph and rendered instantly in the premium merchant dashboard.
+    - Payment Menus/Features (Fitur Pembuatan Link):
+      1. Invoices: Untuk tagihan personal/spesifik (1 link untuk 1 transaksi/klien).
+      2. Checkouts: Untuk penjualan publik (bisa dibeli berkali-kali oleh banyak orang melalui 1 link).
+      3. Subscribtion: Untuk langganan berulang (recurring billing) dengan pemotongan otomatis.
+      4. Tip: Untuk menerima donasi atau dukungan spontan dari siapa saja.
 
     Guide users to: Dashboard, Create Payment, History, or Account tabs.
     Be concise, helpful, and professional. Always respond in the language used by the user (Indonesian if they speak Indonesian).

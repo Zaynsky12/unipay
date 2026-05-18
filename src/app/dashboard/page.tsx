@@ -25,7 +25,10 @@ import {
   Users,
   Layout,
   ArrowRight,
-  Shield
+  Shield,
+  TrendingUp,
+  Activity,
+  Globe2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -209,8 +212,8 @@ export default function DashboardPage() {
     }
   }, 0);
 
-  const displayTotalReceived = Number(formatUnits(totalReceivedRaw, 6)) + localRevenueSum;
-  const displayTotalTx = Number(totalTransactionsRaw) + filteredRecentPayments.length;
+    const displayTotalReceived = Number(formatUnits(totalReceivedRaw, 6));
+  const displayTotalTx = Number(totalTransactionsRaw);
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
