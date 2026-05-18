@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { 
   Zap, 
+  Eye,
   ArrowRight, 
   Globe, 
   Layers, 
@@ -284,12 +285,12 @@ export default function LandingPage() {
           
           {/* Brand Info */}
           <div className="md:col-span-5 flex flex-col items-center md:items-start text-center md:text-left space-y-3.5">
-            <div className="inline-flex items-center gap-3 px-3 py-1.5 rounded-2xl bg-white/[0.01] border border-white/5 backdrop-blur-md shadow-inner">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-[0_0_20px_rgba(124,58,237,0.4)] shrink-0 animate-pulse">
-                <Zap className="w-4 h-4 text-white fill-white" />
+            <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-white/[0.01] border border-white/5 backdrop-blur-md shadow-inner">
+              <div className="w-8 h-8 rounded-xl bg-violet-600 flex items-center justify-center shadow-[0_0_15px_rgba(124,58,237,0.4)] shrink-0 animate-pulse">
+                <Eye className="w-4 h-4 text-white" fill="currentColor" />
               </div>
-              <span className="font-orbitron font-bold tracking-widest text-white bg-gradient-to-r from-white via-violet-100 to-violet-300 bg-clip-text text-transparent text-base">
-                UNIPAY
+              <span className="text-lg font-bold tracking-tight text-white">
+                Uni<span className="gradient-text">Pay</span>
               </span>
             </div>
             
