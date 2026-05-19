@@ -29,7 +29,8 @@ import {
   TrendingUp,
   Activity,
   Globe2,
-  Sparkles
+  Sparkles,
+  Mail
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -286,12 +287,12 @@ export default function DashboardPage() {
 
         {/* Button Options Stack */}
         <div className="space-y-3.5 mb-8">
-          {/* OPTION 1: SIGN WITH GOOGLE & APPLE */}
+          {/* OPTION 1: SIGN WITH SOCIAL LOGIN */}
           <button
             onClick={() => open({ view: 'Connect' })}
             className="w-full py-4 px-6 rounded-2xl bg-white border-[1.5px] border-gray-200 hover:border-gray-300/80 text-slate-800 text-xs font-black uppercase tracking-[0.15em] flex items-center justify-center gap-3 transition-all hover:scale-[1.01] hover:shadow-lg cursor-pointer group"
           >
-            <Sparkles className="w-4 h-4 text-[#fc5000] shrink-0 transition-transform group-hover:scale-110" />
+            <Mail className="w-4 h-4 text-[#fc5000] shrink-0 transition-transform group-hover:scale-110" />
             <span>Sign Social Login</span>
           </button>
 
