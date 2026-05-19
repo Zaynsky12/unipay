@@ -184,12 +184,23 @@ export default function DashboardPage() {
           }
           
           /* 2. RENAME HEADER TITLE TO "SOCIAL LOGIN" VIA CSS PSEUDO-ELEMENTS */
-          wui-text[data-testid="w3m-header-text"],
-          [data-testid="w3m-header-text"],
-          w3m-header wui-text,
-          .w3m-header-title wui-text {
+          :host([data-testid="w3m-header-text"]) slot,
+          :host([data-testid="w3m-header-text"]) span,
+          :host([data-testid="w3m-header-text"]) p,
+          wui-text[data-testid="w3m-header-text"] slot,
+          wui-text[data-testid="w3m-header-text"] span,
+          [data-testid="w3m-header-text"] slot,
+          [data-testid="w3m-header-text"] span,
+          w3m-header wui-text slot,
+          w3m-header wui-text span {
+            display: none !important;
             font-size: 0 !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
           }
+          
+          :host([data-testid="w3m-header-text"])::after,
           wui-text[data-testid="w3m-header-text"]::after,
           [data-testid="w3m-header-text"]::after,
           w3m-header wui-text::after,
@@ -200,6 +211,8 @@ export default function DashboardPage() {
             color: #ffffff !important;
             display: block !important;
             text-align: center !important;
+            visibility: visible !important;
+            opacity: 1 !important;
           }
         `;
         sr.appendChild(style);
