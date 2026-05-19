@@ -136,7 +136,7 @@ export default function DashboardPage() {
     }
   }, [isDeactivateSuccess, refetchMerchant]);
 
-  // Inject shadow DOM style to completely hide Continue with Wallet and Or separator
+  // Inject shadow DOM style to completely hide Continue with Wallet and Or separator, and rename header title
   React.useEffect(() => {
     const injectStyles = () => {
       const modal = document.querySelector('appkit-modal') || document.querySelector('w3m-modal');
@@ -145,27 +145,49 @@ export default function DashboardPage() {
       const injectRecursive = (node: Node) => {
         if (!node) return;
         
-        if (node instanceof Element && node.shadowRoot) {
-          const sr = node.shadowRoot;
-          if (!sr.getElementById('unipay-appkit-style')) {
-            const style = document.createElement('style');
-            style.id = 'unipay-appkit-style';
-            style.textContent = `
-              w3m-connect-wallet-button,
-              w3m-connector-list,
-              w3m-separator,
-              .w3m-separator,
-              .or-separator,
-              div[class*="separator"],
-              span[class*="separator"],
-              [data-testid="connect-wallet-button"],
-              button[class*="connect-wallet"] {
-                display: none !important;
-              }
-            `;
-            sr.appendChild(style);
+        // 1. Text node replacement for "Connect Wallet"
+        if (node.nodeType === Node.TEXT_NODE && node.nodeValue) {
+          const val = node.nodeValue.trim().toLowerCase();
+          if (val === 'connect wallet' || val === 'connect your wallet') {
+            node.nodeValue = 'Connect Social Login';
           }
-          sr.childNodes.forEach(injectRecursive);
+        }
+
+        // 2. Element-level checks
+        if (node instanceof Element) {
+          const tagName = node.tagName.toLowerCase();
+          // Check textContent for elements that might contain the header title
+          if (tagName.includes('title') || tagName.includes('header') || tagName.includes('text') || node.classList.contains('w3m-title')) {
+            if (node.textContent?.trim().toLowerCase() === 'connect wallet') {
+              node.textContent = 'Connect Social Login';
+            }
+          }
+
+          // Handle shadowRoot
+          if (node.shadowRoot) {
+            const sr = node.shadowRoot;
+            if (!sr.getElementById('unipay-appkit-style')) {
+              const style = document.createElement('style');
+              style.id = 'unipay-appkit-style';
+              style.textContent = `
+                w3m-connect-wallet-button,
+                w3m-connector-list,
+                w3m-separator,
+                .w3m-separator,
+                .or-separator,
+                div[class*="separator"],
+                span[class*="separator"],
+                [class*="w3m-or"],
+                [class*="or-text"],
+                [data-testid="connect-wallet-button"],
+                button[class*="connect-wallet"] {
+                  display: none !important;
+                }
+              `;
+              sr.appendChild(style);
+            }
+            sr.childNodes.forEach(injectRecursive);
+          }
         }
         node.childNodes.forEach(injectRecursive);
       };
@@ -173,7 +195,7 @@ export default function DashboardPage() {
       injectRecursive(modal);
     };
 
-    const interval = setInterval(injectStyles, 500);
+    const interval = setInterval(injectStyles, 300); // Check slightly faster (300ms) for snappy visual replacement
     return () => clearInterval(interval);
   }, []);
 
