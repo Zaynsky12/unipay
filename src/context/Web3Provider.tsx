@@ -58,6 +58,7 @@ createAppKit({
     analytics: false,
     email: true,
     socials: ['google', 'apple'],
+    emailShowWallets: false,
   },
   themeVariables: {
     '--w3m-accent': '#7C3AED',
