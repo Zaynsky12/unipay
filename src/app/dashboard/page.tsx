@@ -142,59 +142,84 @@ export default function DashboardPage() {
       const traverse = (node: Node) => {
         if (!node) return;
         
-        // 1. Text node replacement for headers and helper texts
-        if (node.nodeType === Node.TEXT_NODE && node.nodeValue) {
-          const val = node.nodeValue.trim().toLowerCase();
-          if (val === 'connect wallet' || val === 'connect your wallet') {
-            node.nodeValue = 'Connect Social Login';
-          } else if (val === 'continue with a wallet' || val === 'or' || val === 'continue with email') {
-            // Clear out these texts from text nodes
-            node.nodeValue = '';
-          }
-        }
-
-        // 2. Element-level styling & shadow root injection
-        if (node instanceof Element) {
-          const tagName = node.tagName.toLowerCase();
-          
-          // Element text check
-          if (tagName.includes('title') || tagName.includes('header') || tagName.includes('text') || node.classList.contains('w3m-title')) {
-            const txt = node.textContent?.trim().toLowerCase();
-            if (txt === 'connect wallet' || txt === 'connect your wallet') {
-              node.textContent = 'Connect Social Login';
+        try {
+          // 1. Text node replacement for headers and helper texts
+          if (node.nodeType === Node.TEXT_NODE && node.nodeValue) {
+            const val = node.nodeValue.trim().toLowerCase();
+            if (val === 'connect wallet' || val === 'connect your wallet') {
+              node.nodeValue = 'Connect Social Login';
+            } else if (val === 'continue with a wallet' || val === 'or' || val === 'continue with email') {
+              node.nodeValue = '';
             }
           }
 
-          // If the element has a shadow root, pierce inside!
-          if (node.shadowRoot) {
-            const sr = node.shadowRoot;
-            if (!sr.getElementById('unipay-appkit-style')) {
-              const style = document.createElement('style');
-              style.id = 'unipay-appkit-style';
-              style.textContent = `
-                w3m-connect-wallet-button,
-                w3m-connector-list,
-                w3m-separator,
-                .w3m-separator,
-                .or-separator,
-                div[class*="separator"],
-                span[class*="separator"],
-                [class*="w3m-or"],
-                [class*="or-text"],
-                [data-testid="connect-wallet-button"],
-                button[class*="connect-wallet"],
-                /* Extra selectors to hide any container of the wallet options */
-                w3m-connect-wallet-button + *,
-                .w3m-separator + * {
-                  display: none !important;
-                }
-              `;
-              sr.appendChild(style);
+          // 2. Element-level styling & shadow root injection
+          if (node instanceof Element) {
+            const tagName = node.tagName.toLowerCase();
+            
+            // Element text check
+            if (tagName.includes('title') || tagName.includes('header') || tagName.includes('text') || node.classList.contains('w3m-title')) {
+              const txt = node.textContent?.trim().toLowerCase();
+              if (txt === 'connect wallet' || txt === 'connect your wallet') {
+                node.textContent = 'Connect Social Login';
+              }
             }
-            sr.childNodes.forEach(traverse);
+
+            // If the element has a shadow root, pierce inside!
+            if (node.shadowRoot) {
+              const sr = node.shadowRoot;
+              if (!sr.getElementById('unipay-appkit-style')) {
+                const style = document.createElement('style');
+                style.id = 'unipay-appkit-style';
+                style.textContent = `
+                  /* 1. HIDE WALLETS AND SEPARATORS IN CONNECT VIEW */
+                  w3m-connect-view > *:not(w3m-email-login-widget):not(w3m-social-login-list):not(style) {
+                    display: none !important;
+                  }
+                  
+                  /* 2. FALLBACK HIDE SELECTORS */
+                  w3m-connect-wallet-button,
+                  w3m-connector-list,
+                  w3m-separator,
+                  .w3m-separator,
+                  .or-separator,
+                  [class*="separator"],
+                  [class*="w3m-or"],
+                  [class*="or-text"],
+                  [data-testid="connect-wallet-button"],
+                  button[class*="connect-wallet"] {
+                    display: none !important;
+                  }
+                  
+                  /* 3. RENAME HEADER TITLE VIA CSS PSEUDO-ELEMENTS */
+                  w3m-modal-header w3m-text,
+                  w3m-modal-header [class*="title"],
+                  w3m-modal-header h2 {
+                    font-size: 0 !important;
+                  }
+                  w3m-modal-header w3m-text::after,
+                  w3m-modal-header [class*="title"]::after,
+                  w3m-modal-header h2::after {
+                    content: "Connect Social Login" !important;
+                    font-size: 16px !important;
+                    font-weight: 700 !important;
+                    color: #ffffff !important;
+                    display: block !important;
+                    text-align: center !important;
+                  }
+                `;
+                sr.appendChild(style);
+              }
+              sr.childNodes.forEach(traverse);
+            }
           }
+        } catch (e) {
+          // Silent catch to prevent halting traversal on any read-only/unsupported nodes
         }
-        node.childNodes.forEach(traverse);
+        
+        try {
+          node.childNodes.forEach(traverse);
+        } catch (e) {}
       };
 
       traverse(document.body);
