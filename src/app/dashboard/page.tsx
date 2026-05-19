@@ -182,6 +182,25 @@ export default function DashboardPage() {
             margin: 0 !important;
             pointer-events: none !important;
           }
+          
+          /* 2. RENAME HEADER TITLE TO "SOCIAL LOGIN" VIA CSS PSEUDO-ELEMENTS */
+          wui-text[data-testid="w3m-header-text"],
+          [data-testid="w3m-header-text"],
+          w3m-header wui-text,
+          .w3m-header-title wui-text {
+            font-size: 0 !important;
+          }
+          wui-text[data-testid="w3m-header-text"]::after,
+          [data-testid="w3m-header-text"]::after,
+          w3m-header wui-text::after,
+          .w3m-header-title wui-text::after {
+            content: "Social Login" !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            color: #ffffff !important;
+            display: block !important;
+            text-align: center !important;
+          }
         `;
         sr.appendChild(style);
       } catch (e) {}
