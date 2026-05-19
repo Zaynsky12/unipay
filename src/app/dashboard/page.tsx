@@ -134,6 +134,47 @@ export default function DashboardPage() {
     }
   }, [isDeactivateSuccess, refetchMerchant]);
 
+  // Inject shadow DOM style to completely hide Continue with Wallet and Or separator
+  React.useEffect(() => {
+    const injectStyles = () => {
+      const modal = document.querySelector('appkit-modal') || document.querySelector('w3m-modal');
+      if (!modal) return;
+
+      const injectRecursive = (node: Node) => {
+        if (!node) return;
+        
+        if (node instanceof Element && node.shadowRoot) {
+          const sr = node.shadowRoot;
+          if (!sr.getElementById('unipay-appkit-style')) {
+            const style = document.createElement('style');
+            style.id = 'unipay-appkit-style';
+            style.textContent = `
+              w3m-connect-wallet-button,
+              w3m-connector-list,
+              w3m-separator,
+              .w3m-separator,
+              .or-separator,
+              div[class*="separator"],
+              span[class*="separator"],
+              [data-testid="connect-wallet-button"],
+              button[class*="connect-wallet"] {
+                display: none !important;
+              }
+            `;
+            sr.appendChild(style);
+          }
+          sr.childNodes.forEach(injectRecursive);
+        }
+        node.childNodes.forEach(injectRecursive);
+      };
+
+      injectRecursive(modal);
+    };
+
+    const interval = setInterval(injectStyles, 500);
+    return () => clearInterval(interval);
+  }, []);
+
   const isRegisteredOnchain = merchantData ? merchantData[2] : false;
   const rawName = isRegisteredOnchain ? (merchantData?.[0] || '') : '';
   const isRegistered = isRegisteredOnchain && rawName !== '' && rawName !== 'Anonymous';
