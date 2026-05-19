@@ -142,58 +142,67 @@ export default function DashboardPage() {
       if (!sr) return;
       
       try {
-        if (!sr.getElementById('unipay-appkit-style')) {
-          const style = document.createElement('style');
-          style.id = 'unipay-appkit-style';
-          style.textContent = `
-            /* 1. ULTIMATE HIDE WALLETS AND SEPARATORS */
-            w3m-connect-wallet-button,
-            w3m-connect-recent-button,
-            w3m-connect-announced-button,
-            w3m-connect-recommended-button,
-            w3m-connect-external-button,
-            w3m-connect-custom-button,
-            w3m-connector-list,
-            w3m-separator,
-            wui-separator,
-            .w3m-separator,
-            .or-separator,
-            div[class*="separator"],
-            span[class*="separator"],
-            [class*="w3m-or"],
-            [class*="or-text"],
-            [data-testid="connect-wallet-button"],
-            button[class*="connect-wallet"],
-            button[class*="connect-recent"],
-            button[class*="recent-button"] {
-              display: none !important;
-              visibility: hidden !important;
-              opacity: 0 !important;
-              height: 0 !important;
-              padding: 0 !important;
-              margin: 0 !important;
-              pointer-events: none !important;
-            }
-            
-            /* 2. RENAME HEADER TITLE VIA CSS PSEUDO-ELEMENTS */
-            w3m-modal-header w3m-text,
-            w3m-modal-header [class*="title"],
-            w3m-modal-header h2 {
-              font-size: 0 !important;
-            }
-            w3m-modal-header w3m-text::after,
-            w3m-modal-header [class*="title"]::after,
-            w3m-modal-header h2::after {
-              content: "Connect Social Login" !important;
-              font-size: 16px !important;
-              font-weight: 700 !important;
-              color: #ffffff !important;
-              display: block !important;
-              text-align: center !important;
-            }
-          `;
-          sr.appendChild(style);
+        // Remove old style if it exists to ensure hot-reload and new styles are immediately applied
+        const oldStyle = sr.getElementById('unipay-appkit-style');
+        if (oldStyle) {
+          oldStyle.remove();
         }
+
+        const style = document.createElement('style');
+        style.id = 'unipay-appkit-style';
+        style.textContent = `
+          /* 1. HIDE BOTTOM "CONTINUE WITH A WALLET" BUTTON AND SEPARATORS */
+          wui-list-button[data-testid="w3m-collapse-wallets-button"],
+          wui-list-button[text*="wallet"],
+          wui-list-button[text*="Wallet"],
+          wui-separator,
+          w3m-connect-wallet-button,
+          w3m-connect-recent-button,
+          w3m-connect-announced-button,
+          w3m-connect-recommended-button,
+          w3m-connect-external-button,
+          w3m-connect-custom-button,
+          w3m-connector-list,
+          w3m-separator,
+          .w3m-separator,
+          .or-separator,
+          div[class*="separator"],
+          span[class*="separator"],
+          [class*="w3m-or"],
+          [class*="or-text"],
+          [data-testid="connect-wallet-button"],
+          button[class*="connect-wallet"],
+          button[class*="connect-recent"],
+          button[class*="recent-button"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            pointer-events: none !important;
+          }
+          
+          /* 2. RENAME HEADER TITLE TO "SOCIAL LOGIN" VIA CSS PSEUDO-ELEMENTS */
+          wui-text[data-testid="w3m-header-text"],
+          [data-testid="w3m-header-text"],
+          w3m-header wui-text,
+          .w3m-header-title wui-text {
+            font-size: 0 !important;
+          }
+          wui-text[data-testid="w3m-header-text"]::after,
+          [data-testid="w3m-header-text"]::after,
+          w3m-header wui-text::after,
+          .w3m-header-title wui-text::after {
+            content: "Social Login" !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            color: #ffffff !important;
+            display: block !important;
+            text-align: center !important;
+          }
+        `;
+        sr.appendChild(style);
       } catch (e) {}
 
       try {
