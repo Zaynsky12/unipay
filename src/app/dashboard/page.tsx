@@ -182,35 +182,49 @@ export default function DashboardPage() {
             margin: 0 !important;
             pointer-events: none !important;
           }
-          
-          /* 2. RENAME HEADER TITLE TO "SOCIAL LOGIN" VIA CSS PSEUDO-ELEMENTS */
-          wui-text[data-testid="w3m-header-text"],
-          [data-testid="w3m-header-text"],
-          w3m-header wui-text,
-          .w3m-header-title wui-text {
-            font-size: 0 !important;
-          }
-          wui-text[data-testid="w3m-header-text"]::after,
-          [data-testid="w3m-header-text"]::after,
-          w3m-header wui-text::after,
-          .w3m-header-title wui-text::after {
-            content: "Social Login" !important;
-            font-size: 16px !important;
-            font-weight: 700 !important;
-            color: #ffffff !important;
-            display: block !important;
-            text-align: center !important;
-          }
         `;
         sr.appendChild(style);
       } catch (e) {}
 
-      try {
-        sr.querySelectorAll('*').forEach(el => {
-          if (el && (el as any).shadowRoot) {
-            injectIntoShadowRoot((el as any).shadowRoot);
+      // Traverse nodes inside this shadow root for text node replacement
+      const traverse = (node: Node) => {
+        if (!node) return;
+        
+        try {
+          // 1. Text node replacement
+          if (node.nodeType === Node.TEXT_NODE && node.nodeValue) {
+            const val = node.nodeValue.trim().toLowerCase();
+            if (val === 'connect wallet' || val === 'connect your wallet') {
+              node.nodeValue = 'Social Login';
+            } else if (val === 'continue with a wallet' || val === 'or' || val === 'continue with email') {
+              node.nodeValue = '';
+            }
           }
-        });
+
+          // 2. Element node textContent replacement
+          if (node instanceof Element) {
+            const tagName = node.tagName.toLowerCase();
+            
+            if (tagName.includes('text') || tagName.includes('title') || node.classList.contains('w3m-title') || node.getAttribute('data-testid') === 'w3m-header-text') {
+              const txt = node.textContent?.trim().toLowerCase();
+              if (txt === 'connect wallet' || txt === 'connect your wallet') {
+                node.textContent = 'Social Login';
+              }
+            }
+
+            if (node.shadowRoot) {
+              injectIntoShadowRoot(node.shadowRoot);
+            }
+          }
+        } catch (e) {}
+
+        try {
+          node.childNodes.forEach(traverse);
+        } catch (e) {}
+      };
+
+      try {
+        sr.childNodes.forEach(traverse);
       } catch (e) {}
     };
 
@@ -228,6 +242,28 @@ export default function DashboardPage() {
             injectIntoShadowRoot((el as any).shadowRoot);
           }
         });
+
+        // Traverse light DOM for text replacements
+        const traverseLightDOM = (node: Node) => {
+          if (!node) return;
+          try {
+            if (node.nodeType === Node.TEXT_NODE && node.nodeValue) {
+              const val = node.nodeValue.trim().toLowerCase();
+              if (val === 'connect wallet' || val === 'connect your wallet') {
+                node.nodeValue = 'Social Login';
+              }
+            }
+            if (node instanceof Element) {
+              if (node.textContent?.trim().toLowerCase() === 'connect wallet') {
+                node.textContent = 'Social Login';
+              }
+            }
+          } catch (e) {}
+          try {
+            node.childNodes.forEach(traverseLightDOM);
+          } catch (e) {}
+        };
+        traverseLightDOM(document.body);
       } catch (e) {}
     };
 
