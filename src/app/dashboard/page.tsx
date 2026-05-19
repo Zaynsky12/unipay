@@ -138,102 +138,91 @@ export default function DashboardPage() {
 
   // Inject shadow DOM style to completely hide Continue with Wallet and Or separator, and rename header title
   React.useEffect(() => {
-    const injectStyles = () => {
-      const traverse = (node: Node) => {
-        if (!node) return;
-        
-        try {
-          // 1. Text node replacement for headers and helper texts
-          if (node.nodeType === Node.TEXT_NODE && node.nodeValue) {
-            const val = node.nodeValue.trim().toLowerCase();
-            if (val === 'connect wallet' || val === 'connect your wallet') {
-              node.nodeValue = 'Connect Social Login';
-            } else if (val === 'continue with a wallet' || val === 'or' || val === 'continue with email') {
-              node.nodeValue = '';
+    const injectIntoShadowRoot = (sr: ShadowRoot) => {
+      if (!sr) return;
+      
+      try {
+        if (!sr.getElementById('unipay-appkit-style')) {
+          const style = document.createElement('style');
+          style.id = 'unipay-appkit-style';
+          style.textContent = `
+            /* 1. ULTIMATE HIDE WALLETS AND SEPARATORS */
+            w3m-connect-wallet-button,
+            w3m-connect-recent-button,
+            w3m-connect-announced-button,
+            w3m-connect-recommended-button,
+            w3m-connect-external-button,
+            w3m-connect-custom-button,
+            w3m-connector-list,
+            w3m-separator,
+            wui-separator,
+            .w3m-separator,
+            .or-separator,
+            div[class*="separator"],
+            span[class*="separator"],
+            [class*="w3m-or"],
+            [class*="or-text"],
+            [data-testid="connect-wallet-button"],
+            button[class*="connect-wallet"],
+            button[class*="connect-recent"],
+            button[class*="recent-button"] {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              height: 0 !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              pointer-events: none !important;
             }
-          }
-
-          // 2. Element-level styling & shadow root injection
-          if (node instanceof Element) {
-            const tagName = node.tagName.toLowerCase();
             
-            // Element text check
-            if (tagName.includes('title') || tagName.includes('header') || tagName.includes('text') || node.classList.contains('w3m-title')) {
-              const txt = node.textContent?.trim().toLowerCase();
-              if (txt === 'connect wallet' || txt === 'connect your wallet') {
-                node.textContent = 'Connect Social Login';
-              }
+            /* 2. RENAME HEADER TITLE VIA CSS PSEUDO-ELEMENTS */
+            w3m-modal-header w3m-text,
+            w3m-modal-header [class*="title"],
+            w3m-modal-header h2 {
+              font-size: 0 !important;
             }
-
-            // If the element has a shadow root, pierce inside!
-            if (node.shadowRoot) {
-              const sr = node.shadowRoot;
-              if (!sr.getElementById('unipay-appkit-style')) {
-                const style = document.createElement('style');
-                style.id = 'unipay-appkit-style';
-                style.textContent = `
-                  /* 1. NUCLEAR HIDE ALL WALLETS AND SEPARATORS */
-                  w3m-connect-wallet-button,
-                  w3m-connect-recent-button,
-                  w3m-connect-announced-button,
-                  w3m-connect-recommended-button,
-                  w3m-connect-external-button,
-                  w3m-connect-custom-button,
-                  w3m-connector-list,
-                  w3m-separator,
-                  .w3m-separator,
-                  .or-separator,
-                  [class*="separator"],
-                  [class*="w3m-or"],
-                  [class*="or-text"],
-                  [data-testid="connect-wallet-button"],
-                  button[class*="connect-wallet"],
-                  button[class*="connect-recent"],
-                  button[class*="recent-button"] {
-                    display: none !important;
-                    visibility: hidden !important;
-                    opacity: 0 !important;
-                    height: 0 !important;
-                    padding: 0 !important;
-                    margin: 0 !important;
-                    pointer-events: none !important;
-                  }
-                  
-                  /* 2. RENAME HEADER TITLE VIA CSS PSEUDO-ELEMENTS */
-                  w3m-modal-header w3m-text,
-                  w3m-modal-header [class*="title"],
-                  w3m-modal-header h2 {
-                    font-size: 0 !important;
-                  }
-                  w3m-modal-header w3m-text::after,
-                  w3m-modal-header [class*="title"]::after,
-                  w3m-modal-header h2::after {
-                    content: "Connect Social Login" !important;
-                    font-size: 16px !important;
-                    font-weight: 700 !important;
-                    color: #ffffff !important;
-                    display: block !important;
-                    text-align: center !important;
-                  }
-                `;
-                sr.appendChild(style);
-              }
-              sr.childNodes.forEach(traverse);
+            w3m-modal-header w3m-text::after,
+            w3m-modal-header [class*="title"]::after,
+            w3m-modal-header h2::after {
+              content: "Connect Social Login" !important;
+              font-size: 16px !important;
+              font-weight: 700 !important;
+              color: #ffffff !important;
+              display: block !important;
+              text-align: center !important;
             }
-          }
-        } catch (e) {
-          // Silent catch to prevent halting traversal on any read-only/unsupported nodes
+          `;
+          sr.appendChild(style);
         }
-        
-        try {
-          node.childNodes.forEach(traverse);
-        } catch (e) {}
-      };
+      } catch (e) {}
 
-      traverse(document.body);
+      try {
+        sr.querySelectorAll('*').forEach(el => {
+          if (el && (el as any).shadowRoot) {
+            injectIntoShadowRoot((el as any).shadowRoot);
+          }
+        });
+      } catch (e) {}
     };
 
-    const interval = setInterval(injectStyles, 250); // Snappy 250ms interval for instantaneous replacement
+    const injectStyles = () => {
+      try {
+        // Direct query of w3m-modal or appkit-modal to start with
+        const modal = document.querySelector('appkit-modal') || document.querySelector('w3m-modal');
+        if (modal && (modal as any).shadowRoot) {
+          injectIntoShadowRoot((modal as any).shadowRoot);
+        }
+        
+        // Scan all elements in DOM that have shadowRoot
+        document.querySelectorAll('*').forEach(el => {
+          if (el && (el as any).shadowRoot) {
+            injectIntoShadowRoot((el as any).shadowRoot);
+          }
+        });
+      } catch (e) {}
+    };
+
+    const interval = setInterval(injectStyles, 250); // Snappy 250ms interval
     return () => clearInterval(interval);
   }, []);
 
