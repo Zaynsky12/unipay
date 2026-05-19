@@ -172,13 +172,13 @@ export default function DashboardPage() {
                 const style = document.createElement('style');
                 style.id = 'unipay-appkit-style';
                 style.textContent = `
-                  /* 1. HIDE WALLETS AND SEPARATORS IN CONNECT VIEW */
-                  w3m-connect-view > *:not(w3m-email-login-widget):not(w3m-social-login-list):not(style) {
-                    display: none !important;
-                  }
-                  
-                  /* 2. FALLBACK HIDE SELECTORS */
+                  /* 1. NUCLEAR HIDE ALL WALLETS AND SEPARATORS */
                   w3m-connect-wallet-button,
+                  w3m-connect-recent-button,
+                  w3m-connect-announced-button,
+                  w3m-connect-recommended-button,
+                  w3m-connect-external-button,
+                  w3m-connect-custom-button,
                   w3m-connector-list,
                   w3m-separator,
                   .w3m-separator,
@@ -187,11 +187,19 @@ export default function DashboardPage() {
                   [class*="w3m-or"],
                   [class*="or-text"],
                   [data-testid="connect-wallet-button"],
-                  button[class*="connect-wallet"] {
+                  button[class*="connect-wallet"],
+                  button[class*="connect-recent"],
+                  button[class*="recent-button"] {
                     display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    height: 0 !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    pointer-events: none !important;
                   }
                   
-                  /* 3. RENAME HEADER TITLE VIA CSS PSEUDO-ELEMENTS */
+                  /* 2. RENAME HEADER TITLE VIA CSS PSEUDO-ELEMENTS */
                   w3m-modal-header w3m-text,
                   w3m-modal-header [class*="title"],
                   w3m-modal-header h2 {
