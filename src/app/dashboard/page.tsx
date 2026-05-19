@@ -139,31 +139,33 @@ export default function DashboardPage() {
   // Inject shadow DOM style to completely hide Continue with Wallet and Or separator, and rename header title
   React.useEffect(() => {
     const injectStyles = () => {
-      const modal = document.querySelector('appkit-modal') || document.querySelector('w3m-modal');
-      if (!modal) return;
-
-      const injectRecursive = (node: Node) => {
+      const traverse = (node: Node) => {
         if (!node) return;
         
-        // 1. Text node replacement for "Connect Wallet"
+        // 1. Text node replacement for headers and helper texts
         if (node.nodeType === Node.TEXT_NODE && node.nodeValue) {
           const val = node.nodeValue.trim().toLowerCase();
           if (val === 'connect wallet' || val === 'connect your wallet') {
             node.nodeValue = 'Connect Social Login';
+          } else if (val === 'continue with a wallet' || val === 'or' || val === 'continue with email') {
+            // Clear out these texts from text nodes
+            node.nodeValue = '';
           }
         }
 
-        // 2. Element-level checks
+        // 2. Element-level styling & shadow root injection
         if (node instanceof Element) {
           const tagName = node.tagName.toLowerCase();
-          // Check textContent for elements that might contain the header title
+          
+          // Element text check
           if (tagName.includes('title') || tagName.includes('header') || tagName.includes('text') || node.classList.contains('w3m-title')) {
-            if (node.textContent?.trim().toLowerCase() === 'connect wallet') {
+            const txt = node.textContent?.trim().toLowerCase();
+            if (txt === 'connect wallet' || txt === 'connect your wallet') {
               node.textContent = 'Connect Social Login';
             }
           }
 
-          // Handle shadowRoot
+          // If the element has a shadow root, pierce inside!
           if (node.shadowRoot) {
             const sr = node.shadowRoot;
             if (!sr.getElementById('unipay-appkit-style')) {
@@ -180,22 +182,25 @@ export default function DashboardPage() {
                 [class*="w3m-or"],
                 [class*="or-text"],
                 [data-testid="connect-wallet-button"],
-                button[class*="connect-wallet"] {
+                button[class*="connect-wallet"],
+                /* Extra selectors to hide any container of the wallet options */
+                w3m-connect-wallet-button + *,
+                .w3m-separator + * {
                   display: none !important;
                 }
               `;
               sr.appendChild(style);
             }
-            sr.childNodes.forEach(injectRecursive);
+            sr.childNodes.forEach(traverse);
           }
         }
-        node.childNodes.forEach(injectRecursive);
+        node.childNodes.forEach(traverse);
       };
 
-      injectRecursive(modal);
+      traverse(document.body);
     };
 
-    const interval = setInterval(injectStyles, 300); // Check slightly faster (300ms) for snappy visual replacement
+    const interval = setInterval(injectStyles, 250); // Snappy 250ms interval for instantaneous replacement
     return () => clearInterval(interval);
   }, []);
 
