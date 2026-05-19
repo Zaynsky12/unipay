@@ -120,11 +120,10 @@ function AccountContent() {
 
   const formatB = (val: any) => val ? Number(formatUnits(val as bigint, 6)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLogoError(null);
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const [isDragging, setIsDragging] = useState(false);
 
+  const processFile = (file: File) => {
+    setLogoError(null);
     if (!file.type.startsWith('image/')) {
       setLogoError("Please upload a valid image file.");
       return;
@@ -189,6 +188,27 @@ function AccountContent() {
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -385,68 +405,94 @@ function AccountContent() {
 
             <form onSubmit={handleSubmit} className="space-y-8">
                {/* Premium Avatar/Logo Upload Zone di Bagian Atas */}
-               <div className="flex flex-col items-center justify-center p-6 bg-white border border-gray-200 rounded-3xl gap-4">
-                  <div className="relative group">
-                     {/* Efek glow ambient ungu di belakang logo */}
-                     <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-60 transition duration-500" />
-                     
-                     <label className="relative block w-28 h-28 bg-gray-50 border border-gray-200 rounded-[2.5rem] flex flex-col items-center justify-center text-[#fc5000] shadow-2xl overflow-hidden group-hover:border-violet-500/50 transition-all duration-300 cursor-pointer">
-                        {merchantLogo ? (
-                          <>
-                            <img src={merchantLogo} alt="logo preview" className="w-full h-full object-cover animate-fade-in" />
-                            {/* Hover overlay dengan tombol edit dan hapus */}
-                            <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-all duration-300 backdrop-blur-xs">
-                              <span className="text-[9px] font-black uppercase tracking-widest text-[#fc5000]">Change Image</span>
-                              <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                                <label className="cursor-pointer p-2 bg-[#fc5000] hover:bg-[#fc5000] text-slate-900 rounded-full transition-all hover:scale-110 shadow-lg">
-                                  <Upload className="w-4 h-4" />
-                                  <input 
-                                    type="file" 
-                                    accept="image/*" 
-                                    onChange={handleLogoChange} 
-                                    className="hidden" 
-                                  />
-                                </label>
-                                <button
-                                  type="button"
-                                  onClick={() => setMerchantLogo('')}
-                                  className="p-2 bg-red-600/80 hover:bg-red-600 text-slate-900 rounded-full transition-all hover:scale-110 shadow-lg"
-                                  title="Remove Logo"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center gap-2 px-4 text-center">
-                            <div className="w-10 h-10 rounded-full bg-[#fc5000]/10 flex items-center justify-center text-[#fc5000] group-hover:scale-110 transition-transform">
-                              <Upload className="w-5 h-5" />
-                            </div>
-                            <span className="text-[9px] font-black uppercase tracking-wider text-gray-500 group-hover:text-[#fc5000] transition-colors">Upload Logo</span>
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              onChange={handleLogoChange} 
-                              className="hidden" 
-                            />
-                          </div>
-                        )}
-                     </label>
-                  </div>
-                  
-                  <div className="text-center space-y-1">
-                     <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Brand Logo</span>
-                     <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">
-                       Supports PNG, JPG, GIF, SVG. Max size: 200 KB.
-                     </p>
-                     {logoError && (
-                       <div className="flex items-center gap-1.5 text-xs text-red-400 font-bold mt-1 justify-center animate-in fade-in slide-in-from-top-1 duration-200">
-                         <AlertCircle className="w-4 h-4 animate-bounce" />
-                         <span>{logoError}</span>
+               <div 
+                 onDragOver={handleDragOver}
+                 onDragLeave={handleDragLeave}
+                 onDrop={handleDrop}
+                 className={`relative w-full rounded-[2rem] border-2 border-dashed p-8 transition-all duration-300 flex flex-col items-center justify-center gap-4 text-center cursor-pointer overflow-hidden ${
+                   isDragging 
+                     ? 'border-[#fc5000] bg-[#fc5000]/8 scale-[1.01] shadow-[0_0_25px_rgba(252,80,0,0.15)]' 
+                     : merchantLogo
+                       ? 'border-gray-200 bg-white hover:border-[#fc5000]/30 hover:bg-gray-50/50'
+                       : 'border-gray-200 bg-gray-50/30 hover:border-[#fc5000]/30 hover:bg-gray-50/80'
+                 }`}
+               >
+                 <input 
+                   id="logo-upload"
+                   type="file" 
+                   accept="image/*" 
+                   onChange={handleLogoChange} 
+                   className="hidden" 
+                 />
+
+                 {merchantLogo ? (
+                   <div className="flex flex-col items-center gap-4 w-full">
+                     <div className="relative group">
+                       {/* Glowing orange ring around the uploaded logo */}
+                       <div className="absolute -inset-1 bg-gradient-to-r from-[#fc5000] to-[#ff8040] rounded-[2rem] blur opacity-30 group-hover:opacity-60 transition duration-300" />
+                       
+                       <div className="relative w-24 h-24 bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-xl flex items-center justify-center">
+                         <img src={merchantLogo} alt="logo preview" className="w-full h-full object-cover animate-fade-in" />
                        </div>
-                     )}
-                  </div>
+                       
+                       {/* Little green checkmark badge */}
+                       <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-1 border-2 border-white shadow-md">
+                         <CheckCircle2 className="w-3.5 h-3.5" />
+                       </div>
+                     </div>
+
+                     <div className="space-y-1">
+                       <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Brand Logo Loaded</span>
+                       <p className="text-[9px] text-[#fc5000] font-bold uppercase tracking-wider">Drag or upload another image to replace</p>
+                     </div>
+
+                     <div className="flex items-center gap-3 mt-1" onClick={(e) => e.stopPropagation()}>
+                       <label htmlFor="logo-upload" className="cursor-pointer px-4 py-2 bg-gray-100 hover:bg-gray-200 text-slate-800 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 border border-gray-200 shadow-sm flex items-center gap-1.5">
+                         <Upload className="w-3 h-3 text-[#fc5000]" /> Change Logo
+                       </label>
+                       <button
+                         type="button"
+                         onClick={() => setMerchantLogo('')}
+                         className="px-4 py-2 bg-red-500/5 hover:bg-red-500/10 text-red-500 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 border border-red-500/20 shadow-sm flex items-center gap-1.5"
+                         title="Remove Logo"
+                       >
+                         <Trash2 className="w-3 h-3" /> Remove
+                       </button>
+                     </div>
+                   </div>
+                 ) : (
+                   <label htmlFor="logo-upload" className="flex flex-col items-center justify-center gap-3 w-full h-full py-4 cursor-pointer">
+                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                       isDragging 
+                         ? 'bg-[#fc5000] text-white scale-110 shadow-lg' 
+                         : 'bg-[#fc5000]/10 text-[#fc5000] hover:scale-110'
+                     }`}>
+                       <Upload className={`w-6 h-6 ${isDragging ? 'animate-bounce' : ''}`} />
+                     </div>
+                     
+                     <div className="space-y-1">
+                       <p className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                         {isDragging ? 'Drop your logo here!' : 'Drag & drop your logo here'}
+                       </p>
+                       <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">
+                         or <span className="text-[#fc5000] underline">browse files</span> from your computer
+                       </p>
+                     </div>
+                     
+                     <div className="pt-2 border-t border-gray-100 w-2/3 max-w-[200px]">
+                       <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">
+                         PNG, JPG, GIF, SVG • MAX 200 KB
+                       </p>
+                     </div>
+                   </label>
+                 )}
+
+                 {logoError && (
+                   <div className="absolute bottom-4 left-0 right-0 flex items-center gap-1.5 text-[9px] text-red-500 font-black uppercase tracking-widest justify-center animate-in fade-in slide-in-from-top-1 duration-200">
+                     <AlertCircle className="w-3.5 h-3.5" />
+                     <span>{logoError}</span>
+                   </div>
+                 )}
                </div>
 
                {/* Grid Input Fields di Bawah Logo */}

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Eye, LayoutDashboard, PlusCircle, History, Wallet, UserCircle } from 'lucide-react';
+import { Eye, LayoutDashboard, PlusCircle, History, Wallet, UserCircle, ArrowRight } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useAppKit } from '@reown/appkit/react';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,7 @@ export function Navbar() {
   const isActive = (href: string) => pathname === href;
 
   if (isPaymentPage) return null;
+  if (!isLandingPage && !isConnected) return null;
 
   return (
     <>
@@ -44,7 +45,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Nav — Pill container, Caldera block-link style */}
-          {!isLandingPage && (
+          {!isLandingPage && isConnected && (
             <nav className="hidden md:flex items-center bg-white/80 rounded-full p-1 border border-gray-200 gap-0.5 animate-fade-in">
               {navItems.map((item) => {
                 const active = isActive(item.href);
@@ -67,28 +68,38 @@ export function Navbar() {
             </nav>
           )}
 
-          {/* Wallet Button — pill shape, orange highlight on connected */}
+          {/* Wallet Button / Launch App Button */}
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => open()}
-              className={cn(
-                "px-5 py-2.5 text-white text-xs sm:text-sm font-black rounded-full flex items-center gap-2 border transition-all group",
-                "bg-[#fc5000] hover:bg-[#e04500] border-[#fc5000]/30 shadow-[0_0_20px_rgba(252,80,0,0.35)] hover:shadow-[0_0_28px_rgba(252,80,0,0.50)]"
-              )}
-            >
-              <Wallet className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span>
-                {isConnected && address
-                  ? `${address.slice(0, 6)}...${address.slice(-4)}`
-                  : 'Connect Wallet'}
-              </span>
-            </button>
+            {isLandingPage ? (
+              <Link
+                href="/dashboard"
+                className="px-5 py-2.5 text-white text-xs sm:text-sm font-black rounded-full flex items-center gap-1.5 border transition-all group bg-[#fc5000] hover:bg-[#e04500] border-[#fc5000]/30 shadow-[0_0_20px_rgba(252,80,0,0.35)] hover:shadow-[0_0_28px_rgba(252,80,0,0.50)]"
+              >
+                <span>LAUNCH APP</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            ) : (
+              <button
+                onClick={() => open()}
+                className={cn(
+                  "px-5 py-2.5 text-white text-xs sm:text-sm font-black rounded-full flex items-center gap-2 border transition-all group",
+                  "bg-[#fc5000] hover:bg-[#e04500] border-[#fc5000]/30 shadow-[0_0_20px_rgba(252,80,0,0.35)] hover:shadow-[0_0_28px_rgba(252,80,0,0.50)]"
+                )}
+              >
+                <Wallet className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                <span>
+                  {isConnected && address
+                    ? `${address.slice(0, 6)}...${address.slice(-4)}`
+                    : 'Connect Wallet'}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </header>
 
       {/* Mobile Bottom Nav — Caldera chunky pill icons */}
-      {!isLandingPage && (
+      {!isLandingPage && isConnected && (
         <div className="md:hidden fixed bottom-0 left-0 w-full bg-gray-50/98 backdrop-blur-xl border-t border-gray-200 z-50 animate-fade-in">
           <nav className="flex items-center justify-around px-2 py-2 max-w-md mx-auto">
             {navItems.map((item) => {

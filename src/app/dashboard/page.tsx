@@ -34,6 +34,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
 import { useMerchantHistory } from '@/lib/hooks/useMerchantHistory';
+import { useAppKit } from '@reown/appkit/react';
 
 // Helper: translate token address to readable symbol
 function resolveTokenSymbol(tokenAddr: string): string {
@@ -52,8 +53,56 @@ function getSavedDescription(sessionId: string, fallback?: string): string {
   } catch { return fallback || ''; }
 }
 
+export function parseSessionDescription(descString: string) {
+  const str = descString || '';
+  const match = str.match(/^\[(.*?)\]\s*(.*)$/);
+  if (match) {
+    return {
+      type: match[1],
+      cleanDesc: match[2]
+    };
+  }
+  const lower = str.toLowerCase();
+  if (lower.startsWith('invoice')) return { type: 'Invoice', cleanDesc: str };
+  if (lower.startsWith('checkout')) return { type: 'Checkout', cleanDesc: str };
+  if (lower.startsWith('subscription')) return { type: 'Subscription', cleanDesc: str };
+  if (lower.startsWith('tip')) return { type: 'Tip', cleanDesc: str };
+  return { type: 'Payment', cleanDesc: str };
+}
+
+export function getBadgeStyles(type: string) {
+  switch (type.toLowerCase()) {
+    case 'invoice':
+      return {
+        bg: 'bg-cyan-500/10 border-cyan-500/25 text-cyan-600',
+        emoji: '🧾'
+      };
+    case 'checkout':
+      return {
+        bg: 'bg-violet-500/10 border-violet-500/25 text-violet-600',
+        emoji: '💳'
+      };
+    case 'subscription':
+      return {
+        bg: 'bg-amber-500/10 border-amber-500/25 text-amber-600',
+        emoji: '⚡'
+      };
+    case 'tip':
+      return {
+        bg: 'bg-emerald-500/10 border-emerald-500/25 text-emerald-600',
+        emoji: '📲'
+      };
+    default:
+      return {
+        bg: 'bg-gray-500/10 border-gray-500/25 text-gray-600',
+        emoji: '🔗'
+      };
+  }
+}
+
 export default function DashboardPage() {
   const router = useRouter();
+  const { open } = useAppKit();
   const { address, isConnected } = useAccount();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -174,31 +223,54 @@ export default function DashboardPage() {
       <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-[#fc5000]/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/3 -right-1/4 w-[400px] h-[400px] bg-[#fc5000]/6 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="max-w-md w-full caldera-card p-10 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] animate-pop-in">
+      <div className="max-w-md w-full caldera-card p-8 md:p-10 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.1)] animate-pop-in border border-gray-200/50">
         {/* Orange accent top line */}
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000] via-[#fc5000] to-transparent rounded-t-[2.5rem]" />
 
-        <div className="w-20 h-20 bg-[#fc5000]/15 rounded-[2rem] border border-[#fc5000]/30 flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(104,54,232,0.20)]">
-          <Shield className="w-10 h-10 text-[#fc5000]" />
+        {/* Brand Icon */}
+        <div className="w-20 h-20 bg-[#fc5000]/10 rounded-[2rem] border border-[#fc5000]/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(252,80,0,0.15)]">
+          <Coins className="w-9 h-9 text-[#fc5000]" />
         </div>
 
-        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Identity Required</h2>
-        <p className="text-sm text-gray-500 leading-relaxed mb-10 font-medium">
-          To access the UniPay Merchant App, you must connect your Web3 identity. This ensures all your transactions and merchant data remain secure and self-custodial.
+        {/* Title */}
+        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+          Welcome to UniPay Commerce
+        </h2>
+        
+        {/* Subtitle */}
+        <p className="text-[11px] text-gray-500 leading-relaxed mb-8 font-semibold uppercase tracking-wider">
+          Decentralized Payment Checkout & Streaming Protocol
         </p>
 
-        <button
-          onClick={() => {
-            const kitBtn = document.querySelector('appkit-button');
-            if (kitBtn) (kitBtn as any).click();
-          }}
-          className="btn-orange w-full py-4 text-white text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 group"
-        >
-          <span>Connect Identity</span>
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-        </button>
+        {/* Button Options Stack */}
+        <div className="space-y-3.5 mb-8">
+          {/* OPTION 1: SIGN WITH GMAIL */}
+          <button
+            onClick={() => open({ view: 'Connect' })}
+            className="w-full py-4 px-6 rounded-2xl bg-white border-[1.5px] border-gray-200 hover:border-gray-300/80 text-slate-800 text-xs font-black uppercase tracking-[0.15em] flex items-center justify-center gap-3 transition-all hover:scale-[1.01] hover:shadow-lg cursor-pointer group"
+          >
+            {/* Custom Google/Gmail SVG Logo */}
+            <svg className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24" width="16" height="16">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Sign with Gmail</span>
+          </button>
 
-        <Link href="/" className="inline-block mt-8 text-[10px] font-black text-gray-600 hover:text-gray-500 uppercase tracking-widest transition-colors">
+          {/* OPTION 2: SIGN WITH WALLET */}
+          <button
+            onClick={() => open({ view: 'Connect' })}
+            className="btn-orange w-full py-4 px-6 text-white text-xs font-black uppercase tracking-[0.15em] flex items-center justify-center gap-3 transition-all hover:scale-[1.01] hover:shadow-lg cursor-pointer group"
+          >
+            <Wallet className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" />
+            <span>Sign with Wallet</span>
+          </button>
+        </div>
+
+        {/* Back Link */}
+        <Link href="/" className="inline-block text-[10px] font-black text-gray-500 hover:text-gray-700 uppercase tracking-widest transition-colors">
           &larr; Back to Landing Page
         </Link>
       </div>
@@ -342,25 +414,41 @@ export default function DashboardPage() {
                             <div className="w-8 h-8 rounded-2xl bg-[#fc5000] flex items-center justify-center text-slate-900 shrink-0 shadow-[0_0_12px_rgba(104,54,232,0.35)] group-hover:scale-105 group-hover:shadow-[0_0_18px_rgba(104,54,232,0.50)] transition-all">
                               <ExternalLink className="w-3.5 h-3.5" />
                             </div>
-                            <div className="min-w-0">
-                              <p className="text-xs font-bold text-slate-900 truncate group-hover:text-[#fc5000] transition-colors">
-                                {getSavedDescription(actualId, s.description) || resolveTokenSymbol(s.token) + ' Paylink'}
-                              </p>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                {(() => {
+                                  const rawDesc = getSavedDescription(actualId, s.description);
+                                  const parsed = parseSessionDescription(rawDesc);
+                                  const badge = getBadgeStyles(parsed.type);
+                                  return (
+                                    <>
+                                      <span className={`shrink-0 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-md border ${badge.bg}`}>
+                                        {badge.emoji} {parsed.type}
+                                      </span>
+                                      <p className="text-xs font-bold text-slate-900 truncate group-hover:text-[#fc5000] transition-colors">
+                                        {parsed.cleanDesc || resolveTokenSymbol(s.token) + ' Paylink'}
+                                      </p>
+                                    </>
+                                  );
+                                })()}
+                              </div>
                               <p className="text-[9px] text-gray-500 truncate">
-                                {resolveTokenSymbol(s.token)} · Created {s.createdAt ? new Date(Number(s.createdAt) * 1000).toLocaleDateString() : 'recently'}
+                                Created {s.createdAt ? new Date(Number(s.createdAt) * 1000).toLocaleDateString() : 'recently'}
                               </p>
                             </div>
                           </Link>
 
                           {/* 2. PRICE */}
                           <div className="col-span-2 text-center">
-                            <span className="text-xs font-bold text-gray-500">{isNakedAmt}</span>
+                            <span className="text-xs font-bold text-gray-500">
+                              {s.amount ? `$${formatUnits(BigInt(s.amount), 6)} ${resolveTokenSymbol(s.token)}` : 'N/A'}
+                            </span>
                           </div>
 
                           {/* 3. VOLUME */}
                           <div className="col-span-2 text-center leading-tight">
-                            <span className="text-xs font-bold text-slate-900 block">${salesSum.toFixed(0)}</span>
-                            <span className="text-[8px] text-[#fc5000] font-bold block">USDC</span>
+                            <span className="text-xs font-bold text-slate-900 block">${salesSum.toFixed(2)}</span>
+                            <span className="text-[8px] text-[#fc5000] font-bold block">{resolveTokenSymbol(s.token)}</span>
                           </div>
 
                           {/* 4. SALES */}
@@ -401,13 +489,13 @@ export default function DashboardPage() {
 
                             {/* DROPDOWN MENU — Caldera dark panel */}
                             {activeDropdown === actualId && (
-                              <div className="absolute right-0 top-9 w-52 rounded-[1.5rem] bg-white/98 backdrop-blur-2xl border-[1.5px] border-gray-200 shadow-[0_20px_60px_rgba(0,0,0,0.9)] py-2 z-[100] animate-pop-in text-left divide-y divide-white/[0.05] pointer-events-auto cursor-default">
-                                <div className="px-3 py-1.5 bg-gradient-to-r from-violet-500/10 to-transparent">
-                                  <span className="text-[8px] font-black text-[#fc5000] uppercase tracking-widest block">Manage Paylink</span>
-                                  <span className="text-[9px] font-mono text-gray-500 truncate block mt-0.5">{actualId}</span>
+                              <div className="absolute right-0 top-9 w-52 rounded-2xl bg-white/95 backdrop-blur-xl border border-gray-200/80 shadow-[0_20px_50px_rgba(0,0,0,0.15)] ring-1 ring-black/5 py-1 z-[100] animate-in fade-in slide-in-from-top-2 duration-200 text-left pointer-events-auto cursor-default">
+                                <div className="px-3.5 py-2 border-b border-gray-100 bg-gray-50/50 rounded-t-2xl">
+                                  <span className="text-[9px] font-black text-[#fc5000] uppercase tracking-widest block">Manage Paylink</span>
+                                  <span className="text-[8px] font-mono text-gray-400 truncate block mt-0.5">{actualId}</span>
                                 </div>
 
-                                <div className="py-1.5 space-y-0.5 px-1.5">
+                                <div className="p-1.5 space-y-1">
                                   <button 
                                     type="button"
                                     onPointerDown={(e) => {
@@ -417,13 +505,9 @@ export default function DashboardPage() {
                                       router.push(`/dashboard/history?filter=${actualId}&name=${encodeURIComponent(linkName)}`);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                    }}
-                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-600 hover:text-[#fc5000] hover:bg-[#fc5000]/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
+                                    className="w-full px-3 py-2 rounded-xl text-xs text-gray-700 hover:text-[#fc5000] hover:bg-[#fc5000]/5 flex items-center gap-2.5 font-bold transition-all text-left cursor-pointer group"
                                   >
-                                    <span className="text-[#fc5000] text-sm block">👥</span> 
+                                    <Users className="w-4 h-4 text-gray-400 group-hover:text-[#fc5000] transition-colors shrink-0" />
                                     <span>View Buyers</span>
                                   </button>
 
@@ -435,16 +519,11 @@ export default function DashboardPage() {
                                       copySessionUrl(actualId);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                    }}
-                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-600 hover:text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
+                                    className="w-full px-3 py-2 rounded-xl text-xs text-gray-700 hover:text-[#fc5000] hover:bg-[#fc5000]/5 flex items-center gap-2.5 font-bold transition-all text-left cursor-pointer group"
                                   >
-                                    <span className="text-emerald-400 text-sm block">📋</span> 
+                                    <Copy className="w-4 h-4 text-gray-400 group-hover:text-[#fc5000] transition-colors shrink-0" />
                                     <span>{copiedId === actualId ? 'Copied!' : 'Copy Paylink'}</span>
                                   </button>
-                                </div>
 
                                   <button 
                                     type="button"
@@ -452,16 +531,21 @@ export default function DashboardPage() {
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      handleDeleteSession(actualId);
+                                      if (window.confirm("Are you sure you want to delete this payment link? This action cannot be undone on the blockchain.")) {
+                                        handleDeleteSession(actualId);
+                                      }
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
-                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-red-400 hover:text-red-200 hover:bg-red-500/20 flex items-center gap-2.5 font-semibold transition-all text-left group/btn cursor-pointer pointer-events-auto disabled:opacity-50"
+                                    className="w-full px-3 py-2 rounded-xl text-xs text-red-600 hover:text-red-700 hover:bg-red-500/10 flex items-center gap-2.5 font-bold transition-all text-left cursor-pointer disabled:opacity-50 group"
                                   >
-                                    <span className="text-sm block group-hover/btn:scale-110 transition-transform">
-                                      {(isDeactivating === actualId || isConfirmingDeactivate) ? '⏳' : '🗑️'}
-                                    </span> 
-                                    <span>{(isDeactivating === actualId || isConfirmingDeactivate) ? 'Deleting...' : 'Delete Paylink'}</span>
+                                    {isDeactivating === actualId || isConfirmingDeactivate ? (
+                                      <Loader2 className="w-4 h-4 text-red-500 animate-spin shrink-0" />
+                                    ) : (
+                                      <Trash2 className="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors shrink-0" />
+                                    )}
+                                    <span>{isDeactivating === actualId || isConfirmingDeactivate ? 'Deleting...' : 'Delete Paylink'}</span>
                                   </button>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -495,20 +579,34 @@ export default function DashboardPage() {
                       <div key={`mob-${actualId || idx}`} className={`p-4 rounded-2xl bg-white border border-white/[0.04] space-y-3 relative group ${activeDropdown === actualId ? 'z-50 ring-1 ring-violet-500/30' : 'z-10'}`}>
                         {/* Top Bar: Title & Actions */}
                         <div className="flex items-start justify-between gap-2">
-                          <Link 
+                           <Link 
                             href={`/pay/${actualId}`}
                             target="_blank"
-                            className="flex items-center gap-3 min-w-0 transition-opacity hover:opacity-80"
+                            className="flex items-center gap-3 min-w-0 transition-opacity hover:opacity-80 flex-1"
                           >
                             <div className="w-8 h-8 rounded-xl bg-[#fc5000] flex items-center justify-center text-slate-900 shrink-0 shadow-md">
                               <ExternalLink className="w-3.5 h-3.5" />
                             </div>
-                            <div className="min-w-0">
-                              <p className="text-xs font-bold text-slate-900 truncate">
-                                {getSavedDescription(actualId, s.description) || resolveTokenSymbol(s.token) + ' Paylink'}
-                              </p>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 mb-1 max-w-full">
+                                {(() => {
+                                  const rawDesc = getSavedDescription(actualId, s.description);
+                                  const parsed = parseSessionDescription(rawDesc);
+                                  const badge = getBadgeStyles(parsed.type);
+                                  return (
+                                    <>
+                                      <span className={`shrink-0 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded border ${badge.bg}`}>
+                                        {badge.emoji} {parsed.type}
+                                      </span>
+                                      <p className="text-xs font-bold text-slate-900 truncate">
+                                        {parsed.cleanDesc || resolveTokenSymbol(s.token) + ' Paylink'}
+                                      </p>
+                                    </>
+                                  );
+                                })()}
+                              </div>
                               <p className="text-[9px] text-gray-500 truncate">
-                                {resolveTokenSymbol(s.token)} · {isNakedAmt}
+                                Created {s.createdAt ? new Date(Number(s.createdAt) * 1000).toLocaleDateString() : 'recently'}
                               </p>
                             </div>
                           </Link>
@@ -543,13 +641,13 @@ export default function DashboardPage() {
 
                             {/* Dropdown Mobile */}
                             {activeDropdown === actualId && (
-                              <div className="absolute right-0 top-9 w-52 rounded-2xl bg-white/98 backdrop-blur-3xl border border-violet-500/30 ring-1 ring-white/5 shadow-2xl py-2 z-[100] animate-fade-in text-left divide-y divide-white/[0.04] pointer-events-auto cursor-default">
-                                <div className="px-3 py-1.5 bg-gradient-to-r from-violet-500/10 to-transparent">
-                                  <span className="text-[8px] font-black text-[#fc5000] uppercase tracking-widest block">Manage Paylink</span>
-                                  <span className="text-[9px] font-mono text-gray-500 truncate block mt-0.5">{actualId}</span>
+                              <div className="absolute right-0 top-9 w-52 rounded-2xl bg-white/95 backdrop-blur-xl border border-gray-200/80 shadow-[0_20px_50px_rgba(0,0,0,0.15)] ring-1 ring-black/5 py-1 z-[100] animate-in fade-in slide-in-from-top-2 duration-200 text-left pointer-events-auto cursor-default">
+                                <div className="px-3.5 py-2 border-b border-gray-100 bg-gray-50/50 rounded-t-2xl">
+                                  <span className="text-[9px] font-black text-[#fc5000] uppercase tracking-widest block">Manage Paylink</span>
+                                  <span className="text-[8px] font-mono text-gray-400 truncate block mt-0.5">{actualId}</span>
                                 </div>
 
-                                <div className="py-1.5 space-y-0.5 px-1.5">
+                                <div className="p-1.5 space-y-1">
                                   <button 
                                     type="button"
                                     onPointerDown={(e) => {
@@ -559,13 +657,9 @@ export default function DashboardPage() {
                                       router.push(`/dashboard/history?filter=${actualId}&name=${encodeURIComponent(linkName)}`);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                    }}
-                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-600 hover:text-[#fc5000] hover:bg-[#fc5000]/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
+                                    className="w-full px-3 py-2 rounded-xl text-xs text-gray-700 hover:text-[#fc5000] hover:bg-[#fc5000]/5 flex items-center gap-2.5 font-bold transition-all text-left cursor-pointer group"
                                   >
-                                    <span className="text-[#fc5000] text-sm block">👥</span> 
+                                    <Users className="w-4 h-4 text-gray-400 group-hover:text-[#fc5000] transition-colors shrink-0" />
                                     <span>View Buyers</span>
                                   </button>
 
@@ -577,35 +671,31 @@ export default function DashboardPage() {
                                       copySessionUrl(actualId);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                    }}
-                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-gray-600 hover:text-emerald-300 hover:bg-emerald-500/10 flex items-center gap-2.5 font-semibold transition-all text-left cursor-pointer pointer-events-auto"
+                                    className="w-full px-3 py-2 rounded-xl text-xs text-gray-700 hover:text-[#fc5000] hover:bg-[#fc5000]/5 flex items-center gap-2.5 font-bold transition-all text-left cursor-pointer group"
                                   >
-                                    <span className="text-emerald-400 text-sm block">📋</span> 
+                                    <Copy className="w-4 h-4 text-gray-400 group-hover:text-[#fc5000] transition-colors shrink-0" />
                                     <span>{copiedId === actualId ? 'Copied!' : 'Copy Paylink'}</span>
                                   </button>
-                                </div>
 
-                                <div className="pt-1.5 px-1.5">
                                   <button 
                                     type="button"
                                     disabled={isDeactivating === actualId || isConfirmingDeactivate}
-                                    onClick={(e) => {
+                                    onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
                                       if (window.confirm("Are you sure you want to delete this payment link? This action cannot be undone on the blockchain.")) {
                                         handleDeleteSession(actualId);
                                       }
-                                      setActiveDropdown(null);
+                                      setTimeout(() => setActiveDropdown(null), 10);
                                     }}
-                                    className="w-full px-2.5 py-1.5 rounded-xl text-xs text-red-400 hover:text-red-200 hover:bg-red-500/20 flex items-center gap-2.5 font-semibold transition-all text-left group/btn cursor-pointer pointer-events-auto disabled:opacity-50"
+                                    className="w-full px-3 py-2 rounded-xl text-xs text-red-600 hover:text-red-700 hover:bg-red-500/10 flex items-center gap-2.5 font-bold transition-all text-left cursor-pointer disabled:opacity-50 group"
                                   >
-                                    <span className="text-sm block group-hover/btn:scale-110 transition-transform">
-                                      {(isDeactivating === actualId || isConfirmingDeactivate) ? '⏳' : '🗑️'}
-                                    </span> 
-                                    <span>{(isDeactivating === actualId || isConfirmingDeactivate) ? 'Deleting...' : 'Delete Paylink'}</span>
+                                    {isDeactivating === actualId || isConfirmingDeactivate ? (
+                                      <Loader2 className="w-4 h-4 text-red-500 animate-spin shrink-0" />
+                                    ) : (
+                                      <Trash2 className="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors shrink-0" />
+                                    )}
+                                    <span>{isDeactivating === actualId || isConfirmingDeactivate ? 'Deleting...' : 'Delete Paylink'}</span>
                                   </button>
                                 </div>
                               </div>
@@ -617,11 +707,13 @@ export default function DashboardPage() {
                         <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/[0.02]">
                           <div className="bg-white/[0.01] p-2 rounded-xl text-center border border-white/[0.02]">
                             <span className="text-[8px] font-bold text-gray-500 block uppercase tracking-wider">Price</span>
-                            <span className="text-xs font-bold text-gray-600 mt-0.5 block">{isNakedAmt}</span>
+                            <span className="text-xs font-bold text-gray-600 mt-0.5 block">
+                              {s.amount ? `$${formatUnits(BigInt(s.amount), 6)} ${resolveTokenSymbol(s.token)}` : 'N/A'}
+                            </span>
                           </div>
                           <div className="bg-white/[0.01] p-2 rounded-xl text-center border border-white/[0.02]">
-                            <span className="text-[8px] font-bold text-[#fc5000] block uppercase tracking-wider">Volume</span>
-                            <span className="text-xs font-black text-slate-900 mt-0.5 block">${salesSum.toFixed(0)}</span>
+                            <span className="text-[8px] font-bold text-[#fc5000] block uppercase tracking-wider">Volume ({resolveTokenSymbol(s.token)})</span>
+                            <span className="text-xs font-black text-slate-900 mt-0.5 block">${salesSum.toFixed(2)}</span>
                           </div>
                           <div className="bg-white/[0.01] p-2 rounded-xl text-center border border-white/[0.02]">
                             <span className="text-[8px] font-bold text-gray-500 block uppercase tracking-wider">Orders</span>
@@ -675,16 +767,26 @@ export default function DashboardPage() {
                       s.id?.toLowerCase() === p.sessionId?.toLowerCase() || 
                       s.sessionId?.toLowerCase() === p.sessionId?.toLowerCase()
                     );
-                    const customTitle = matchedSession ? (matchedSession.description || matchedSession.token) : null;
+                    const rawTitle = matchedSession ? (matchedSession.description || matchedSession.token) : null;
+                    const parsedTitle = rawTitle ? parseSessionDescription(rawTitle) : null;
+                    const cleanTitle = parsedTitle ? parsedTitle.cleanDesc : null;
+                    const badge = parsedTitle ? getBadgeStyles(parsedTitle.type) : null;
 
                     return (
                       <tr key={idx} className="hover:bg-white transition-colors group">
                         <td className="py-3 px-2 font-mono text-[#fc5000]/90 font-semibold">
                           <div className="space-y-0.5">
-                            {customTitle && (
-                              <span className="text-[9px] font-bold text-slate-900 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 block font-sans w-fit truncate max-w-[120px]">
-                                {customTitle}
-                              </span>
+                            {cleanTitle && (
+                              <div className="flex items-center gap-1">
+                                {badge && (
+                                  <span className={`shrink-0 px-1 py-0.2 text-[6px] font-black uppercase tracking-wider rounded border ${badge.bg}`}>
+                                    {badge.emoji} {parsedTitle?.type}
+                                  </span>
+                                )}
+                                <span className="text-[9px] font-bold text-slate-900 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 block font-sans w-fit truncate max-w-[120px]">
+                                  {cleanTitle}
+                                </span>
+                              </div>
                             )}
                             <div className="flex items-center gap-1.5 pt-0.5">
                               <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
@@ -701,7 +803,9 @@ export default function DashboardPage() {
 
                         <td className="py-3 px-2">
                           <span className="font-black text-slate-900">${pAmountFormatted}</span>
-                          <span className="text-[9px] text-[#fc5000] font-bold ml-1">USDC</span>
+                          <span className="text-[9px] text-[#fc5000] font-bold ml-1">
+                            {matchedSession ? resolveTokenSymbol(matchedSession.token) : 'USDC'}
+                          </span>
                         </td>
 
                         <td className="py-3 px-2 text-gray-500">

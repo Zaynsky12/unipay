@@ -16,7 +16,22 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract UniPayRegistry is ERC2771Context {
     
-    constructor(address trustedForwarder) ERC2771Context(trustedForwarder) {}
+    // Fee settings
+    address public devWallet;
+    uint256 public constant FEE_PERCENT = 20; // 2% (20/1000)
+
+    constructor(address trustedForwarder) ERC2771Context(trustedForwarder) {
+        devWallet = msg.sender;
+    }
+
+    /**
+     * @dev Mengubah address developer yang menerima fee
+     */
+    function setDevWallet(address _newDevWallet) external {
+        require(_msgSender() == devWallet, "Only current dev can change wallet");
+        require(_newDevWallet != address(0), "Invalid address");
+        devWallet = _newDevWallet;
+    }
 
     struct MerchantProfile {
         string name;
@@ -154,13 +169,24 @@ contract UniPayRegistry is ERC2771Context {
         uint256 targetAmount = session.amount;
         address targetToken = session.token;
 
+        // Calculate 1.5% fee
+        uint256 fee = (targetAmount * FEE_PERCENT) / 1000;
+        uint256 amountAfterFee = targetAmount - fee;
+
         // Perbarui rekapitulasi statistik onchain pedagang
-        merchants[targetMerchant].totalReceived += targetAmount;
+        merchants[targetMerchant].totalReceived += amountAfterFee;
         merchants[targetMerchant].totalTransactions += 1;
 
-        // Eksekusi P2P Settlement langsung dari dompet Payer ke Merchant
         address actualPayer = _msgSender();
-        bool success = IERC20(targetToken).transferFrom(actualPayer, targetMerchant, targetAmount);
+
+        // Transfer fee to devWallet
+        if (fee > 0) {
+            bool feeSuccess = IERC20(targetToken).transferFrom(actualPayer, devWallet, fee);
+            require(feeSuccess, "Fee transfer failed");
+        }
+
+        // Eksekusi P2P Settlement langsung dari dompet Payer ke Merchant
+        bool success = IERC20(targetToken).transferFrom(actualPayer, targetMerchant, amountAfterFee);
         require(success, "Cross-chain stablecoin transfer execution failed");
 
         emit PaymentCompleted(sessionId, targetMerchant, actualPayer, targetAmount);
@@ -218,10 +244,18 @@ contract UniPayRegistry is ERC2771Context {
         address targetMerchant = sub.merchant;
         uint256 targetAmount = sub.amount;
 
-        merchants[targetMerchant].totalReceived += targetAmount;
+        uint256 fee = (targetAmount * FEE_PERCENT) / 1000;
+        uint256 amountAfterFee = targetAmount - fee;
+
+        merchants[targetMerchant].totalReceived += amountAfterFee;
         merchants[targetMerchant].totalTransactions += 1;
 
-        bool success = IERC20(sub.token).transferFrom(sub.subscriber, targetMerchant, targetAmount);
+        if (fee > 0) {
+            bool feeSuccess = IERC20(sub.token).transferFrom(sub.subscriber, devWallet, fee);
+            require(feeSuccess, "Fee pull failed");
+        }
+
+        bool success = IERC20(sub.token).transferFrom(sub.subscriber, targetMerchant, amountAfterFee);
         require(success, "Subscription pull failed. Check allowance/balance.");
 
         emit SubscriptionExecuted(subId, targetMerchant, sub.subscriber, targetAmount);

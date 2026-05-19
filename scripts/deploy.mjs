@@ -108,6 +108,18 @@ async function main() {
       console.log("✅ File src/lib/constants.ts otomatis diperbarui dengan alamat kontrak baru yang sah.");
     }
 
+    // 4. Otomatis memperbarui subgraph.yaml (mengganti/menghapus pendengaran kontrak lama)
+    const subgraphPath = path.resolve('./subgraph/subgraph.yaml');
+    if (fs.existsSync(subgraphPath)) {
+      let subContent = fs.readFileSync(subgraphPath, 'utf8');
+      subContent = subContent.replace(
+        /address: "0x[a-fA-F0-9]{40}"/,
+        `address: "${contractAddress.toLowerCase()}"`
+      );
+      fs.writeFileSync(subgraphPath, subContent, 'utf8');
+      console.log("✅ File subgraph/subgraph.yaml otomatis diperbarui ke alamat kontrak baru (memutuskan kontrak lama).");
+    }
+
   } catch (error) {
     console.log("\n❌ PENYEBARAN TERHENTI OLEH NODE BLOCKCHAIN.");
     console.log("Alasan paling umum: Saldo koin ARC Testnet Gas pada dompet di atas belum terisi atau RPC sibuk.");

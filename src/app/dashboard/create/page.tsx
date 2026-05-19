@@ -23,7 +23,9 @@ import {
   ArrowRight,
   ArrowLeft,
   Settings,
-  QrCode
+  QrCode,
+  Receipt,
+  CreditCard
 } from 'lucide-react';
 import Link from 'next/link';
 import { 
@@ -130,15 +132,27 @@ export default function CreatePaymentPage() {
 
     const amountUnits = parseUnits(amount, tokenObj.decimals);
     const expiryTimestamp = Math.floor(Date.now() / 1000) + Number(expiryDays) * 86400;
+    
+    let typeName = 'Payment';
+    if (selectedMenu === 'invoices') typeName = 'Invoice';
+    else if (selectedMenu === 'checkouts') typeName = 'Checkout';
+    else if (selectedMenu === 'subscribtion') typeName = 'Subscription';
+    else if (selectedMenu === 'tip') typeName = 'Tip';
+
+    const typePrefix = `[${typeName}]`;
     const fallbackDesc = selectedMenu 
       ? `${selectedMenu.charAt(0).toUpperCase() + selectedMenu.slice(1)} — ${merchantName}` 
       : `Payment — ${merchantName}`;
+
+    const finalDesc = description.trim()
+      ? `${typePrefix} ${description.trim()}`
+      : `${typePrefix} ${fallbackDesc}`;
 
     writeContract({
       address: UNIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: 'createSession',
-      args: [amountUnits, tokenObj.address, description || fallbackDesc, BigInt(expiryTimestamp)],
+      args: [amountUnits, tokenObj.address, finalDesc, BigInt(expiryTimestamp)],
       gas: 500000n,
     });
   };
@@ -164,15 +178,30 @@ export default function CreatePaymentPage() {
       setCreatedSessionId(extractedId);
       if (extractedId) {
         try {
+          let typeName = 'Payment';
+          if (selectedMenu === 'invoices') typeName = 'Invoice';
+          else if (selectedMenu === 'checkouts') typeName = 'Checkout';
+          else if (selectedMenu === 'subscribtion') typeName = 'Subscription';
+          else if (selectedMenu === 'tip') typeName = 'Tip';
+
+          const typePrefix = `[${typeName}]`;
+          const fallbackDesc = selectedMenu 
+            ? `${selectedMenu.charAt(0).toUpperCase() + selectedMenu.slice(1)} — ${merchantName}` 
+            : `Payment — ${merchantName}`;
+          
+          const finalDesc = description.trim()
+            ? `${typePrefix} ${description.trim()}`
+            : `${typePrefix} ${fallbackDesc}`;
+
           const descs = JSON.parse(localStorage.getItem('unipay_descriptions') || '{}');
-          descs[extractedId] = description || `${selectedToken} Payment`;
+          descs[extractedId] = finalDesc;
           localStorage.setItem('unipay_descriptions', JSON.stringify(descs));
           const tokenObj = SUPPORTED_TOKENS.find(t => t.symbol === selectedToken);
           const optimisticSession = {
             id: extractedId,
             amount: parseUnits(amount, tokenObj?.decimals || 6).toString(),
             token: tokenObj?.address || '',
-            description: description || `${selectedToken} Payment`,
+            description: finalDesc,
             paid: false,
             active: true,
             createdAt: Math.floor(Date.now() / 1000).toString(),
@@ -228,8 +257,8 @@ export default function CreatePaymentPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
-            { menu: 'invoices', type: 'onetime', icon: LinkIcon, label: 'Invoices', desc: 'A hosted shareable link', accent: '#fc5000' },
-            { menu: 'checkouts', type: 'onetime', icon: Settings, label: 'Checkouts', desc: 'Embed directly into your site or app', accent: '#fc5000' },
+            { menu: 'invoices', type: 'onetime', icon: Receipt, label: 'Invoices', desc: 'A hosted shareable link', accent: '#fc5000' },
+            { menu: 'checkouts', type: 'onetime', icon: CreditCard, label: 'Checkouts', desc: 'Embed directly into your site or app', accent: '#fc5000' },
             { menu: 'subscribtion', type: 'subscription', icon: Zap, label: 'Subscription', desc: 'Recurring billing', accent: '#fc5000' },
             { menu: 'tip', type: 'onetime', icon: QrCode, label: 'Tip', desc: 'Accept spontaneous contributions', accent: '#fc5000' },
           ].map((item) => (
@@ -330,6 +359,9 @@ export default function CreatePaymentPage() {
                       required
                     />
                   </div>
+                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 ml-1">
+                    * A 2% protocol fee is deducted upon settlement
+                  </p>
                 </div>
 
                 <div className="space-y-3">
@@ -420,7 +452,7 @@ export default function CreatePaymentPage() {
                 {isPending || isTxConfirming ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Finalizing on L1...</>
                 ) : (
-                  <><Sparkles className="w-4 h-4" /> Create Paylink</>
+                  <><Sparkles className="w-4 h-4" /> Create {selectedMenu === 'subscribtion' ? 'Subscription' : selectedMenu?.charAt(0).toUpperCase() + selectedMenu?.slice(1)}</>
                 )}
               </button>
             </form>

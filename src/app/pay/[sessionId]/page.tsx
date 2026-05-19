@@ -21,6 +21,53 @@ import Link from 'next/link';
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
 import { goldskyClient, GET_SESSION } from '@/lib/goldsky';
 
+export function parseSessionDescription(descString: string) {
+  const str = descString || '';
+  const match = str.match(/^\[(.*?)\]\s*(.*)$/);
+  if (match) {
+    return {
+      type: match[1],
+      cleanDesc: match[2]
+    };
+  }
+  const lower = str.toLowerCase();
+  if (lower.startsWith('invoice')) return { type: 'Invoice', cleanDesc: str };
+  if (lower.startsWith('checkout')) return { type: 'Checkout', cleanDesc: str };
+  if (lower.startsWith('subscription')) return { type: 'Subscription', cleanDesc: str };
+  if (lower.startsWith('tip')) return { type: 'Tip', cleanDesc: str };
+  return { type: 'Payment', cleanDesc: str };
+}
+
+export function getBadgeStyles(type: string) {
+  switch (type.toLowerCase()) {
+    case 'invoice':
+      return {
+        bg: 'bg-cyan-500/10 border-cyan-500/25 text-cyan-600',
+        emoji: '🧾'
+      };
+    case 'checkout':
+      return {
+        bg: 'bg-violet-500/10 border-violet-500/25 text-violet-600',
+        emoji: '💳'
+      };
+    case 'subscription':
+      return {
+        bg: 'bg-amber-500/10 border-amber-500/25 text-amber-600',
+        emoji: '⚡'
+      };
+    case 'tip':
+      return {
+        bg: 'bg-emerald-500/10 border-emerald-500/25 text-emerald-600',
+        emoji: '📲'
+      };
+    default:
+      return {
+        bg: 'bg-gray-500/10 border-gray-500/25 text-gray-600',
+        emoji: '🔗'
+      };
+  }
+}
+
 export default function PaymentPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const resolvedParams = use(params);
   const rawSessionId = resolvedParams.sessionId;
@@ -240,12 +287,26 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
             {/* Description & Details */}
             <div className="bg-white border border-gray-200 rounded-3xl p-6 space-y-6">
-               <div className="flex justify-between items-start">
-                 <div className="space-y-1">
+               <div className="flex justify-between items-start gap-4">
+                 <div className="space-y-1 min-w-0 flex-1">
                    <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Order Note</p>
-                   <p className="text-sm font-bold text-gray-200">{urlDesc || `Order Settlement — ${displayName}`}</p>
+                   {(() => {
+                     const raw = urlDesc || `Order Settlement — ${displayName}`;
+                     const parsed = parseSessionDescription(raw);
+                     const badge = getBadgeStyles(parsed.type);
+                     return (
+                       <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+                         <span className={`shrink-0 w-fit px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-md border ${badge.bg}`}>
+                           {badge.emoji} {parsed.type}
+                         </span>
+                         <p className="text-sm font-bold text-slate-800 truncate" title={parsed.cleanDesc}>
+                           {parsed.cleanDesc}
+                         </p>
+                       </div>
+                     );
+                   })()}
                  </div>
-                 <div className="text-right space-y-1">
+                 <div className="text-right space-y-1 shrink-0">
                    <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Blockchain</p>
                    <p className="text-xs font-bold text-slate-900 flex items-center justify-end gap-1.5 uppercase tracking-tighter">Arc Network <ShieldCheck className="w-3.5 h-3.5 text-violet-500" /></p>
                  </div>
