@@ -57,7 +57,7 @@ createAppKit({
   features: {
     analytics: false,
     email: false,
-    emailShowWallets: true,
+    socials: false,
   },
   themeVariables: {
     '--w3m-accent': '#7C3AED',
