@@ -136,172 +136,7 @@ export default function DashboardPage() {
     }
   }, [isDeactivateSuccess, refetchMerchant]);
 
-  // Inject shadow DOM style to completely hide Continue with Wallet and Or separator, and rename header title
-  React.useEffect(() => {
-    const injectIntoShadowRoot = (sr: ShadowRoot) => {
-      if (!sr) return;
-      
-      try {
-        // Remove old style if it exists to ensure hot-reload and new styles are immediately applied
-        const oldStyle = sr.getElementById('unipay-appkit-style');
-        if (oldStyle) {
-          oldStyle.remove();
-        }
 
-        const style = document.createElement('style');
-        style.id = 'unipay-appkit-style';
-        style.textContent = `
-          /* 1. HIDE BOTTOM "CONTINUE WITH A WALLET" BUTTON AND SEPARATORS */
-          wui-list-button[data-testid="w3m-collapse-wallets-button"],
-          wui-list-button[text*="wallet"],
-          wui-list-button[text*="Wallet"],
-          wui-separator,
-          w3m-connect-wallet-button,
-          w3m-connect-recent-button,
-          w3m-connect-announced-button,
-          w3m-connect-recommended-button,
-          w3m-connect-external-button,
-          w3m-connect-custom-button,
-          w3m-connector-list,
-          w3m-separator,
-          .w3m-separator,
-          .or-separator,
-          div[class*="separator"],
-          span[class*="separator"],
-          [class*="w3m-or"],
-          [class*="or-text"],
-          [data-testid="connect-wallet-button"],
-          button[class*="connect-wallet"],
-          button[class*="connect-recent"],
-          button[class*="recent-button"] {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            height: 0 !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            pointer-events: none !important;
-          }
-          
-          /* 2. RENAME HEADER TITLE TO "SOCIAL LOGIN" VIA CSS PSEUDO-ELEMENTS */
-          :host([data-testid="w3m-header-text"]) slot,
-          :host([data-testid="w3m-header-text"]) span,
-          :host([data-testid="w3m-header-text"]) p,
-          wui-text[data-testid="w3m-header-text"] slot,
-          wui-text[data-testid="w3m-header-text"] span,
-          [data-testid="w3m-header-text"] slot,
-          [data-testid="w3m-header-text"] span,
-          w3m-header wui-text slot,
-          w3m-header wui-text span {
-            display: none !important;
-            font-size: 0 !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            height: 0 !important;
-          }
-          
-          :host([data-testid="w3m-header-text"])::after,
-          wui-text[data-testid="w3m-header-text"]::after,
-          [data-testid="w3m-header-text"]::after,
-          w3m-header wui-text::after,
-          .w3m-header-title wui-text::after {
-            content: "Social Login" !important;
-            font-size: 16px !important;
-            font-weight: 700 !important;
-            color: #ffffff !important;
-            display: block !important;
-            text-align: center !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-          }
-        `;
-        sr.appendChild(style);
-      } catch (e) {}
-
-      // Traverse nodes inside this shadow root for text node replacement
-      const traverse = (node: Node) => {
-        if (!node) return;
-        
-        try {
-          // 1. Text node replacement
-          if (node.nodeType === Node.TEXT_NODE && node.nodeValue) {
-            const val = node.nodeValue.trim().toLowerCase();
-            if (val === 'connect wallet' || val === 'connect your wallet') {
-              node.nodeValue = 'Social Login';
-            } else if (val === 'continue with a wallet' || val === 'or' || val === 'continue with email') {
-              node.nodeValue = '';
-            }
-          }
-
-          // 2. Element node textContent replacement
-          if (node instanceof Element) {
-            const tagName = node.tagName.toLowerCase();
-            
-            if (tagName.includes('text') || tagName.includes('title') || node.classList.contains('w3m-title') || node.getAttribute('data-testid') === 'w3m-header-text') {
-              const txt = node.textContent?.trim().toLowerCase();
-              if (txt === 'connect wallet' || txt === 'connect your wallet') {
-                node.textContent = 'Social Login';
-              }
-            }
-
-            if (node.shadowRoot) {
-              injectIntoShadowRoot(node.shadowRoot);
-            }
-          }
-        } catch (e) {}
-
-        try {
-          node.childNodes.forEach(traverse);
-        } catch (e) {}
-      };
-
-      try {
-        sr.childNodes.forEach(traverse);
-      } catch (e) {}
-    };
-
-    const injectStyles = () => {
-      try {
-        // Direct query of w3m-modal or appkit-modal to start with
-        const modal = document.querySelector('appkit-modal') || document.querySelector('w3m-modal');
-        if (modal && (modal as any).shadowRoot) {
-          injectIntoShadowRoot((modal as any).shadowRoot);
-        }
-        
-        // Scan all elements in DOM that have shadowRoot
-        document.querySelectorAll('*').forEach(el => {
-          if (el && (el as any).shadowRoot) {
-            injectIntoShadowRoot((el as any).shadowRoot);
-          }
-        });
-
-        // Traverse light DOM for text replacements
-        const traverseLightDOM = (node: Node) => {
-          if (!node) return;
-          try {
-            if (node.nodeType === Node.TEXT_NODE && node.nodeValue) {
-              const val = node.nodeValue.trim().toLowerCase();
-              if (val === 'connect wallet' || val === 'connect your wallet') {
-                node.nodeValue = 'Social Login';
-              }
-            }
-            if (node instanceof Element) {
-              if (node.textContent?.trim().toLowerCase() === 'connect wallet') {
-                node.textContent = 'Social Login';
-              }
-            }
-          } catch (e) {}
-          try {
-            node.childNodes.forEach(traverseLightDOM);
-          } catch (e) {}
-        };
-        traverseLightDOM(document.body);
-      } catch (e) {}
-    };
-
-    const interval = setInterval(injectStyles, 250); // Snappy 250ms interval
-    return () => clearInterval(interval);
-  }, []);
 
   const isRegisteredOnchain = merchantData ? merchantData[2] : false;
   const rawName = isRegisteredOnchain ? (merchantData?.[0] || '') : '';
@@ -413,22 +248,12 @@ export default function DashboardPage() {
 
         {/* Button Options Stack */}
         <div className="space-y-3.5 mb-8">
-          {/* OPTION 1: SIGN WITH SOCIAL LOGIN */}
           <button
             onClick={() => open({ view: 'Connect' })}
-            className="w-full py-4 px-6 rounded-2xl bg-white border-[1.5px] border-gray-200 hover:border-gray-300/80 text-slate-800 text-xs font-black uppercase tracking-[0.15em] flex items-center justify-center gap-3 transition-all hover:scale-[1.01] hover:shadow-lg cursor-pointer group"
-          >
-            <Mail className="w-4 h-4 text-[#fc5000] shrink-0 transition-transform group-hover:scale-110" />
-            <span>Sign Social Login</span>
-          </button>
-
-          {/* OPTION 2: SIGN WITH WALLET ONLY */}
-          <button
-            onClick={() => open({ view: 'AllWallets' })}
             className="btn-orange w-full py-4 px-6 text-white text-xs font-black uppercase tracking-[0.15em] flex items-center justify-center gap-3 transition-all hover:scale-[1.01] hover:shadow-lg cursor-pointer group"
           >
             <Wallet className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" />
-            <span>Sign with Wallet</span>
+            <span>Connect Wallet</span>
           </button>
         </div>
 

@@ -56,9 +56,8 @@ createAppKit({
   themeMode: 'dark',
   features: {
     analytics: false,
-    email: true,
-    socials: ['google', 'apple'],
-    emailShowWallets: false,
+    email: false,
+    emailShowWallets: true,
   },
   themeVariables: {
     '--w3m-accent': '#7C3AED',
