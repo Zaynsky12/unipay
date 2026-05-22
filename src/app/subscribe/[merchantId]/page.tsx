@@ -225,7 +225,7 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
                     ) : (
                       <>
                         <ShieldCheck className="w-5 h-5 text-blue-200" />
-                        <span>Start Subscription</span>
+                        <span>Subscribe</span>
                       </>
                     )}
                   </button>

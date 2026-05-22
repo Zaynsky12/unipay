@@ -214,11 +214,30 @@ export default function CreatePaymentPage() {
     }
   }, [isSuccess, txReceipt, txHash, address, amount, selectedToken, description, merchantName, expiryDays]);
 
+  let typeNameForLink = 'Payment';
+  if (selectedMenu === 'invoices') typeNameForLink = 'Invoice';
+  else if (selectedMenu === 'checkouts') typeNameForLink = 'Checkout';
+  else if (selectedMenu === 'subscribtion') typeNameForLink = 'Subscription';
+  else if (selectedMenu === 'tip') typeNameForLink = 'Tip';
+
+  const typePrefixForLink = `[${typeNameForLink}]`;
+  const fallbackDescForLink = selectedMenu 
+    ? `${selectedMenu.charAt(0).toUpperCase() + selectedMenu.slice(1)} — ${merchantName}` 
+    : `Payment — ${merchantName}`;
+  const finalDescForLink = description.trim()
+    ? `${typePrefixForLink} ${description.trim()}`
+    : `${typePrefixForLink} ${fallbackDescForLink}`;
+
+  let routePath = 'pay';
+  if (selectedMenu === 'invoices') routePath = 'invoice';
+  else if (selectedMenu === 'checkouts') routePath = 'checkout';
+  else if (selectedMenu === 'tip') routePath = 'tip';
+
   const paymentLink = typeof window !== 'undefined' 
     ? (paymentType === 'onetime' 
-        ? `${window.location.origin}/pay/${createdSessionId || 'preview_id'}${description ? `?desc=${encodeURIComponent(description)}` : ''}`
+        ? `${window.location.origin}/${routePath}/${createdSessionId || 'preview_id'}?desc=${encodeURIComponent(finalDescForLink)}`
         : `${window.location.origin}/subscribe/${address}?amount=${amount || '0'}&interval=${subInterval}&token=${selectedToken}`)
-    : `https://unipay.app/${paymentType === 'onetime' ? 'pay/preview_id' : 'subscribe/0x...'}`;
+    : `https://unipay.app/${paymentType === 'onetime' ? `${routePath}/preview_id` : 'subscribe/0x...'}`;
 
   const embedSnippet = `<script src="https://unipay.app/widget.js" type="module"></script>
 <unipay-checkout 

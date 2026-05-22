@@ -213,8 +213,16 @@ export default function DashboardPage() {
 
 
   // Tombol penyalinan tautan
-  const copySessionUrl = (sessionId: string) => {
-    const url = `${window.location.origin}/pay/${sessionId}`;
+  const copySessionUrl = (sessionId: string, description: string) => {
+    const rawDesc = getSavedDescription(sessionId, description);
+    const parsed = parseSessionDescription(rawDesc);
+    let routePath = 'pay';
+    const typeLower = parsed.type.toLowerCase();
+    if (typeLower === 'invoice') routePath = 'invoice';
+    else if (typeLower === 'checkout') routePath = 'checkout';
+    else if (typeLower === 'tip') routePath = 'tip';
+
+    const url = `${window.location.origin}/${routePath}/${sessionId}`;
     navigator.clipboard.writeText(url);
     setCopiedId(sessionId);
     setTimeout(() => setCopiedId(null), 2000);
@@ -394,7 +402,15 @@ export default function DashboardPage() {
                         <div key={actualId || idx} className={`grid grid-cols-12 items-center gap-2 group py-2 border-b border-white/[0.03] last:border-0 relative ${activeDropdown === actualId ? 'z-50' : 'z-10'}`}>
                           {/* 1. PAYMENTS */}
                           <Link
-                            href={`/pay/${actualId}`}
+                            href={`/${(() => {
+                                const rawDesc = getSavedDescription(actualId, s.description);
+                                const parsed = parseSessionDescription(rawDesc);
+                                const typeLower = parsed.type.toLowerCase();
+                                if (typeLower === 'invoice') return 'invoice';
+                                if (typeLower === 'checkout') return 'checkout';
+                                if (typeLower === 'tip') return 'tip';
+                                return 'pay';
+                            })()}/${actualId}`}
                             target="_blank"
                             className="col-span-5 flex items-center gap-3 min-w-0 transition-opacity hover:opacity-80"
                             title="Open Live Payment Link (Checkout Page)"
@@ -504,7 +520,7 @@ export default function DashboardPage() {
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      copySessionUrl(actualId);
+                                      copySessionUrl(actualId, s.description);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
                                     className="w-full px-3 py-2 rounded-xl text-xs text-gray-700 hover:text-[#fc5000] hover:bg-[#fc5000]/5 flex items-center gap-2.5 font-bold transition-all text-left cursor-pointer group"
@@ -568,7 +584,15 @@ export default function DashboardPage() {
                         {/* Top Bar: Title & Actions */}
                         <div className="flex items-start justify-between gap-2">
                            <Link 
-                            href={`/pay/${actualId}`}
+                            href={`/${(() => {
+                                const rawDesc = getSavedDescription(actualId, s.description);
+                                const parsed = parseSessionDescription(rawDesc);
+                                const typeLower = parsed.type.toLowerCase();
+                                if (typeLower === 'invoice') return 'invoice';
+                                if (typeLower === 'checkout') return 'checkout';
+                                if (typeLower === 'tip') return 'tip';
+                                return 'pay';
+                            })()}/${actualId}`}
                             target="_blank"
                             className="flex items-center gap-3 min-w-0 transition-opacity hover:opacity-80 flex-1"
                           >
@@ -656,7 +680,7 @@ export default function DashboardPage() {
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      copySessionUrl(actualId);
+                                      copySessionUrl(actualId, s.description);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
                                     className="w-full px-3 py-2 rounded-xl text-xs text-gray-700 hover:text-[#fc5000] hover:bg-[#fc5000]/5 flex items-center gap-2.5 font-bold transition-all text-left cursor-pointer group"

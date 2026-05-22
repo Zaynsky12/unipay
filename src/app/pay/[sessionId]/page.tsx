@@ -18,6 +18,7 @@ import {
   UserCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
 import { goldskyClient, GET_SESSION } from '@/lib/goldsky';
 
@@ -76,6 +77,18 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   const { address, isConnected } = useAccount();
   const [urlDesc, setUrlDesc] = useState<string | null>(null);
+  const pathname = usePathname();
+
+  const getEffectiveType = () => {
+    const parsed = parseSessionDescription(urlDesc || '');
+    let type = parsed.type;
+    if (type === 'Payment' && pathname) {
+      if (pathname.includes('/invoice/')) type = 'Invoice';
+      else if (pathname.includes('/checkout/')) type = 'Checkout';
+      else if (pathname.includes('/tip/')) type = 'Tip';
+    }
+    return type;
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -344,7 +357,15 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                     <CheckCircle2 className="w-10 h-10" />
                   </div>
                   <div className="text-center">
-                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Payment Settled</h3>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+                      {(() => {
+                        const type = getEffectiveType().toLowerCase();
+                        if (type === 'invoice') return 'Invoice Paid';
+                        if (type === 'checkout') return 'Order Confirmed';
+                        if (type === 'tip') return 'Tip Claimed';
+                        return 'Payment Settled';
+                      })()}
+                    </h3>
                     <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mt-1">Confirmed on Blockchain</p>
                   </div>
                   {txHash && (
@@ -364,7 +385,11 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   className="w-full py-5 bg-white text-black hover:bg-gray-200 text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
                 >
                   {activeStep === 'approving' ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
-                  Pay Now
+                  {(() => {
+                    const type = getEffectiveType().toLowerCase();
+                    if (type === 'tip') return 'Claim';
+                    return 'Pay Now';
+                  })()}
                 </button>
               ) : (
                 <button 
@@ -373,7 +398,11 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   className="btn-orange w-full py-5 text-white text-[11px] font-black uppercase tracking-[0.2em] active:scale-95 flex items-center justify-center gap-3"
                 >
                   {activeStep === 'paying' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
-                  Confirm Payment
+                  {(() => {
+                    const type = getEffectiveType().toLowerCase();
+                    if (type === 'tip') return 'Claim';
+                    return 'Pay Now';
+                  })()}
                 </button>
               )}
             </div>

@@ -324,7 +324,6 @@ export default function HistoryPage() {
                                 <td className="py-4 px-3 text-gray-500">
                                   <div className="space-y-0.5">
                                     <div className="flex items-center gap-1.5 text-xs text-gray-600 font-medium"><Calendar className="w-3.5 h-3.5 text-gray-500" /><span>{new Date(timestampMs).toLocaleDateString()} {new Date(timestampMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
-                                    <div className="text-[10px] text-emerald-500 font-mono pl-5">Goldsky Verified</div>
                                   </div>
                                 </td>
                                 <td className="py-4 px-3 text-right">
@@ -454,7 +453,6 @@ export default function HistoryPage() {
                             <td className="py-4 px-3 text-gray-500">
                               <div className="space-y-0.5">
                                 <div className="flex items-center gap-1.5 text-xs text-gray-600 font-medium"><Calendar className="w-3.5 h-3.5 text-gray-500" /><span>{new Date(timestampMs).toLocaleDateString()} {new Date(timestampMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
-                                <div className="text-[10px] text-emerald-500 font-mono pl-5">Goldsky Verified</div>
                               </div>
                             </td>
                             <td className="py-4 px-3 text-right">

@@ -219,12 +219,7 @@ function AccountContent() {
     writeContract({ address: UNIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'registerMerchant', args: [merchantName, metadataString] });
   };
 
-  const handleReset = () => {
-    if (!address) return;
-    if (confirm("Reset profile to Anonymous?")) {
-      writeContract({ address: UNIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'registerMerchant', args: ['Anonymous', ''] });
-    }
-  };
+
 
   if (!isConnected) return (
     <div className="fixed inset-0 z-[100] bg-[#FEF7ED] flex items-center justify-center p-6 animate-fade-in overflow-hidden pixel-grid">
@@ -536,7 +531,6 @@ function AccountContent() {
                   <button type="submit" disabled={isPending || isTxConfirming || !merchantName} className="btn-orange flex-1 py-4 text-white text-[10px] font-black uppercase flex items-center justify-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed">
                     {isPending || isTxConfirming ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-4 h-4" />Save Profile</>}
                   </button>
-                  <button type="button" onClick={handleReset} className="px-8 py-4 bg-red-500/5 hover:bg-red-500/10 text-red-500 text-[10px] font-black uppercase rounded-2xl border border-red-500/20 transition-all">Reset</button>
                </div>
             </form>
           </div>
