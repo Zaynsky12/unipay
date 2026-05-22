@@ -1,6 +1,6 @@
 import { GraphQLClient, gql } from 'graphql-request';
 
-const GOLDSKY_ENDPOINT = 'https://api.goldsky.com/api/public/project_cmp4c9mq1fr6t01y5emhw79h2/subgraphs/unipay/v3/gn';
+const GOLDSKY_ENDPOINT = 'https://api.goldsky.com/api/public/project_cmp4c9mq1fr6t01y5emhw79h2/subgraphs/unipay/v4/gn';
 
 export const goldskyClient = new GraphQLClient(GOLDSKY_ENDPOINT);
 

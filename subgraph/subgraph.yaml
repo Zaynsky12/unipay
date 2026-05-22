@@ -6,7 +6,7 @@ dataSources:
     name: UniPayRegistry
     network: arc-testnet
     source:
-      address: "0x4c57ea2ffe9492e821c522f8a71e373ac6fb7c07"
+      address: "0xaa63707b349f0637d66065b4edcf4a5793838b04"
       abi: UniPayRegistry
       startBlock: 42320000
     mapping:
