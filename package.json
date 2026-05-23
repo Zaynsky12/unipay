@@ -2,6 +2,12 @@
   "name": "lumipay",
   "version": "0.1.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Zaynsky12/lumipay.git"
+  },
+  "author": "LumiPay Contributors",
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
