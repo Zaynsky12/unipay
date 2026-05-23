@@ -148,11 +148,10 @@ body {
   -webkit-backdrop-filter: blur(12px) saturate(110%);
   position: relative;
   z-index: 1;
-  transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+  transition: border-color 0.25s, box-shadow 0.25s;
 }
 .glass-panel:hover {
   border-color: rgba(252, 80, 0, 0.3);
-  background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 6px 40px rgba(252, 80, 0, 0.05);
 }
 
