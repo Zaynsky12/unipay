@@ -11,14 +11,11 @@ LumiPay is a fully decentralized, non-custodial payment checkout protocol that e
 | Feature | Description |
 |---|---|
 | 🔐 **Stateless Payment Dispatch** | Funds go P2P — directly from buyer wallet to merchant. LumiPay never holds assets. |
-| 🧠 **On-chain Merchant Identity** | Brand name, logo, website, and contact info stored immutably on the `LumiPayRegistry` smart contract. |
-| 🔗 **Smart Pay Links (Checkouts)** | Generate deterministic billing endpoints for one-time payments with custom descriptions and expiry timers. |
-| 🧾 **Invoice System** | Create and share on-chain invoices with metadata stored permanently on the blockchain. |
-| 🔄 **Recurring Subscriptions** | Schedule recurring billing cycles with configurable intervals — executed by any relayer or cron job. |
-| 💡 **Tips Module** | Accept voluntary micropayments from community or supporters. |
+| 🧠 **On-chain Merchant Identity** | Brand name, metadata, and identity stored immutably on the `LumiPayRegistry` smart contract. |
+| 🔗 **Smart Pay Links** | Generate deterministic endpoints for checkouts, invoices, and tips with custom expiry timers. |
+| 🔄 **Recurring Subscriptions** | Schedule recurring billing cycles with configurable on-chain execution intervals. |
+| ⚡ **1-Second Finality** | Built natively on the Arc Network for instant sub-second payment settlement and negligible gas fees. |
 | 📊 **Real-time Analytics** | Live business performance metrics pulled from an on-chain subgraph (Goldsky-indexed). |
-| 💰 **Multi-chain Asset Overview** | Consolidated USDC balance view across Arc, Base, Arbitrum, and Optimism. |
-| 🤖 **AI-Powered Assistant** | Intelligent embedded guide powered by Google Gemini to help merchants navigate the protocol. |
 | 🌐 **Payment Explorer** | Public-facing transaction explorer for on-chain payment transparency. |
 
 ---
@@ -177,9 +174,6 @@ SubscriptionCancelled(bytes32 subId)
 | Network | Status |
 |---|---|
 | **Arc Network (L1)** | ✅ Primary — Live |
-| Base | 🔜 Planned |
-| Arbitrum | 🔜 Planned |
-| Optimism | 🔜 Planned |
 
 ---
 
