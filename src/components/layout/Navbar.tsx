@@ -31,7 +31,7 @@ export function Navbar() {
   return (
     <>
       {/* ── Top Navbar ── */}
-      <header className="w-full bg-gray-50/96 border-b border-gray-200 backdrop-blur-xl fixed top-0 z-50">
+      <header className="w-full bg-white/30 border-b border-gray-200/50 backdrop-blur-xl fixed top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
           {/* Logo — Caldera style: chunky pill badge */}
@@ -100,7 +100,7 @@ export function Navbar() {
 
       {/* Mobile Bottom Nav — Caldera chunky pill icons */}
       {!isLandingPage && isConnected && (
-        <div className="md:hidden fixed bottom-0 left-0 w-full bg-gray-50/98 backdrop-blur-xl border-t border-gray-200 z-50 animate-fade-in">
+        <div className="md:hidden fixed bottom-0 left-0 w-full bg-white/30 backdrop-blur-xl border-t border-gray-200/50 z-50 animate-fade-in">
           <nav className="flex items-center justify-around px-2 py-2 max-w-md mx-auto">
             {navItems.map((item) => {
               const active = isActive(item.href);
