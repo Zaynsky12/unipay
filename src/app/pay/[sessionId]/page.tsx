@@ -237,7 +237,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[120px]" />
       </div>
 
-      <div className="relative z-10 max-w-xl mx-auto px-4 py-8 sm:py-16">
+      <div className="relative z-10 max-w-xl mx-auto px-4 pt-8 pb-32 sm:pt-16 sm:pb-40">
 
 
 
@@ -403,8 +403,8 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   {activeStep === 'paying' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
                   {(() => {
                     const type = getEffectiveType().toLowerCase();
-                    if (type === 'tip') return 'Send Tip';
-                    return 'Pay Now';
+                    if (type === 'tip') return 'Send Tip (Step 2/2)';
+                    return 'Pay Now (Step 2/2)';
                   })()}
                 </button>
               )}
