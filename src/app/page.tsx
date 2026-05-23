@@ -42,7 +42,7 @@ export default function LandingPage() {
         initial={{ opacity: 0, y: 30 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.6, ease: "easeOut" }} 
-        className="relative min-h-[92vh] flex flex-col items-center justify-center text-center px-4 pt-32 md:pt-20"
+        className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-4 pt-32 pb-16 md:pt-40 md:pb-24"
       >
         {/* Background blocks */}
         <div className="absolute top-0 -z-10 w-full h-full bg-[#FEF7ED]" />
@@ -99,7 +99,7 @@ export default function LandingPage() {
       </motion.section>
 
       {/* Premium Stats Ticker Belt (Perfect 3D transition between sections) */}
-      <div className="w-full overflow-hidden py-5 sm:py-6 z-20 pointer-events-auto relative mt-16 sm:mt-24">
+      <div className="w-full overflow-hidden py-5 sm:py-6 z-20 pointer-events-auto relative">
         {/* Gradient fade on edges for smooth scrolling effect */}
         <div className="absolute top-0 left-0 bottom-0 w-16 sm:w-40 bg-gradient-to-r from-[#FEF7ED] to-transparent z-10 pointer-events-none" />
         <div className="absolute top-0 right-0 bottom-0 w-16 sm:w-40 bg-gradient-to-l from-[#FEF7ED] to-transparent z-10 pointer-events-none" />
@@ -148,7 +148,7 @@ export default function LandingPage() {
         viewport={{ once: true, margin: "-50px" }} 
         transition={{ duration: 0.6, ease: "easeOut" }} 
         id="how-it-works" 
-        className="w-full max-w-6xl mx-auto px-6 py-24 mt-4"
+        className="w-full max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-24"
       >
         <div className="text-center mb-16">
           {/* Orange section tag */}
@@ -228,7 +228,7 @@ export default function LandingPage() {
         whileInView={{ opacity: 1, y: 0 }} 
         viewport={{ once: true, margin: "-50px" }} 
         transition={{ duration: 0.6, ease: "easeOut" }} 
-        className="w-full bg-[#FEF7ED] py-24 border-y border-gray-200 relative overflow-hidden"
+        className="w-full bg-[#FEF7ED] py-16 md:py-24 border-y border-gray-200/50 relative overflow-hidden"
       >
         {/* Background accent */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[200px] bg-[#fc5000]/5 rounded-full blur-[100px] pointer-events-none" />
@@ -260,7 +260,7 @@ export default function LandingPage() {
 
             <div className="space-y-3 pt-2 w-full">
               {[
-                "On-chain Merchant Profile (Logo, Website, Email)",
+                "On-chain Merchant Profile",
                 "Consolidated Multi-Chain Asset Management",
                 "Real-time Business Performance Analytics",
                 "Direct On-chain Finality & SDK Ready",
@@ -362,7 +362,7 @@ export default function LandingPage() {
         whileInView={{ opacity: 1, y: 0 }} 
         viewport={{ once: true, margin: "-50px" }} 
         transition={{ duration: 0.6, ease: "easeOut" }} 
-        className="pt-28 flex flex-col items-center text-center px-4"
+        className="py-16 md:py-24 flex flex-col items-center text-center px-4"
       >
         {/* Orange decorative tag */}
         <div className="caldera-tag mb-6">Start Today</div>
@@ -388,7 +388,7 @@ export default function LandingPage() {
       </motion.section>
 
       {/* ── Footer ── */}
-      <footer className="w-full max-w-6xl mx-auto mt-32 pt-14 pb-10 border-t border-gray-200 px-6 relative z-10">
+      <footer className="w-full max-w-6xl mx-auto py-12 md:py-16 border-t border-gray-200/50 px-4 md:px-6 relative z-10">
         {/* Footer subtle glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-[100px] bg-gradient-to-r from-[#fc5000]/4 via-transparent to-[#fc5000]/4 rounded-full blur-[80px] -z-10 pointer-events-none" />
 
