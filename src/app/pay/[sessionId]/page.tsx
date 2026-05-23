@@ -239,17 +239,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
       <div className="relative z-10 max-w-xl mx-auto px-4 py-8 sm:py-16">
         
-        {/* LumiPay Logo Header */}
-        <div className="flex justify-center mb-8 animate-fade-in-down">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-2xl bg-[#fc5000] flex items-center justify-center shadow-[0_0_18px_rgba(252,80,0,0.45)] group-hover:shadow-[0_0_24px_rgba(252,80,0,0.65)] transition-all hover:scale-105">
-              <Eye className="w-5 h-5 text-slate-900" fill="currentColor" />
-            </div>
-            <span className="text-2xl font-black tracking-tight text-white drop-shadow-md" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-              Lumi<span className="text-[#fc5000]">Pay</span>
-            </span>
-          </Link>
-        </div>
+
 
         {/* ── BILLING CARD (Everything Integrated) ── */}
         <div className="glass-panel rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-2xl relative animate-fade-in-up bg-gray-50 backdrop-blur-3xl">
@@ -422,9 +412,17 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
           </div>
 
           <div className="px-8 py-5 bg-white/[0.01] border-t border-gray-200 flex items-center justify-center">
-             <div className="flex items-center gap-2 text-[9px] font-black text-gray-700 uppercase tracking-[0.2em]">
-                <Zap className="w-3 h-3 text-violet-500 fill-violet-500/20" /> Powered by LumiPay
-             </div>
+             <Link href="/" className="flex items-center gap-2.5 group transition-transform hover:scale-105 duration-300">
+                <div className="w-7 h-7 rounded-xl bg-[#fc5000] flex items-center justify-center shadow-[0_0_10px_rgba(252,80,0,0.3)] group-hover:shadow-[0_0_16px_rgba(252,80,0,0.5)] transition-all">
+                  <Eye className="w-4 h-4 text-slate-900" fill="currentColor" />
+                </div>
+                <div className="flex flex-col items-start justify-center">
+                  <span className="text-[7px] font-black text-gray-400 uppercase tracking-[0.2em] leading-none mb-0.5">Powered by</span>
+                  <span className="text-sm font-black tracking-tight text-slate-600 leading-none group-hover:text-slate-800 transition-colors" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+                    Lumi<span className="text-[#fc5000]">Pay</span>
+                  </span>
+                </div>
+             </Link>
           </div>
         </div>
 
