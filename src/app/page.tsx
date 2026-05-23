@@ -35,7 +35,7 @@ export default function LandingPage() {
   });
 
   return (
-    <div className="flex flex-col gap-0 pb-24 animate-fade-in overflow-hidden">
+    <div className="flex flex-col gap-0 pb-24 animate-fade-in overflow-hidden bg-[#FEF7ED] min-h-screen">
 
       {/* ── Hero Section ── */}
       <motion.section 
@@ -45,17 +45,13 @@ export default function LandingPage() {
         className="relative min-h-[92vh] flex flex-col items-center justify-center text-center px-4 pt-32 md:pt-20"
       >
         {/* Background blocks */}
-        <div className="absolute top-0 -z-10 w-full h-full bg-gray-50" />
+        <div className="absolute top-0 -z-10 w-full h-full bg-[#FEF7ED]" />
         {/* Top purple glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -z-10 w-[700px] h-[500px] bg-[#6836e8]/10 rounded-full blur-[140px] pointer-events-none" />
         {/* Orange bottom-right accent */}
         <div className="absolute bottom-0 right-0 -z-10 w-[400px] h-[400px] bg-[#fc5000]/6 rounded-full blur-[120px] pointer-events-none" />
 
-        {/* Chip badge — Caldera style orange */}
-        <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-[#fc5000]/10 border border-[#fc5000]/25 text-[10px] sm:text-xs font-black text-[#fc5000] mb-8 backdrop-blur-md animate-fade-in-down uppercase tracking-wider max-w-[90vw] text-center leading-snug">
-          <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current shrink-0" />
-          <span>Payment Protocol Built on Arc Network</span>
-        </div>
+
 
         {/* H1 — chunky display */}
         <h1
@@ -103,10 +99,10 @@ export default function LandingPage() {
       </motion.section>
 
       {/* Premium Stats Ticker Belt (Perfect 3D transition between sections) */}
-      <div className="w-full overflow-hidden bg-gray-50/80 backdrop-blur-md border-y border-gray-200/80 py-5 sm:py-6 shadow-[0_4px_30px_rgba(0,0,0,0.02)] z-20 pointer-events-auto relative mt-16 sm:mt-24">
+      <div className="w-full overflow-hidden py-5 sm:py-6 z-20 pointer-events-auto relative mt-16 sm:mt-24">
         {/* Gradient fade on edges for smooth scrolling effect */}
-        <div className="absolute top-0 left-0 bottom-0 w-16 sm:w-40 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
-        <div className="absolute top-0 right-0 bottom-0 w-16 sm:w-40 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 left-0 bottom-0 w-16 sm:w-40 bg-gradient-to-r from-[#FEF7ED] to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 right-0 bottom-0 w-16 sm:w-40 bg-gradient-to-l from-[#FEF7ED] to-transparent z-10 pointer-events-none" />
 
         <div className="animate-marquee-quarter gap-4 sm:gap-6 py-2">
           {[

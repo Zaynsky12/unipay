@@ -31,7 +31,10 @@ export function Navbar() {
   return (
     <>
       {/* ── Top Navbar ── */}
-      <header className="w-full bg-gray-50/96 border-b border-gray-200 backdrop-blur-xl fixed top-0 z-50">
+      <header className={cn(
+        "w-full border-b border-gray-200 backdrop-blur-xl fixed top-0 z-50",
+        isLandingPage ? "bg-[#FEF7ED]/96" : "bg-gray-50/96"
+      )}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
           {/* Logo — Caldera style: chunky pill badge */}
