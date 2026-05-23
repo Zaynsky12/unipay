@@ -820,8 +820,8 @@ export default function DashboardPage() {
                           </span>
                         </td>
 
-                        <td className="py-3 px-2 text-gray-500">
-                          <span>{new Date(Number(p.timestamp) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <td className="py-3 px-2 text-gray-500 text-[10px]">
+                          <span>{new Date(Number(p.timestamp) * 1000).toLocaleDateString()} {new Date(Number(p.timestamp) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </td>
 
                         <td className="py-3 px-2 text-right">
