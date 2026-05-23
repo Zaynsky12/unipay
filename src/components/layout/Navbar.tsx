@@ -40,7 +40,7 @@ export function Navbar() {
               <Eye className="w-4.5 h-4.5 text-slate-900" fill="currentColor" />
             </div>
             <span className="text-base font-black tracking-tight text-slate-900" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-              Uni<span className="text-[#fc5000]">Pay</span>
+              Lumi<span className="text-[#fc5000]">Pay</span>
             </span>
           </Link>
 

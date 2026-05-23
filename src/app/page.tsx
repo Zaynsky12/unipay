@@ -401,7 +401,7 @@ export default function LandingPage() {
                 <Eye className="w-5 h-5 text-slate-900" fill="currentColor" />
               </div>
               <span className="text-xl font-black tracking-tight text-slate-900" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                Uni<span className="text-[#fc5000]">Pay</span>
+                Lumi<span className="text-[#fc5000]">Pay</span>
               </span>
             </Link>
             <p className="text-sm text-gray-500 leading-relaxed font-medium px-4 md:px-0">
