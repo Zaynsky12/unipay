@@ -357,26 +357,31 @@ export default function HistoryPage() {
                               <div><span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Settlement Amount</span><div className="flex items-center gap-1 text-base font-black text-slate-900 mt-0.5"><span>${formattedAmount}</span><span className="text-[10px] font-bold text-[#fc5000]">USDC</span></div></div>
                               <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Settled</span>
                             </div>
-                            <div className="space-y-2 text-xs">
-                              <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]">
-                                <span>Session:</span>
-                                <div className="text-right">
-                                  {cleanTitle && (
-                                    <div className="flex items-center justify-end gap-1 mb-0.5">
-                                      {badge && (
-                                        <span className={`shrink-0 px-1 py-0.2 text-[6px] font-black uppercase tracking-wider rounded border ${badge.bg}`}>
-                                          {badge.emoji} {parsedTitle?.type}
-                                        </span>
-                                      )}
-                                      <span className="text-[9px] font-bold text-slate-900 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 block font-sans w-fit truncate max-w-[120px]">
-                                        {cleanTitle}
-                                      </span>
-                                    </div>
+                            <div className="space-y-2.5 text-xs">
+                              {cleanTitle && (
+                                <div className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                  {badge && (
+                                    <span className={`shrink-0 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider rounded border ${badge.bg} mt-0.5`}>
+                                      {badge.emoji} {parsedTitle?.type}
+                                    </span>
                                   )}
-                                  <span className="text-[#fc5000] font-semibold truncate max-w-[150px]">{item.sessionId ? `${item.sessionId.slice(0, 6)}...${item.sessionId.slice(-4)}` : 'N/A'}</span>
+                                  <span className="text-[11px] font-bold text-slate-700 leading-tight break-words line-clamp-2">
+                                    {cleanTitle}
+                                  </span>
                                 </div>
+                              )}
+                              <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]">
+                                <span>Session ID:</span>
+                                <span className="text-[#fc5000] font-semibold truncate max-w-[150px]">
+                                  {item.sessionId ? `${item.sessionId.slice(0, 8)}...${item.sessionId.slice(-6)}` : 'N/A'}
+                                </span>
                               </div>
-                              <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]"><span>Payer:</span><span className="text-gray-600">{item.payer ? `${item.payer.slice(0, 6)}...${item.payer.slice(-4)}` : 'Unknown'}</span></div>
+                              <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]">
+                                <span>Payer:</span>
+                                <span className="text-gray-600">
+                                  {item.payer ? `${item.payer.slice(0, 6)}...${item.payer.slice(-4)}` : 'Unknown'}
+                                </span>
+                              </div>
                             </div>
                             <div className="pt-2 border-t border-gray-200 flex justify-between items-center text-[11px]">
                               <div className="flex items-center gap-1 text-gray-500"><Calendar className="w-3 h-3" /><span>{new Date(timestampMs).toLocaleDateString()} {new Date(timestampMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
@@ -537,24 +542,31 @@ export default function HistoryPage() {
                           <div><span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Settlement Amount</span><div className="flex items-center gap-1 text-base font-black text-slate-900 mt-0.5"><span>${formattedAmount}</span><span className="text-[10px] font-bold text-[#fc5000]">USDC</span></div></div>
                           <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Settled</span>
                         </div>
-                        <div className="space-y-2 text-xs">
+                        <div className="space-y-2.5 text-xs">
                           {cleanTitle && (
-                            <div className="flex items-center gap-1.5 bg-gray-50 p-2 rounded-xl border border-gray-100">
+                            <div className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                               {badge && (
-                                <span className={`shrink-0 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider rounded border ${badge.bg}`}>
+                                <span className={`shrink-0 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider rounded border ${badge.bg} mt-0.5`}>
                                   {badge.emoji} {parsedTitle?.type}
                                 </span>
                               )}
-                              <span className="text-[10px] font-bold text-slate-900 truncate">
+                              <span className="text-[11px] font-bold text-slate-700 leading-tight break-words line-clamp-2">
                                 {cleanTitle}
                               </span>
                             </div>
                           )}
                           <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]">
-                            <span>Session:</span>
-                            <span className="text-[#fc5000] font-semibold truncate max-w-[150px]">{item.sessionId ? `${item.sessionId.slice(0, 8)}...${item.sessionId.slice(-6)}` : 'N/A'}</span>
+                            <span>Session ID:</span>
+                            <span className="text-[#fc5000] font-semibold truncate max-w-[150px]">
+                              {item.sessionId ? `${item.sessionId.slice(0, 8)}...${item.sessionId.slice(-6)}` : 'N/A'}
+                            </span>
                           </div>
-                          <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]"><span>Payer:</span><span className="text-gray-600">{item.payer ? `${item.payer.slice(0, 6)}...${item.payer.slice(-4)}` : 'Unknown'}</span></div>
+                          <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]">
+                            <span>Payer:</span>
+                            <span className="text-gray-600">
+                              {item.payer ? `${item.payer.slice(0, 6)}...${item.payer.slice(-4)}` : 'Unknown'}
+                            </span>
+                          </div>
                         </div>
                         <div className="pt-2 border-t border-gray-200 flex justify-between items-center text-[11px]">
                           <div className="flex items-center gap-1 text-gray-500"><Calendar className="w-3 h-3" /><span>{new Date(timestampMs).toLocaleDateString()} {new Date(timestampMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
