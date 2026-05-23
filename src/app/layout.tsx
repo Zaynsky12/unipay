@@ -28,7 +28,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "UniPay | Decentralized Payment Checkout Protocol",
+  title: "LumiPay | Decentralized Payment Checkout Protocol",
   description: "Accept USDC/EURC from any chain, settle in < 1 second. Fully onchain protocol powered by Arc Network.",
 };
 

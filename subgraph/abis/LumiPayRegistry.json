@@ -1,13 +1,4 @@
-// ── LumiPay Contract Address (LumiPayRegistry) ──────────────────────────────────
-// Will be filled automatically after deploy on Arc Testnet
-export const LUMIPAY_REGISTRY_ADDRESS = "0xd02f0cb8d7a156550e80c3b1183c90803fc464f7" as `0x${string}`;
-
-// ── Token Addresses ────────────────────────────────────────────────────────────
-export const USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as `0x${string}`;
-export const EURC_ADDRESS = "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as `0x${string}`;
-
-// ── LumiPayRegistry ABI (100% Presisi dan Sinkron dengan Kontrak Solidity Aktual) ──
-export const REGISTRY_ABI = [
+[
   {
     "inputs": [
       {
@@ -569,50 +560,4 @@ export const REGISTRY_ABI = [
     "stateMutability": "view",
     "type": "function"
   }
-] as const;
-
-// ── ERC20 ABI (minimal for approval + balance) ─────────────────────────────────
-export const ERC20_ABI = [
-  {
-    "inputs": [
-      { "internalType": "address", "name": "spender", "type": "address" },
-      { "internalType": "uint256", "name": "amount", "type": "uint256" }
-    ],
-    "name": "approve",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
-    "name": "balanceOf",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "owner", "type": "address" },
-      { "internalType": "address", "name": "spender", "type": "address" }
-    ],
-    "name": "allowance",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "decimals",
-    "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }],
-    "stateMutability": "view",
-    "type": "function"
-  }
-] as const;
-
-// ── Supported tokens list ──────────────────────────────────────────────────────
-export const SUPPORTED_TOKENS = [
-  { symbol: "USDC", address: USDC_ADDRESS, decimals: 6 },
-  { symbol: "EURC", address: EURC_ADDRESS, decimals: 6 },
-] as const;
-
-export type SupportedToken = "USDC" | "EURC";
+]

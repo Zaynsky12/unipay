@@ -1,8 +1,8 @@
-# UniPay Protocol 🟣
+# LumiPay Protocol 🟣
 
 > **Stateless stablecoin payment processing engine — built natively on the Arc Network.**
 
-UniPay is a fully decentralized, non-custodial payment checkout protocol that enables merchants to accept USDC from any chain and settle directly into their self-custody wallet in under 1 second. No intermediaries. No custodial risk. Pure on-chain finality.
+LumiPay is a fully decentralized, non-custodial payment checkout protocol that enables merchants to accept USDC from any chain and settle directly into their self-custody wallet in under 1 second. No intermediaries. No custodial risk. Pure on-chain finality.
 
 ---
 
@@ -10,8 +10,8 @@ UniPay is a fully decentralized, non-custodial payment checkout protocol that en
 
 | Feature | Description |
 |---|---|
-| 🔐 **Stateless Payment Dispatch** | Funds go P2P — directly from buyer wallet to merchant. UniPay never holds assets. |
-| 🧠 **On-chain Merchant Identity** | Brand name, logo, website, and contact info stored immutably on the `UniPayRegistry` smart contract. |
+| 🔐 **Stateless Payment Dispatch** | Funds go P2P — directly from buyer wallet to merchant. LumiPay never holds assets. |
+| 🧠 **On-chain Merchant Identity** | Brand name, logo, website, and contact info stored immutably on the `LumiPayRegistry` smart contract. |
 | 🔗 **Smart Pay Links (Checkouts)** | Generate deterministic billing endpoints for one-time payments with custom descriptions and expiry timers. |
 | 🧾 **Invoice System** | Create and share on-chain invoices with metadata stored permanently on the blockchain. |
 | 🔄 **Recurring Subscriptions** | Schedule recurring billing cycles with configurable intervals — executed by any relayer or cron job. |
@@ -26,10 +26,10 @@ UniPay is a fully decentralized, non-custodial payment checkout protocol that en
 ## 🏗 Architecture
 
 ```
-[ Buyer ] ──→ [ UniPay Frontend (Next.js) ]
+[ Buyer ] ──→ [ LumiPay Frontend (Next.js) ]
                        │
                        ↓
-        [ UniPayRegistry Smart Contract ]  ←─ Deployed on Arc Network
+        [ LumiPayRegistry Smart Contract ]  ←─ Deployed on Arc Network
                        │
              ┌─────────┴─────────┐
              ↓                   ↓
@@ -42,7 +42,7 @@ UniPay is a fully decentralized, non-custodial payment checkout protocol that en
                     [ Dashboard Analytics / History ]
 ```
 
-UniPay is built on a **fully stateless architecture**. All state — merchant profiles, payment sessions, subscriptions — lives exclusively on-chain. The frontend is a read/write interface to the `UniPayRegistry` contract with no backend server.
+LumiPay is built on a **fully stateless architecture**. All state — merchant profiles, payment sessions, subscriptions — lives exclusively on-chain. The frontend is a read/write interface to the `LumiPayRegistry` contract with no backend server.
 
 ---
 
@@ -60,7 +60,7 @@ UniPay is built on a **fully stateless architecture**. All state — merchant pr
 - **[Circle Arc App Kit](https://www.circle.com/)** — Unified cross-chain USDC balance
 
 ### Smart Contracts
-- **[Solidity ^0.8.20](https://soliditylang.org/)** — `UniPayRegistry` contract
+- **[Solidity ^0.8.20](https://soliditylang.org/)** — `LumiPayRegistry` contract
 - **[Hardhat](https://hardhat.org/)** — Development & deployment framework
 - **[OpenZeppelin](https://openzeppelin.com/)** — ERC2771 (meta-transactions / gasless support)
 
@@ -83,8 +83,8 @@ UniPay is built on a **fully stateless architecture**. All state — merchant pr
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Zaynsky12/unipay.git
-cd unipay
+git clone https://github.com/Zaynsky12/lumipay.git
+cd lumipay
 ```
 
 ### 2. Install dependencies
@@ -115,7 +115,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 📜 Smart Contract — `UniPayRegistry`
+## 📜 Smart Contract — `LumiPayRegistry`
 
 Deployed on **Arc Network**. The single source of truth for all protocol state.
 

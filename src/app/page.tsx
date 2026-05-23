@@ -74,7 +74,7 @@ export default function LandingPage() {
           className="max-w-xl text-sm text-gray-500 leading-relaxed mb-12 animate-fade-in-up px-2"
           style={{ animationDelay: '0.15s' }}
         >
-          UniPay is the decentralized Stripe of Web3. Intercept multi-chain stablecoin settlements directly into your self-custodial wallet. Real-time on-chain indexing for absolute transparency.
+          LumiPay is the decentralized Stripe of Web3. Intercept multi-chain stablecoin settlements directly into your self-custodial wallet. Real-time on-chain indexing for absolute transparency.
         </p>
 
         {/* CTA Buttons — pill shape */}
@@ -255,7 +255,7 @@ export default function LandingPage() {
             <p className="text-gray-500 text-sm sm:text-base leading-relaxed font-medium">
               Powered by the{' '}
               <span className="text-slate-900 font-bold">Circle Arc App Kit</span>
-              , UniPay identifies a user&apos;s USDC balance across arbitrary layer-2 networks and automatically bridges them instantly into the Arc Network for microsecond transaction checkout.
+              , LumiPay identifies a user&apos;s USDC balance across arbitrary layer-2 networks and automatically bridges them instantly into the Arc Network for microsecond transaction checkout.
             </p>
 
             <div className="space-y-3 pt-2 w-full">
@@ -414,7 +414,7 @@ export default function LandingPage() {
             {[
               { label: 'Twitter', href: 'https://x.com/owsnpidc' },
               { label: 'Discord', href: 'https://discord.gg/buildonarc' },
-              { label: 'GitHub', href: 'https://github.com/Zaynsky12/unipay' },
+              { label: 'GitHub', href: 'https://github.com/Zaynsky12/lumipay' },
             ].map((link) => (
               <a
                 key={link.label}
@@ -432,7 +432,7 @@ export default function LandingPage() {
         {/* Bottom bar */}
         <div className="mt-14 pt-6 border-t border-gray-200 flex flex-col items-center justify-center gap-3 text-center">
           <p className="text-[10px] sm:text-[11px] text-gray-400 font-bold tracking-widest uppercase px-4 leading-relaxed">
-            &copy; 2026 UniPay Protocol. Built natively on Arc Network.
+            &copy; 2026 LumiPay Protocol. Built natively on Arc Network.
           </p>
           <div className="w-16 h-1 bg-[#fc5000]/20 rounded-full mt-1" />
         </div>

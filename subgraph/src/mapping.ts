@@ -7,7 +7,7 @@ import {
   SubscriptionCreated,
   SubscriptionExecuted,
   SubscriptionCancelled
-} from "../generated/UniPayRegistry/UniPayRegistry"
+} from "../generated/LumiPayRegistry/LumiPayRegistry"
 import {
   Merchant,
   PaymentSession,
@@ -76,6 +76,7 @@ export function handleSessionCreated(event: SessionCreated): void {
   session.description = event.params.description
   session.paid = false
   session.active = true
+  session.isReusable = event.params.isReusable
   session.createdAt = event.block.timestamp
   session.save()
 
@@ -94,7 +95,9 @@ export function handleSessionDeactivated(event: SessionDeactivated): void {
 export function handlePaymentCompleted(event: PaymentCompleted): void {
   let session = PaymentSession.load(event.params.sessionId.toHexString())
   if (session) {
-    session.paid = true
+    if (!session.isReusable) {
+      session.paid = true
+    }
     session.payer = event.params.payer.toHexString()
     session.paidAt = event.block.timestamp
     session.save()

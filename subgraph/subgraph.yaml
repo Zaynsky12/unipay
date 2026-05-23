@@ -3,11 +3,11 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum
-    name: UniPayRegistry
+    name: LumiPayRegistry
     network: arc-testnet
     source:
-      address: "0xaa63707b349f0637d66065b4edcf4a5793838b04"
-      abi: UniPayRegistry
+      address: "0xd02f0cb8d7a156550e80c3b1183c90803fc464f7"
+      abi: LumiPayRegistry
       startBlock: 42320000
     mapping:
       kind: ethereum/events
@@ -21,12 +21,12 @@ dataSources:
         - SubscriptionPlan
         - SubscriptionPayment
       abis:
-        - name: UniPayRegistry
-          file: ./abis/UniPayRegistry.json
+        - name: LumiPayRegistry
+          file: ./abis/LumiPayRegistry.json
       eventHandlers:
         - event: MerchantRegistered(indexed address,string,string)
           handler: handleMerchantRegistered
-        - event: SessionCreated(indexed bytes32,indexed address,uint256,address,string,uint256)
+        - event: SessionCreated(indexed bytes32,indexed address,uint256,address,string,uint256,bool)
           handler: handleSessionCreated
         - event: SessionDeactivated(indexed bytes32)
           handler: handleSessionDeactivated

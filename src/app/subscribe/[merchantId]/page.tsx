@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
+import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
 
 export default function SubscribePage({ params }: { params: Promise<{ merchantId: string }> }) {
   const resolvedParams = use(params);
@@ -37,7 +37,7 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
 
   // 1. Membaca profil bisnis merchant
   const { data: merchantData, isLoading: isLoadingMerchant } = useReadContract({
-    address: UNIPAY_REGISTRY_ADDRESS,
+    address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
     args: [merchantAddr],
@@ -52,7 +52,7 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
     address: token.address as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'allowance',
-    args: address ? [address, UNIPAY_REGISTRY_ADDRESS] : undefined,
+    args: address ? [address, LUMIPAY_REGISTRY_ADDRESS] : undefined,
     query: { enabled: !!address }
   });
 
@@ -77,7 +77,7 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
       address: token.address as `0x${string}`,
       abi: ERC20_ABI,
       functionName: 'approve',
-      args: [UNIPAY_REGISTRY_ADDRESS, maxInt],
+      args: [LUMIPAY_REGISTRY_ADDRESS, maxInt],
     });
   };
 
@@ -86,7 +86,7 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
     if (!address) return;
     setActiveStep('subscribing');
     writeContract({
-      address: UNIPAY_REGISTRY_ADDRESS,
+      address: LUMIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: 'createSubscription',
       args: [merchantAddr, amountRaw, token.address as `0x${string}`, BigInt(intervalSeconds)],
@@ -118,7 +118,7 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
         <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center text-xs font-black text-slate-900 shadow-[0_0_15px_rgba(37,99,235,0.3)]">
           U
         </div>
-        <span className="text-xs font-black tracking-tight text-slate-900/80">UniPay Subscriptions</span>
+        <span className="text-xs font-black tracking-tight text-slate-900/80">LumiPay Subscriptions</span>
       </div>
 
       <div className="w-full max-w-md glass-panel p-6 sm:p-8 relative z-10 shadow-2xl space-y-6 rounded-3xl border border-gray-200">
@@ -240,7 +240,7 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
       </div>
 
       <div className="mt-8 text-center text-xs text-gray-600 font-medium">
-        Powered by <Link href="/" className="text-gray-500 hover:text-gray-500 font-bold underline">UniPay Subscriptions</Link>
+        Powered by <Link href="/" className="text-gray-500 hover:text-gray-500 font-bold underline">LumiPay Subscriptions</Link>
       </div>
 
     </div>

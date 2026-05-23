@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
+import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
 import { goldskyClient, GET_SESSION } from '@/lib/goldsky';
 
 export function parseSessionDescription(descString: string) {
@@ -118,7 +118,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   // 1. Membaca tuple state sesi onchain
   const { data: sessionData, isLoading: isLoadingSession, refetch: refetchSession } = useReadContract({
-    address: UNIPAY_REGISTRY_ADDRESS,
+    address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'sessions',
     args: [sessionIdBytes32],
@@ -133,7 +133,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   // 2. Membaca profil bisnis merchant
   const { data: merchantData, refetch: refetchMerchant } = useReadContract({
-    address: UNIPAY_REGISTRY_ADDRESS,
+    address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
     args: merchantAddr !== '0x0000000000000000000000000000000000000000' ? [merchantAddr] : undefined,
@@ -176,7 +176,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
     address: tokenAddr as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'allowance',
-    args: address ? [address, UNIPAY_REGISTRY_ADDRESS] : undefined,
+    args: address ? [address, LUMIPAY_REGISTRY_ADDRESS] : undefined,
     query: { enabled: !!address && !!tokenAddr && tokenAddr !== '0x0000000000000000000000000000000000000000' }
   });
 
@@ -191,13 +191,13 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   const handleApproveToken = () => {
     if (!tokenAddr || !address) return;
     setActiveStep('approving');
-    writeContract({ address: tokenAddr as `0x${string}`, abi: ERC20_ABI, functionName: 'approve', args: [UNIPAY_REGISTRY_ADDRESS, amountRaw], gas: 100000n });
+    writeContract({ address: tokenAddr as `0x${string}`, abi: ERC20_ABI, functionName: 'approve', args: [LUMIPAY_REGISTRY_ADDRESS, amountRaw], gas: 100000n });
   };
 
   const handleExecutePayment = () => {
     if (!address) return;
     setActiveStep('paying');
-    writeContract({ address: UNIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'pay', args: [sessionIdBytes32], gas: 500000n });
+    writeContract({ address: LUMIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'pay', args: [sessionIdBytes32], gas: 500000n });
   };
 
   useEffect(() => {
@@ -351,7 +351,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                 >
                   <Wallet className="w-5 h-5" /> Connect Wallet
                 </button>
-              ) : isPaid ? (
+              ) : (isPaid || isTxSuccess) ? (
                 <div className="w-full py-12 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex flex-col items-center justify-center gap-4 animate-in zoom-in-95 duration-500">
                   <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-[#050508] shadow-[0_0_30px_rgba(16,185,129,0.4)]">
                     <CheckCircle2 className="w-10 h-10" />
@@ -362,7 +362,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                         const type = getEffectiveType().toLowerCase();
                         if (type === 'invoice') return 'Invoice Paid';
                         if (type === 'checkout') return 'Order Confirmed';
-                        if (type === 'tip') return 'Tip Claimed';
+                        if (type === 'tip') return 'Tip Sent';
                         return 'Payment Settled';
                       })()}
                     </h3>
@@ -387,7 +387,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   {activeStep === 'approving' ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
                   {(() => {
                     const type = getEffectiveType().toLowerCase();
-                    if (type === 'tip') return 'Claim';
+                    if (type === 'tip') return 'Send Tip';
                     return 'Pay Now';
                   })()}
                 </button>
@@ -400,7 +400,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   {activeStep === 'paying' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
                   {(() => {
                     const type = getEffectiveType().toLowerCase();
-                    if (type === 'tip') return 'Claim';
+                    if (type === 'tip') return 'Send Tip';
                     return 'Pay Now';
                   })()}
                 </button>
@@ -410,7 +410,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
           <div className="px-8 py-5 bg-white/[0.01] border-t border-gray-200 flex items-center justify-center">
              <div className="flex items-center gap-2 text-[9px] font-black text-gray-700 uppercase tracking-[0.2em]">
-                <Zap className="w-3 h-3 text-violet-500 fill-violet-500/20" /> Powered by UniPay
+                <Zap className="w-3 h-3 text-violet-500 fill-violet-500/20" /> Powered by LumiPay
              </div>
           </div>
         </div>

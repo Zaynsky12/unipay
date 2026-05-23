@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { 
-  UNIPAY_REGISTRY_ADDRESS, 
+  LUMIPAY_REGISTRY_ADDRESS, 
   REGISTRY_ABI, 
   SUPPORTED_TOKENS, 
   type SupportedToken 
@@ -38,37 +38,7 @@ import {
 export default function CreatePaymentPage() {
   const { address, isConnected } = useAccount();
 
-  if (!isConnected) return (
-    <div className="fixed inset-0 z-[100] bg-[#FEF7ED] flex items-center justify-center p-6 animate-fade-in overflow-hidden pixel-grid">
-      <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-[#fc5000]/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/3 -right-1/4 w-[400px] h-[400px] bg-[#fc5000]/6 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="max-w-md w-full caldera-card p-10 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] animate-pop-in">
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000] via-[#fc5000] to-transparent rounded-t-[2.5rem]" />
-        <div className="w-20 h-20 bg-[#fc5000]/12 rounded-[2rem] border border-[#fc5000]/25 flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(252,80,0,0.15)]">
-          <Shield className="w-10 h-10 text-[#fc5000]" />
-        </div>
-
-        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Identity Required</h2>
-        <p className="text-sm text-gray-500 leading-relaxed mb-10 font-medium">
-          To create payment links, you must connect your Web3 identity. This ensures you can receive settlements directly into your self-custody wallet.
-        </p>
-
-        <button
-          onClick={() => (document.querySelector('appkit-button') as any)?.click()}
-          className="btn-orange w-full py-4 text-white text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 group"
-        >
-          <span>Connect Identity</span>
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-        </button>
-
-        <Link href="/" className="inline-block mt-8 text-[10px] font-black text-gray-600 hover:text-gray-500 uppercase tracking-widest transition-colors">
-          &larr; Back to Landing Page
-        </Link>
-      </div>
-    </div>
-  );
-  
   // Form State
   const [paymentType, setPaymentType] = useState<'onetime' | 'subscription'>('onetime');
   const [selectedMenu, setSelectedMenu] = useState<'checkouts' | 'invoices' | 'subscribtion' | 'tip' | null>(null);
@@ -93,7 +63,7 @@ export default function CreatePaymentPage() {
 
   // Read Merchant Registry Status
   const { data: merchantData } = useReadContract({
-    address: UNIPAY_REGISTRY_ADDRESS,
+    address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
     args: address ? [address] : undefined,
@@ -121,7 +91,7 @@ export default function CreatePaymentPage() {
       const amountUnits = parseUnits(amount, tokenObj.decimals);
       const intervalSec = BigInt(subInterval) * 86400n;
       writeContract({
-        address: UNIPAY_REGISTRY_ADDRESS,
+        address: LUMIPAY_REGISTRY_ADDRESS,
         abi: REGISTRY_ABI,
         functionName: 'createSubscription',
         args: [address, amountUnits, tokenObj.address, intervalSec],
@@ -148,11 +118,13 @@ export default function CreatePaymentPage() {
       ? `${typePrefix} ${description.trim()}`
       : `${typePrefix} ${fallbackDesc}`;
 
+    const isReusable = selectedMenu === 'checkouts' || selectedMenu === 'tip';
+
     writeContract({
-      address: UNIPAY_REGISTRY_ADDRESS,
+      address: LUMIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: 'createSession',
-      args: [amountUnits, tokenObj.address, finalDesc, BigInt(expiryTimestamp)],
+      args: [amountUnits, tokenObj.address, finalDesc, BigInt(expiryTimestamp), isReusable],
       gas: 500000n,
     });
   };
@@ -193,9 +165,9 @@ export default function CreatePaymentPage() {
             ? `${typePrefix} ${description.trim()}`
             : `${typePrefix} ${fallbackDesc}`;
 
-          const descs = JSON.parse(localStorage.getItem('unipay_descriptions') || '{}');
+          const descs = JSON.parse(localStorage.getItem('lumipay_descriptions') || '{}');
           descs[extractedId] = finalDesc;
-          localStorage.setItem('unipay_descriptions', JSON.stringify(descs));
+          localStorage.setItem('lumipay_descriptions', JSON.stringify(descs));
           const tokenObj = SUPPORTED_TOKENS.find(t => t.symbol === selectedToken);
           const optimisticSession = {
             id: extractedId,
@@ -206,9 +178,9 @@ export default function CreatePaymentPage() {
             active: true,
             createdAt: Math.floor(Date.now() / 1000).toString(),
           };
-          const sessions = JSON.parse(localStorage.getItem('unipay_optimistic_sessions') || '[]');
+          const sessions = JSON.parse(localStorage.getItem('lumipay_optimistic_sessions') || '[]');
           sessions.push(optimisticSession);
-          localStorage.setItem('unipay_optimistic_sessions', JSON.stringify(sessions));
+          localStorage.setItem('lumipay_optimistic_sessions', JSON.stringify(sessions));
         } catch {}
       }
     }
@@ -237,16 +209,16 @@ export default function CreatePaymentPage() {
     ? (paymentType === 'onetime' 
         ? `${window.location.origin}/${routePath}/${createdSessionId || 'preview_id'}?desc=${encodeURIComponent(finalDescForLink)}`
         : `${window.location.origin}/subscribe/${address}?amount=${amount || '0'}&interval=${subInterval}&token=${selectedToken}`)
-    : `https://unipay.app/${paymentType === 'onetime' ? `${routePath}/preview_id` : 'subscribe/0x...'}`;
+    : `https://lumipay.app/${paymentType === 'onetime' ? `${routePath}/preview_id` : 'subscribe/0x...'}`;
 
-  const embedSnippet = `<script src="https://unipay.app/widget.js" type="module"></script>
-<unipay-checkout 
+  const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module"></script>
+<lumipay-checkout 
   merchant="${address || '0x...'}" 
   amount="${amount || '0.00'}" 
   currency="${selectedToken}" 
   session="${createdSessionId || 'preview_id'}"
   theme="dark">
-</unipay-checkout>`;
+</lumipay-checkout>`;
 
   const copyToClipboard = (text: string, type: 'link' | 'code') => {
     navigator.clipboard.writeText(text);
@@ -258,6 +230,37 @@ export default function CreatePaymentPage() {
       setTimeout(() => setCopiedCode(false), 2000);
     }
   };
+
+  if (!isConnected) return (
+    <div className="fixed inset-0 z-[100] bg-[#FEF7ED] flex items-center justify-center p-6 animate-fade-in overflow-hidden pixel-grid">
+      <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-[#fc5000]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/3 -right-1/4 w-[400px] h-[400px] bg-[#fc5000]/6 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="max-w-md w-full caldera-card p-10 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] animate-pop-in">
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000] via-[#fc5000] to-transparent rounded-t-[2.5rem]" />
+        <div className="w-20 h-20 bg-[#fc5000]/12 rounded-[2rem] border border-[#fc5000]/25 flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(252,80,0,0.15)]">
+          <Shield className="w-10 h-10 text-[#fc5000]" />
+        </div>
+
+        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Identity Required</h2>
+        <p className="text-sm text-gray-500 leading-relaxed mb-10 font-medium">
+          To create payment links, you must connect your Web3 identity. This ensures you can receive settlements directly into your self-custody wallet.
+        </p>
+
+        <button
+          onClick={() => (document.querySelector('appkit-button') as any)?.click()}
+          className="btn-orange w-full py-4 text-white text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 group"
+        >
+          <span>Connect Identity</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        <Link href="/" className="inline-block mt-8 text-[10px] font-black text-gray-600 hover:text-gray-500 uppercase tracking-widest transition-colors">
+          &larr; Back to Landing Page
+        </Link>
+      </div>
+    </div>
+  );
 
   if (!selectedMenu) {
     return (

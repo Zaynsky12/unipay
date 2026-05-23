@@ -23,6 +23,7 @@ type PaymentSession @entity {
   paidAt: BigInt
   description: String
   createdAt: BigInt!
+  isReusable: Boolean!
   transaction: Transaction
 }
 

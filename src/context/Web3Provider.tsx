@@ -35,7 +35,7 @@ const projectId =
   process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || '578ef42e8d44388cc7acc1ca69ed85a9';
 
 const metadata = {
-  name: 'UniPay',
+  name: 'LumiPay',
   description: 'Decentralized Payment Checkout Protocol on Arc Network',
   url: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000',
   icons: ['https://avatars.githubusercontent.com/u/37784886'],

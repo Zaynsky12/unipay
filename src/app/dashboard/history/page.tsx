@@ -18,7 +18,7 @@ import {
   Loader2
 } from 'lucide-react';
 import Link from 'next/link';
-import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
+import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
 import { useMerchantHistory } from '@/lib/hooks/useMerchantHistory';
 
 export default function HistoryPage() {
@@ -44,7 +44,7 @@ export default function HistoryPage() {
 
   // Membaca identitas pedagang aktif
   const { data: merchantData } = useReadContract({
-    address: UNIPAY_REGISTRY_ADDRESS,
+    address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
     args: address ? [address] : undefined,

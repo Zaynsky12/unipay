@@ -1,10 +1,10 @@
 {
-  "name": "unipay-subgraph",
+  "name": "lumipay-subgraph",
   "version": "0.1.0",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "goldsky subgraph deploy unipay/v3"
+    "deploy": "goldsky subgraph deploy lumipay/v2"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.68.0",

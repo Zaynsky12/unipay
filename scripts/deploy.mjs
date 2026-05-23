@@ -32,7 +32,7 @@ async function main() {
   console.log("==================================================");
 
   // 1. Membaca Artifact Segar Hasil Kompilasi Hardhat Aktual
-  const artifactPath = path.resolve('./artifacts/contracts/UniPayRegistry.sol/UniPayRegistry.json');
+  const artifactPath = path.resolve('./artifacts/contracts/LumiPayRegistry.sol/LumiPayRegistry.json');
   
   if (!fs.existsSync(artifactPath)) {
     console.log("❌ Galat Kritis: Artifact Smart Contract belum ditemukan!");
@@ -100,8 +100,8 @@ async function main() {
       
       // Menimpa alamat lama dengan aman dan presisi
       content = content.replace(
-        /export const UNIPAY_REGISTRY_ADDRESS = "0x[a-fA-F0-9]{40}".*/,
-        `export const UNIPAY_REGISTRY_ADDRESS = "${contractAddress}" as \`0x\${string}\`;`
+        /export const LUMIPAY_REGISTRY_ADDRESS = "0x[a-fA-F0-9]{40}".*/,
+        `export const LUMIPAY_REGISTRY_ADDRESS = "${contractAddress}" as \`0x\${string}\`;`
       );
       
       fs.writeFileSync(constantsPath, content, 'utf8');

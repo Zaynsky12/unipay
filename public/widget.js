@@ -1,9 +1,9 @@
 /**
- * UniPay Embedded Checkout Web Component
- * Tag: <unipay-checkout>
+ * LumiPay Embedded Checkout Web Component
+ * Tag: <lumipay-checkout>
  * Attributes: merchant, amount, currency, session, theme
  */
-class UniPayCheckoutWidget extends HTMLElement {
+class LumiPayCheckoutWidget extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -148,7 +148,7 @@ class UniPayCheckoutWidget extends HTMLElement {
         <div class="header">
           <div class="logo-area">
             <div class="logo-icon">U</div>
-            <span class="brand">UniPay Checkout</span>
+            <span class="brand">LumiPay Checkout</span>
           </div>
           <span class="badge">Arc L1 L2 Bridge</span>
         </div>
@@ -165,7 +165,7 @@ class UniPayCheckoutWidget extends HTMLElement {
           </div>
         </div>
 
-        <a href="https://unipay.app/pay/${session}" target="_blank" class="btn-pay">
+        <a href="https://lumipay.app/pay/${session}" target="_blank" class="btn-pay">
           Pay with any Chain Stablecoin
         </a>
 
@@ -178,6 +178,6 @@ class UniPayCheckoutWidget extends HTMLElement {
 }
 
 // Daftarkan Custom Element
-if (!customElements.get('unipay-checkout')) {
-  customElements.define('unipay-checkout', UniPayCheckoutWidget);
+if (!customElements.get('lumipay-checkout')) {
+  customElements.define('lumipay-checkout', LumiPayCheckoutWidget);
 }

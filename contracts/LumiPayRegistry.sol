@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title UniPayRegistry
+ * @title LumiPayRegistry
  * @dev Fully onchain decentralized payment checkout protocol for the Arc Network.
  * Acts as an immutable, stateless dispatch controller enabling P2P multi-chain settlement.
  */
@@ -14,7 +14,7 @@ interface IERC20 {
 
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-contract UniPayRegistry is ERC2771Context {
+contract LumiPayRegistry is ERC2771Context {
     
     // Fee settings
     address public devWallet;
@@ -48,6 +48,7 @@ contract UniPayRegistry is ERC2771Context {
         uint256 expiry;
         bool isFulfilled;
         bool isActive;
+        bool isReusable;
     }
 
     // Mapping identitas merchant onchain
@@ -71,7 +72,7 @@ contract UniPayRegistry is ERC2771Context {
 
     // Events Logging untuk direfleksikan secara instan oleh Wagmi/Viem Listeners
     event MerchantRegistered(address indexed merchant, string name, string metadata);
-    event SessionCreated(bytes32 indexed sessionId, address indexed merchant, uint256 amount, address token, string description, uint256 expiry);
+    event SessionCreated(bytes32 indexed sessionId, address indexed merchant, uint256 amount, address token, string description, uint256 expiry, bool isReusable);
     event SessionDeactivated(bytes32 indexed sessionId);
     event PaymentCompleted(bytes32 indexed sessionId, address indexed merchant, address indexed payer, uint256 amount);
     event SubscriptionCreated(bytes32 indexed subId, address indexed merchant, address indexed subscriber, uint256 amount, uint256 interval);
@@ -106,7 +107,8 @@ contract UniPayRegistry is ERC2771Context {
         uint256 amount, 
         address token, 
         string memory description, 
-        uint256 expiry
+        uint256 expiry,
+        bool isReusable
     ) external returns (bytes32 sessionId) {
         require(amount > 0, "Requested settlement amount must be greater than zero");
         require(token != address(0), "Invalid stablecoin contract address");
@@ -120,6 +122,7 @@ contract UniPayRegistry is ERC2771Context {
                 amount,
                 description,
                 expiry,
+                isReusable,
                 block.timestamp
             )
         );
@@ -132,10 +135,11 @@ contract UniPayRegistry is ERC2771Context {
             token: token,
             expiry: expiry,
             isFulfilled: false,
-            isActive: true
+            isActive: true,
+            isReusable: isReusable
         });
 
-        emit SessionCreated(sessionId, _msgSender(), amount, token, description, expiry);
+        emit SessionCreated(sessionId, _msgSender(), amount, token, description, expiry, isReusable);
     }
 
     /**
@@ -159,11 +163,13 @@ contract UniPayRegistry is ERC2771Context {
         
         require(session.merchant != address(0), "Target payment dispatch session does not exist");
         require(session.isActive, "Payment session has been deactivated by the merchant");
-        require(!session.isFulfilled, "Payment session endpoint has already been fulfilled");
         require(block.timestamp <= session.expiry, "Payment dispatch session lifecycle has expired");
 
-        // Tandai pesanan lunas sebelum transfer untuk mencegah serangan masuk ulang (Reentrancy)
-        session.isFulfilled = true;
+        if (!session.isReusable) {
+            require(!session.isFulfilled, "Payment session endpoint has already been fulfilled");
+            // Tandai pesanan lunas sebelum transfer untuk mencegah serangan masuk ulang (Reentrancy)
+            session.isFulfilled = true;
+        }
 
         address targetMerchant = session.merchant;
         uint256 targetAmount = session.amount;

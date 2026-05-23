@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
+import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
 import { useMerchantHistory } from '@/lib/hooks/useMerchantHistory';
 import { useAppKit } from '@reown/appkit/react';
 
@@ -50,7 +50,7 @@ function resolveTokenSymbol(tokenAddr: string): string {
 function getSavedDescription(sessionId: string, fallback?: string): string {
   if (typeof window === 'undefined') return fallback || '';
   try {
-    const descs = JSON.parse(localStorage.getItem('unipay_descriptions') || '{}');
+    const descs = JSON.parse(localStorage.getItem('lumipay_descriptions') || '{}');
     return descs[sessionId] || fallback || '';
   } catch { return fallback || ''; }
 }
@@ -113,7 +113,7 @@ export default function DashboardPage() {
 
   // Membaca identitas merchant onchain
   const { data: merchantData, isLoading: isLoadingRead, refetch: refetchMerchant } = useReadContract({
-    address: UNIPAY_REGISTRY_ADDRESS,
+    address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
     args: address ? [address] : undefined,
@@ -162,7 +162,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const stored = JSON.parse(localStorage.getItem('unipay_optimistic_sessions') || '[]');
+      const stored = JSON.parse(localStorage.getItem('lumipay_optimistic_sessions') || '[]');
       
       const goldskyIds = new Set(goldskyActiveSessions.map((s: any) => (s.id || s.sessionId || '').toLowerCase()));
       
@@ -176,7 +176,7 @@ export default function DashboardPage() {
       if (JSON.stringify(pending) !== JSON.stringify(optimisticSessions)) {
         setOptimisticSessions(pending);
         if (pending.length !== stored.length) {
-          localStorage.setItem('unipay_optimistic_sessions', JSON.stringify(pending));
+          localStorage.setItem('lumipay_optimistic_sessions', JSON.stringify(pending));
         }
       }
     } catch (e) {
@@ -203,7 +203,7 @@ export default function DashboardPage() {
     if (!address) return;
     setIsDeactivating(sessionId);
     writeContract({
-      address: UNIPAY_REGISTRY_ADDRESS,
+      address: LUMIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: 'deactivateSession',
       args: [sessionId as `0x${string}`],
@@ -246,7 +246,7 @@ export default function DashboardPage() {
 
         {/* Title */}
         <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-          Welcome to UniPay Commerce
+          Welcome to LumiPay Commerce
         </h2>
         
         {/* Subtitle */}

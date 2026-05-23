@@ -29,7 +29,7 @@ import {
   Upload,
   Trash2
 } from 'lucide-react';
-import { UNIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, USDC_ADDRESS, ERC20_ABI } from '@/lib/constants';
+import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, USDC_ADDRESS, ERC20_ABI } from '@/lib/constants';
 import { formatUnits } from 'viem';
 import Link from 'next/link';
 
@@ -54,7 +54,7 @@ function AccountContent() {
   const [logoError, setLogoError] = useState<string | null>(null);
 
   const { data: merchantData, isLoading: isLoadingRead, refetch } = useReadContract({
-    address: UNIPAY_REGISTRY_ADDRESS,
+    address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
     args: address ? [address] : undefined,
@@ -216,7 +216,7 @@ function AccountContent() {
     if (!address || !merchantName) return;
     const metadataObj = { logo: merchantLogo, website: merchantWebsite, email: merchantEmail, updatedAt: Date.now() };
     const metadataString = JSON.stringify(metadataObj);
-    writeContract({ address: UNIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'registerMerchant', args: [merchantName, metadataString] });
+    writeContract({ address: LUMIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'registerMerchant', args: [merchantName, metadataString] });
   };
 
 

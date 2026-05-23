@@ -17,9 +17,9 @@ type Message = {
 
 const QUICK_PROMPTS = [
   "How do I create a new smart Paylink?",
-  "What is the purpose of the UniPay Registry?",
+  "What is the purpose of the LumiPay Registry?",
   "Do I need to manually withdraw my funds?",
-  "Is the UniPay Protocol fully non-custodial?"
+  "Is the LumiPay Protocol fully non-custodial?"
 ];
 
 export function AIFloatingButton() {
@@ -28,7 +28,7 @@ export function AIFloatingButton() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Hello! I'm your UniPay Assistant. How can I help you navigate the protocol today?" }
+    { role: 'assistant', content: "Hello! I'm your LumiPay Assistant. How can I help you navigate the protocol today?" }
   ]);
   const [messageCount, setMessageCount] = useState(0);
   const MAX_DAILY_MESSAGES = 15;
@@ -38,22 +38,22 @@ export function AIFloatingButton() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const today = new Date().toDateString();
-      const stored = localStorage.getItem('unipay_ai_limit');
+      const stored = localStorage.getItem('lumipay_ai_limit');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
           if (parsed.date === today) {
             setMessageCount(parsed.count || 0);
           } else {
-            localStorage.setItem('unipay_ai_limit', JSON.stringify({ date: today, count: 0 }));
+            localStorage.setItem('lumipay_ai_limit', JSON.stringify({ date: today, count: 0 }));
             setMessageCount(0);
           }
         } catch (e) {
-          localStorage.setItem('unipay_ai_limit', JSON.stringify({ date: today, count: 0 }));
+          localStorage.setItem('lumipay_ai_limit', JSON.stringify({ date: today, count: 0 }));
           setMessageCount(0);
         }
       } else {
-        localStorage.setItem('unipay_ai_limit', JSON.stringify({ date: today, count: 0 }));
+        localStorage.setItem('lumipay_ai_limit', JSON.stringify({ date: today, count: 0 }));
         setMessageCount(0);
       }
     }
@@ -71,7 +71,7 @@ export function AIFloatingButton() {
     if (!text.trim()) return;
 
     const today = new Date().toDateString();
-    const stored = localStorage.getItem('unipay_ai_limit');
+    const stored = localStorage.getItem('lumipay_ai_limit');
     let currentCount = 0;
     if (stored) {
       try {
@@ -106,7 +106,7 @@ export function AIFloatingButton() {
       setMessages(prev => [...prev, { role: 'assistant', content: data.text }]);
 
       const newCount = currentCount + 1;
-      localStorage.setItem('unipay_ai_limit', JSON.stringify({ date: today, count: newCount }));
+      localStorage.setItem('lumipay_ai_limit', JSON.stringify({ date: today, count: newCount }));
       setMessageCount(newCount);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting to my neural network. Please check your internet or API key." }]);
@@ -129,7 +129,7 @@ export function AIFloatingButton() {
           <Sparkles className="w-6 h-6 text-slate-900" />
           <div className="absolute right-full mr-4 bg-white border border-gray-200 px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
             <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-              Ask UniPay AI
+              Ask LumiPay AI
               <span className="w-1.5 h-1.5 rounded-full bg-[#fc5000] animate-pulse" />
             </p>
           </div>
@@ -149,7 +149,7 @@ export function AIFloatingButton() {
                 <Bot className="w-6 h-6 text-slate-900" />
               </div>
               <div>
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">UniPay AI</h3>
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">LumiPay AI</h3>
                 <div className="flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Protocol Intelligence</span>
