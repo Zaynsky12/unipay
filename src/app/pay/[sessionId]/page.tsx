@@ -182,7 +182,8 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   });
 
   const allowanceVal = (currentAllowance as bigint) ?? 0n;
-  const hasSufficientAllowance = allowanceVal >= amountRaw;
+  const [localApproved, setLocalApproved] = useState(false);
+  const hasSufficientAllowance = allowanceVal >= amountRaw || localApproved;
 
   const { writeContract, data: txHash, isPending: isWritePending } = useWriteContract();
   const { isLoading: isTxConfirming, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({ hash: txHash });
@@ -203,11 +204,14 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   useEffect(() => {
     if (isTxSuccess) {
+      if (activeStep === 'approving') {
+        setLocalApproved(true);
+      }
       refetchAllowance();
       refetchSession();
       setActiveStep('idle');
     }
-  }, [isTxSuccess, refetchAllowance, refetchSession]);
+  }, [isTxSuccess, activeStep, refetchAllowance, refetchSession]);
 
   const isExpired = expiry > 0n && BigInt(Math.floor(Date.now() / 1000)) > expiry;
 
