@@ -291,7 +291,7 @@ export default function HistoryPage() {
                       </span>
                     </div>
 
-                    <div className="hidden md:block overflow-x-auto">
+                    <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead>
                           <tr className="text-gray-500 uppercase tracking-wider text-[10px] border-b border-gray-200">
@@ -337,60 +337,6 @@ export default function HistoryPage() {
                       </table>
                     </div>
 
-                    <div className="md:hidden space-y-3">
-                      {filteredLogs.map((item: any, idx: number) => {
-                        const formattedAmount = item.amount ? formatUnits(BigInt(item.amount), 6) : '0.00';
-                        const timestampMs = Number(item.timestamp) * 1000;
-
-                        const matchedSession = createdSessions.find((cs: any) => 
-                          cs.id?.toLowerCase() === item.sessionId?.toLowerCase() ||
-                          cs.sessionId?.toLowerCase() === item.sessionId?.toLowerCase()
-                        );
-                        const rawTitle = matchedSession ? (matchedSession.description || matchedSession.token) : null;
-                        const parsedTitle = rawTitle ? parseSessionDescription(rawTitle) : null;
-                        const cleanTitle = parsedTitle ? parsedTitle.cleanDesc : null;
-                        const badge = parsedTitle ? getBadgeStyles(parsedTitle.type) : null;
-
-                        return (
-                          <div key={item.id || idx} className="p-4 rounded-2xl bg-white border border-gray-200 space-y-3">
-                            <div className="flex justify-between items-start gap-2 border-b border-gray-200 pb-2.5">
-                              <div><span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Settlement Amount</span><div className="flex items-center gap-1 text-base font-black text-slate-900 mt-0.5"><span>${formattedAmount}</span><span className="text-[10px] font-bold text-[#fc5000]">USDC</span></div></div>
-                              <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Settled</span>
-                            </div>
-                            <div className="space-y-2.5 text-xs">
-                              {cleanTitle && (
-                                <div className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                                  {badge && (
-                                    <span className={`shrink-0 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider rounded border ${badge.bg} mt-0.5`}>
-                                      {badge.emoji} {parsedTitle?.type}
-                                    </span>
-                                  )}
-                                  <span className="text-[11px] font-bold text-slate-700 leading-tight break-words line-clamp-2">
-                                    {cleanTitle}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]">
-                                <span>Session ID:</span>
-                                <span className="text-[#fc5000] font-semibold truncate max-w-[150px]">
-                                  {item.sessionId ? `${item.sessionId.slice(0, 8)}...${item.sessionId.slice(-6)}` : 'N/A'}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]">
-                                <span>Payer:</span>
-                                <span className="text-gray-600">
-                                  {item.payer ? `${item.payer.slice(0, 6)}...${item.payer.slice(-4)}` : 'Unknown'}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="pt-2 border-t border-gray-200 flex justify-between items-center text-[11px]">
-                              <div className="flex items-center gap-1 text-gray-500"><Calendar className="w-3 h-3" /><span>{new Date(timestampMs).toLocaleDateString()} {new Date(timestampMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
-                              <a href={`https://testnet.arcscan.app/tx/${item.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-[#fc5000] font-bold bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200"><span>ArcScan</span><ExternalLink className="w-2.5 h-2.5" /></a>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
                   </div>
                 )}
               </div>
@@ -450,8 +396,7 @@ export default function HistoryPage() {
                   );
                 })()}
 
-                {/* Tampilan Desktop (Tabel Elegan) */}
-                <div className="hidden md:block overflow-x-auto">
+                <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="text-gray-500 uppercase tracking-wider text-[10px] border-b border-gray-200">
@@ -521,60 +466,6 @@ export default function HistoryPage() {
                   </table>
                 </div>
 
-                {/* Tampilan Mobile (Daftar Kartu) */}
-                <div className="md:hidden space-y-3">
-                  {filteredLogs.map((item: any, idx: number) => {
-                    const formattedAmount = item.amount ? formatUnits(BigInt(item.amount), 6) : '0.00';
-                    const timestampMs = Number(item.timestamp) * 1000;
-
-                    const matchedSession = createdSessions.find((cs: any) => 
-                      cs.id?.toLowerCase() === item.sessionId?.toLowerCase() ||
-                      cs.sessionId?.toLowerCase() === item.sessionId?.toLowerCase()
-                    );
-                    const rawTitle = matchedSession ? (matchedSession.description || matchedSession.token) : null;
-                    const parsedTitle = rawTitle ? parseSessionDescription(rawTitle) : null;
-                    const cleanTitle = parsedTitle ? parsedTitle.cleanDesc : null;
-                    const badge = parsedTitle ? getBadgeStyles(parsedTitle.type) : null;
-
-                    return (
-                      <div key={item.id || idx} className="p-4 rounded-2xl bg-white border border-gray-200 space-y-3">
-                        <div className="flex justify-between items-start gap-2 border-b border-gray-200 pb-2.5">
-                          <div><span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Settlement Amount</span><div className="flex items-center gap-1 text-base font-black text-slate-900 mt-0.5"><span>${formattedAmount}</span><span className="text-[10px] font-bold text-[#fc5000]">USDC</span></div></div>
-                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Settled</span>
-                        </div>
-                        <div className="space-y-2.5 text-xs">
-                          {cleanTitle && (
-                            <div className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                              {badge && (
-                                <span className={`shrink-0 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider rounded border ${badge.bg} mt-0.5`}>
-                                  {badge.emoji} {parsedTitle?.type}
-                                </span>
-                              )}
-                              <span className="text-[11px] font-bold text-slate-700 leading-tight break-words line-clamp-2">
-                                {cleanTitle}
-                              </span>
-                            </div>
-                          )}
-                          <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]">
-                            <span>Session ID:</span>
-                            <span className="text-[#fc5000] font-semibold truncate max-w-[150px]">
-                              {item.sessionId ? `${item.sessionId.slice(0, 8)}...${item.sessionId.slice(-6)}` : 'N/A'}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]">
-                            <span>Payer:</span>
-                            <span className="text-gray-600">
-                              {item.payer ? `${item.payer.slice(0, 6)}...${item.payer.slice(-4)}` : 'Unknown'}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="pt-2 border-t border-gray-200 flex justify-between items-center text-[11px]">
-                          <div className="flex items-center gap-1 text-gray-500"><Calendar className="w-3 h-3" /><span>{new Date(timestampMs).toLocaleDateString()} {new Date(timestampMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
-                          <a href={`https://testnet.arcscan.app/tx/${item.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-[#fc5000] font-bold bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200"><span>ArcScan</span><ExternalLink className="w-2.5 h-2.5" /></a>
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
             )}
