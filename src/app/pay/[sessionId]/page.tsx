@@ -15,7 +15,8 @@ import {
   Zap,
   Globe,
   Mail,
-  UserCircle
+  UserCircle,
+  Eye
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -238,6 +239,18 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
       <div className="relative z-10 max-w-xl mx-auto px-4 py-8 sm:py-16">
         
+        {/* LumiPay Logo Header */}
+        <div className="flex justify-center mb-8 animate-fade-in-down">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-10 h-10 rounded-2xl bg-[#fc5000] flex items-center justify-center shadow-[0_0_18px_rgba(252,80,0,0.45)] group-hover:shadow-[0_0_24px_rgba(252,80,0,0.65)] transition-all hover:scale-105">
+              <Eye className="w-5 h-5 text-slate-900" fill="currentColor" />
+            </div>
+            <span className="text-2xl font-black tracking-tight text-white drop-shadow-md" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+              Lumi<span className="text-[#fc5000]">Pay</span>
+            </span>
+          </Link>
+        </div>
+
         {/* ── BILLING CARD (Everything Integrated) ── */}
         <div className="glass-panel rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-2xl relative animate-fade-in-up bg-gray-50 backdrop-blur-3xl">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#fc5000] via-[#6836e8] to-[#fc5000] animate-shimmer" />
