@@ -1,6 +1,6 @@
 # LumiPay Protocol 🟣
 
-> **Stateless stablecoin payment processing engine — built natively on the Arc Network.**
+> **Stateless stablecoin payment processing engine, built natively on the Arc Network.**
 
 LumiPay is a fully decentralized, non-custodial payment checkout protocol that enables merchants to accept USDC from any chain and settle directly into their self-custody wallet in under 1 second. No intermediaries. No custodial risk. Pure on-chain finality.
 
