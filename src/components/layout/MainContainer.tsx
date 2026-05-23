@@ -7,7 +7,12 @@ import { cn } from '@/lib/utils';
 export function MainContainer({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLandingPage = pathname === '/';
-  const isWidgetOrPayment = pathname.startsWith('/pay/') || pathname.includes('widget');
+  const isWidgetOrPayment = pathname.startsWith('/pay/') || 
+                            pathname.startsWith('/checkout/') || 
+                            pathname.startsWith('/invoice/') || 
+                            pathname.startsWith('/subscribe/') || 
+                            pathname.startsWith('/tip/') || 
+                            pathname.includes('widget');
 
   return (
     <main className={cn(

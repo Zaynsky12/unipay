@@ -369,7 +369,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                     <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mt-1">Confirmed on Blockchain</p>
                   </div>
                   {txHash && (
-                    <button onClick={() => window.open(`https://explorer.arc.network/tx/${txHash}`, '_blank')} className="mt-2 flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
+                    <button onClick={() => window.open(`https://testnet.arcscan.app/tx/${txHash}`, '_blank')} className="mt-2 flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
                        View Receipt <ExternalLink className="w-3.5 h-3.5" />
                     </button>
                   )}

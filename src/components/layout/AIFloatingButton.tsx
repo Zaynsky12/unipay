@@ -65,7 +65,13 @@ export function AIFloatingButton() {
     }
   }, [messages, isTyping]);
 
-  if (pathname === '/') return null;
+  const isPaymentPage = pathname.startsWith('/pay/') || 
+                        pathname.startsWith('/checkout/') || 
+                        pathname.startsWith('/invoice/') || 
+                        pathname.startsWith('/subscribe/') || 
+                        pathname.startsWith('/tip/');
+
+  if (pathname === '/' || isPaymentPage) return null;
 
   const handleSend = async (text: string) => {
     if (!text.trim()) return;

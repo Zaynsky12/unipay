@@ -21,7 +21,11 @@ export function Navbar() {
   const { open } = useAppKit();
 
   const isLandingPage = pathname === '/';
-  const isPaymentPage = pathname.startsWith('/pay/');
+  const isPaymentPage = pathname.startsWith('/pay/') || 
+                        pathname.startsWith('/checkout/') || 
+                        pathname.startsWith('/invoice/') || 
+                        pathname.startsWith('/subscribe/') || 
+                        pathname.startsWith('/tip/');
 
   const isActive = (href: string) => pathname === href;
 

@@ -4,6 +4,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { AIFloatingButton } from "@/components/layout/AIFloatingButton";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { Web3Provider } from "@/context/Web3Provider";
+import { GlobalBackground } from "@/components/layout/GlobalBackground";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -48,7 +49,7 @@ export default function RootLayout({
       >
         <Web3Provider>
           {/* Mirage-style ambient background */}
-          <div className="glow-bg pixel-grid" />
+          <GlobalBackground />
           <Navbar />
           <AIFloatingButton />
           <MainContainer>

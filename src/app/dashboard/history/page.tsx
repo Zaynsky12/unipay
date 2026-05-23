@@ -20,6 +20,7 @@ import {
 import Link from 'next/link';
 import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
 import { useMerchantHistory } from '@/lib/hooks/useMerchantHistory';
+import { parseSessionDescription, getBadgeStyles } from '@/app/dashboard/page';
 
 export default function HistoryPage() {
   const { address, isConnected } = useAccount();
@@ -340,14 +341,41 @@ export default function HistoryPage() {
                       {filteredLogs.map((item: any, idx: number) => {
                         const formattedAmount = item.amount ? formatUnits(BigInt(item.amount), 6) : '0.00';
                         const timestampMs = Number(item.timestamp) * 1000;
+
+                        const matchedSession = createdSessions.find((cs: any) => 
+                          cs.id?.toLowerCase() === item.sessionId?.toLowerCase() ||
+                          cs.sessionId?.toLowerCase() === item.sessionId?.toLowerCase()
+                        );
+                        const rawTitle = matchedSession ? (matchedSession.description || matchedSession.token) : null;
+                        const parsedTitle = rawTitle ? parseSessionDescription(rawTitle) : null;
+                        const cleanTitle = parsedTitle ? parsedTitle.cleanDesc : null;
+                        const badge = parsedTitle ? getBadgeStyles(parsedTitle.type) : null;
+
                         return (
                           <div key={item.id || idx} className="p-4 rounded-2xl bg-white border border-gray-200 space-y-3">
                             <div className="flex justify-between items-start gap-2 border-b border-gray-200 pb-2.5">
                               <div><span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Settlement Amount</span><div className="flex items-center gap-1 text-base font-black text-slate-900 mt-0.5"><span>${formattedAmount}</span><span className="text-[10px] font-bold text-[#fc5000]">USDC</span></div></div>
                               <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Settled</span>
                             </div>
-                            <div className="space-y-1.5 text-xs">
-                              <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]"><span>Session:</span><span className="text-[#fc5000] font-semibold truncate max-w-[150px]">{item.sessionId ? `${item.sessionId.slice(0, 6)}...${item.sessionId.slice(-4)}` : 'N/A'}</span></div>
+                            <div className="space-y-2 text-xs">
+                              <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]">
+                                <span>Session:</span>
+                                <div className="text-right">
+                                  {cleanTitle && (
+                                    <div className="flex items-center justify-end gap-1 mb-0.5">
+                                      {badge && (
+                                        <span className={`shrink-0 px-1 py-0.2 text-[6px] font-black uppercase tracking-wider rounded border ${badge.bg}`}>
+                                          {badge.emoji} {parsedTitle?.type}
+                                        </span>
+                                      )}
+                                      <span className="text-[9px] font-bold text-slate-900 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 block font-sans w-fit truncate max-w-[120px]">
+                                        {cleanTitle}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <span className="text-[#fc5000] font-semibold truncate max-w-[150px]">{item.sessionId ? `${item.sessionId.slice(0, 6)}...${item.sessionId.slice(-4)}` : 'N/A'}</span>
+                                </div>
+                              </div>
                               <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]"><span>Payer:</span><span className="text-gray-600">{item.payer ? `${item.payer.slice(0, 6)}...${item.payer.slice(-4)}` : 'Unknown'}</span></div>
                             </div>
                             <div className="pt-2 border-t border-gray-200 flex justify-between items-center text-[11px]">
@@ -434,12 +462,35 @@ export default function HistoryPage() {
                         const formattedAmount = item.amount ? formatUnits(BigInt(item.amount), 6) : '0.00';
                         const timestampMs = Number(item.timestamp) * 1000;
 
+                        const matchedSession = createdSessions.find((cs: any) => 
+                          cs.id?.toLowerCase() === item.sessionId?.toLowerCase() ||
+                          cs.sessionId?.toLowerCase() === item.sessionId?.toLowerCase()
+                        );
+                        const rawTitle = matchedSession ? (matchedSession.description || matchedSession.token) : null;
+                        const parsedTitle = rawTitle ? parseSessionDescription(rawTitle) : null;
+                        const cleanTitle = parsedTitle ? parsedTitle.cleanDesc : null;
+                        const badge = parsedTitle ? getBadgeStyles(parsedTitle.type) : null;
+
                         return (
                           <tr key={item.id || idx} className="hover:bg-white transition-colors group">
                             <td className="py-4 px-3 font-mono text-[#fc5000] font-semibold">
-                              <div className="flex items-center gap-2">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                                <span className="truncate max-w-[150px]">{item.sessionId ? `${item.sessionId.slice(0, 10)}...${item.sessionId.slice(-6)}` : 'N/A'}</span>
+                              <div className="space-y-0.5">
+                                {cleanTitle && (
+                                  <div className="flex items-center gap-1">
+                                    {badge && (
+                                      <span className={`shrink-0 px-1 py-0.2 text-[8px] font-black uppercase tracking-wider rounded border ${badge.bg}`}>
+                                        {badge.emoji} {parsedTitle?.type}
+                                      </span>
+                                    )}
+                                    <span className="text-[10px] font-bold text-slate-900 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 block font-sans w-fit truncate max-w-[150px]">
+                                      {cleanTitle}
+                                    </span>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-1.5 opacity-80">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                  <span className="truncate max-w-[120px] text-xs">{item.sessionId ? `${item.sessionId.slice(0, 10)}...${item.sessionId.slice(-6)}` : 'N/A'}</span>
+                                </div>
                               </div>
                             </td>
                             <td className="py-4 px-3 font-mono text-gray-500">
@@ -471,14 +522,38 @@ export default function HistoryPage() {
                     const formattedAmount = item.amount ? formatUnits(BigInt(item.amount), 6) : '0.00';
                     const timestampMs = Number(item.timestamp) * 1000;
 
+                    const matchedSession = createdSessions.find((cs: any) => 
+                      cs.id?.toLowerCase() === item.sessionId?.toLowerCase() ||
+                      cs.sessionId?.toLowerCase() === item.sessionId?.toLowerCase()
+                    );
+                    const rawTitle = matchedSession ? (matchedSession.description || matchedSession.token) : null;
+                    const parsedTitle = rawTitle ? parseSessionDescription(rawTitle) : null;
+                    const cleanTitle = parsedTitle ? parsedTitle.cleanDesc : null;
+                    const badge = parsedTitle ? getBadgeStyles(parsedTitle.type) : null;
+
                     return (
                       <div key={item.id || idx} className="p-4 rounded-2xl bg-white border border-gray-200 space-y-3">
                         <div className="flex justify-between items-start gap-2 border-b border-gray-200 pb-2.5">
                           <div><span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Settlement Amount</span><div className="flex items-center gap-1 text-base font-black text-slate-900 mt-0.5"><span>${formattedAmount}</span><span className="text-[10px] font-bold text-[#fc5000]">USDC</span></div></div>
                           <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Settled</span>
                         </div>
-                        <div className="space-y-1.5 text-xs">
-                          <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]"><span>Session:</span><span className="text-[#fc5000] font-semibold truncate max-w-[150px]">{item.sessionId ? `${item.sessionId.slice(0, 6)}...${item.sessionId.slice(-4)}` : 'N/A'}</span></div>
+                        <div className="space-y-2 text-xs">
+                          {cleanTitle && (
+                            <div className="flex items-center gap-1.5 bg-gray-50 p-2 rounded-xl border border-gray-100">
+                              {badge && (
+                                <span className={`shrink-0 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider rounded border ${badge.bg}`}>
+                                  {badge.emoji} {parsedTitle?.type}
+                                </span>
+                              )}
+                              <span className="text-[10px] font-bold text-slate-900 truncate">
+                                {cleanTitle}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]">
+                            <span>Session:</span>
+                            <span className="text-[#fc5000] font-semibold truncate max-w-[150px]">{item.sessionId ? `${item.sessionId.slice(0, 8)}...${item.sessionId.slice(-6)}` : 'N/A'}</span>
+                          </div>
                           <div className="flex justify-between items-center text-gray-500 font-mono text-[11px]"><span>Payer:</span><span className="text-gray-600">{item.payer ? `${item.payer.slice(0, 6)}...${item.payer.slice(-4)}` : 'Unknown'}</span></div>
                         </div>
                         <div className="pt-2 border-t border-gray-200 flex justify-between items-center text-[11px]">
