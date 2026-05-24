@@ -59,7 +59,8 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
   // Karena ini langganan, kita asumsikan butuh allowance minimal untuk 12 bulan
   const requiredAllowance = amountRaw * 12n;
   const allowanceVal = currentAllowance ?? 0n;
-  const hasSufficientAllowance = allowanceVal >= requiredAllowance;
+  const [localApproved, setLocalApproved] = useState(false);
+  const hasSufficientAllowance = allowanceVal >= requiredAllowance || localApproved;
 
   // Hooks Penulisan Eksekusi Onchain
   const { writeContract, data: txHash, isPending: isWritePending, error: writeError } = useWriteContract();
@@ -96,6 +97,7 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
   useEffect(() => {
     if (isTxSuccess) {
       if (activeStep === 'approving') {
+        setLocalApproved(true);
         refetchAllowance();
         setActiveStep('idle');
       } else if (activeStep === 'subscribing') {
@@ -210,7 +212,7 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
                       <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
                     ) : (
                       <>
-                        <span>Step 1: Approve Unlimited USDC</span>
+                        <span>Approve Unlimited USDC</span>
                       </>
                     )}
                   </button>
@@ -225,7 +227,7 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
                     ) : (
                       <>
                         <ShieldCheck className="w-5 h-5 text-blue-200" />
-                        <span>Subscribe (Step 2/2)</span>
+                        <span>Subscribe</span>
                       </>
                     )}
                   </button>

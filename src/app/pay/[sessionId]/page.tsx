@@ -398,7 +398,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   {(() => {
                     const type = getEffectiveType().toLowerCase();
                     if (type === 'tip') return 'Send Tip';
-                    return 'Pay Now';
+                    return 'Approve Token';
                   })()}
                 </button>
               ) : (
@@ -410,8 +410,8 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   {activeStep === 'paying' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
                   {(() => {
                     const type = getEffectiveType().toLowerCase();
-                    if (type === 'tip') return 'Send Tip (Step 2/2)';
-                    return 'Pay Now (Step 2/2)';
+                    if (type === 'tip') return 'Send Tip';
+                    return 'Pay Now';
                   })()}
                 </button>
               )}
