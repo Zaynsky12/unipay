@@ -212,7 +212,7 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
                       <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
                     ) : (
                       <>
-                        <span>Approve Unlimited USDC</span>
+                        <span>Approve</span>
                       </>
                     )}
                   </button>

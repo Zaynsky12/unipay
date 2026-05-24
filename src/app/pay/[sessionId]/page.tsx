@@ -398,7 +398,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                   {(() => {
                     const type = getEffectiveType().toLowerCase();
                     if (type === 'tip') return 'Send Tip';
-                    return 'Approve Token';
+                    return 'Approve';
                   })()}
                 </button>
               ) : (
