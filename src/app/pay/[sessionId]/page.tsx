@@ -183,6 +183,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   const allowanceVal = (currentAllowance as bigint) ?? 0n;
   const [localApproved, setLocalApproved] = useState(false);
+  const [localPaid, setLocalPaid] = useState(false);
   const hasSufficientAllowance = allowanceVal >= amountRaw || localApproved;
 
   const { writeContract, data: txHash, isPending: isWritePending } = useWriteContract();
@@ -206,6 +207,8 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
     if (isTxSuccess) {
       if (activeStep === 'approving') {
         setLocalApproved(true);
+      } else if (activeStep === 'paying') {
+        setLocalPaid(true);
       }
       refetchAllowance();
       refetchSession();
@@ -358,7 +361,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                 >
                   <Wallet className="w-5 h-5" /> Connect Wallet
                 </button>
-              ) : (isPaid || isTxSuccess) ? (
+              ) : (isPaid || localPaid) ? (
                 <div className="w-full py-12 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex flex-col items-center justify-center gap-4 animate-in zoom-in-95 duration-500">
                   <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-[#050508] shadow-[0_0_30px_rgba(16,185,129,0.4)]">
                     <CheckCircle2 className="w-10 h-10" />
