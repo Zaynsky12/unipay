@@ -76,13 +76,13 @@ export function Navbar() {
           {/* Wallet Button / Launch App Button */}
           <div className="flex items-center gap-2 shrink-0">
             {isLandingPage ? (
-              <button
-                onClick={() => isConnected ? router.push('/dashboard') : open()}
+              <Link
+                href="/dashboard"
                 className="px-5 py-2.5 text-white text-xs sm:text-sm font-black rounded-full flex items-center gap-1.5 border transition-all group bg-[#fc5000] hover:bg-[#e04500] border-[#fc5000]/30 shadow-[0_0_20px_rgba(252,80,0,0.35)] hover:shadow-[0_0_28px_rgba(252,80,0,0.50)]"
               >
                 <span>LAUNCH APP</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </button>
+              </Link>
             ) : (
               <button
                 onClick={() => open()}

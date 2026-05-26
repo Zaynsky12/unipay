@@ -79,13 +79,13 @@ export default function LandingPage() {
 
         {/* CTA Buttons — pill shape */}
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <button
-            onClick={() => isConnected ? router.push('/dashboard') : open()}
-            className="group btn-orange px-8 py-4 text-white font-black text-sm flex items-center justify-center gap-3 hover:gap-4 transition-all w-full sm:w-auto"
+          <Link
+            href="/dashboard"
+            className="group btn-orange px-8 py-4 text-white font-black text-sm flex items-center justify-center gap-3 hover:gap-4 transition-all"
           >
             <span>Launch Merchant App</span>
             <ArrowRight className="w-5 h-5 transition-all" />
-          </button>
+          </Link>
           <a
             href="https://docs.arc.network/"
             target="_blank"
@@ -378,13 +378,13 @@ export default function LandingPage() {
         <p className="text-gray-500 max-w-md text-sm mb-10 leading-relaxed font-medium">
           Deploy native cryptographic commercial verification mapping straight into your Web3 application. Zero platform counterparty risks.
         </p>
-        <button
-          onClick={() => isConnected ? router.push('/dashboard') : open()}
+        <Link
+          href="/dashboard"
           className="btn-orange px-10 py-4 text-white font-black text-sm flex items-center gap-3 hover:gap-4 transition-all"
         >
           Access Merchant Dashboard
           <ArrowRight className="w-5 h-5" />
-        </button>
+        </Link>
       </motion.section>
 
       {/* ── Footer ── */}
