@@ -12,15 +12,13 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-
-contract LumiPayRegistry is ERC2771Context {
+contract LumiPayRegistry {
     
     // Fee settings
     address public devWallet;
     uint256 public constant FEE_PERCENT = 20; // 2% (20/1000)
 
-    constructor(address trustedForwarder) ERC2771Context(trustedForwarder) {
+    constructor() {
         devWallet = msg.sender;
     }
 
@@ -28,7 +26,7 @@ contract LumiPayRegistry is ERC2771Context {
      * @dev Mengubah address developer yang menerima fee
      */
     function setDevWallet(address _newDevWallet) external {
-        require(_msgSender() == devWallet, "Only current dev can change wallet");
+        require(msg.sender == devWallet, "Only current dev can change wallet");
         require(_newDevWallet != address(0), "Invalid address");
         devWallet = _newDevWallet;
     }
@@ -87,12 +85,12 @@ contract LumiPayRegistry is ERC2771Context {
     function registerMerchant(string memory name, string memory metadata) external {
         require(bytes(name).length > 0, "Brand name cannot be empty");
         
-        MerchantProfile storage profile = merchants[_msgSender()];
+        MerchantProfile storage profile = merchants[msg.sender];
         profile.name = name;
         profile.metadata = metadata;
         profile.isRegistered = true;
 
-        emit MerchantRegistered(_msgSender(), name, metadata);
+        emit MerchantRegistered(msg.sender, name, metadata);
     }
 
     /**
@@ -117,7 +115,7 @@ contract LumiPayRegistry is ERC2771Context {
         // Hash deterministik yang unik untuk mengidentifikasi endpoint pesanan
         sessionId = keccak256(
             abi.encodePacked(
-                _msgSender(),
+                msg.sender,
                 token,
                 amount,
                 description,
@@ -130,7 +128,7 @@ contract LumiPayRegistry is ERC2771Context {
         require(sessions[sessionId].merchant == address(0), "Session collision detected");
 
         sessions[sessionId] = CheckoutSession({
-            merchant: _msgSender(),
+            merchant: msg.sender,
             amount: amount,
             token: token,
             expiry: expiry,
@@ -139,7 +137,7 @@ contract LumiPayRegistry is ERC2771Context {
             isReusable: isReusable
         });
 
-        emit SessionCreated(sessionId, _msgSender(), amount, token, description, expiry, isReusable);
+        emit SessionCreated(sessionId, msg.sender, amount, token, description, expiry, isReusable);
     }
 
     /**
@@ -147,7 +145,7 @@ contract LumiPayRegistry is ERC2771Context {
      * @param sessionId Hash identifier sesi pesanan yang ingin dinonaktifkan.
      */
     function deactivateSession(bytes32 sessionId) external {
-        require(sessions[sessionId].merchant == _msgSender(), "Only the merchant can deactivate this session");
+        require(sessions[sessionId].merchant == msg.sender, "Only the merchant can deactivate this session");
         require(sessions[sessionId].isActive, "Session is already inactive");
         
         sessions[sessionId].isActive = false;
@@ -183,7 +181,7 @@ contract LumiPayRegistry is ERC2771Context {
         merchants[targetMerchant].totalReceived += amountAfterFee;
         merchants[targetMerchant].totalTransactions += 1;
 
-        address actualPayer = _msgSender();
+        address actualPayer = msg.sender;
 
         // Transfer fee to devWallet
         if (fee > 0) {
@@ -211,7 +209,7 @@ contract LumiPayRegistry is ERC2771Context {
         require(token != address(0), "Invalid token");
         require(interval >= 1 days, "Interval too short");
 
-        address subscriber = _msgSender();
+        address subscriber = msg.sender;
 
         subId = keccak256(
             abi.encodePacked(
@@ -273,7 +271,7 @@ contract LumiPayRegistry is ERC2771Context {
     function cancelSubscription(bytes32 subId) external {
         Subscription storage sub = subscriptions[subId];
         require(sub.isActive, "Already inactive");
-        require(_msgSender() == sub.subscriber || _msgSender() == sub.merchant, "Unauthorized");
+        require(msg.sender == sub.subscriber || msg.sender == sub.merchant, "Unauthorized");
 
         sub.isActive = false;
         emit SubscriptionCancelled(subId);

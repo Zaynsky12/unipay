@@ -6,7 +6,7 @@ import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
 import { defineChain } from 'viem';
-import { base, arbitrum, optimism } from 'viem/chains';
+import { baseSepolia, arbitrumSepolia, optimismSepolia, sepolia } from 'viem/chains';
 
 // ── Arc Testnet Chain Definition ───────────────────────────────────────────────
 export const arcTestnet = defineChain({
@@ -41,23 +41,26 @@ const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/37784886'],
 };
 
+const supportedNetworks = [arcTestnet, sepolia, baseSepolia, arbitrumSepolia, optimismSepolia] as any;
+
 const wagmiAdapter = new WagmiAdapter({
-  networks: [arcTestnet, base, arbitrum, optimism],
+  networks: supportedNetworks,
   projectId,
   ssr: true,
 });
 
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: [arcTestnet, base, arbitrum, optimism],
+  networks: supportedNetworks,
   defaultNetwork: arcTestnet,
   projectId,
   metadata,
   themeMode: 'dark',
   features: {
     analytics: false,
-    email: false,
-    socials: false,
+    email: true,
+    socials: ['google'],
+    emailShowWallets: true,
   },
   themeVariables: {
     '--w3m-accent': '#7C3AED',

@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, use } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
+import { AppKit } from '@circle-fin/app-kit';
+import { createViemAdapterFromProvider } from '@circle-fin/adapter-viem-v2';
 import { formatUnits } from 'viem';
 import {
   ShieldCheck,
@@ -40,6 +42,27 @@ export function parseSessionDescription(descString: string) {
   return { type: 'Payment', cleanDesc: str };
 }
 
+export function getCircleChain(chainId?: number): any {
+  switch (chainId) {
+    case 5042002: return "Arc_Testnet";
+    case 11155111: return "Ethereum_Sepolia";
+    case 421614: return "Arbitrum_Sepolia";
+    case 11155420: return "Optimism_Sepolia";
+    case 84532: return "Base_Sepolia";
+    default: return null;
+  }
+}
+
+export function getSourceUSDCAddress(chainId?: number): `0x${string}` | null {
+  switch (chainId) {
+    case 11155111: return "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"; // Eth Sepolia
+    case 421614: return "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d"; // Arb Sepolia
+    case 11155420: return "0x5fd84259d66Cd46123540766Be93DFE6D43130D7"; // OP Sepolia
+    case 84532: return "0x036CbD53842c5426634e7929541eC2318f3dCF7e"; // Base Sepolia
+    default: return null;
+  }
+}
+
 export function getBadgeStyles(type: string) {
   switch (type.toLowerCase()) {
     case 'invoice':
@@ -76,7 +99,9 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   const sessionIdBytes32 = (rawSessionId.startsWith('0x') ? rawSessionId : `0x${rawSessionId}`) as `0x${string}`;
 
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, connector, chainId } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
+  const [circleKit] = useState(() => new AppKit());
   const [urlDesc, setUrlDesc] = useState<string | null>(null);
   const pathname = usePathname();
 
@@ -119,6 +144,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   // 1. Membaca tuple state sesi onchain
   const { data: sessionData, isLoading: isLoadingSession, refetch: refetchSession } = useReadContract({
+    chainId: 5042002,
     address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'sessions',
@@ -134,6 +160,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   // 2. Membaca profil bisnis merchant
   const { data: merchantData, refetch: refetchMerchant } = useReadContract({
+    chainId: 5042002,
     address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
@@ -174,12 +201,25 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   const formattedAmount = formatUnits(amountRaw, matchedToken.decimals);
 
   const { data: currentAllowance, refetch: refetchAllowance } = useReadContract({
+    chainId: 5042002,
     address: tokenAddr as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'allowance',
     args: address ? [address, LUMIPAY_REGISTRY_ADDRESS] : undefined,
     query: { enabled: !!address && !!tokenAddr && tokenAddr !== '0x0000000000000000000000000000000000000000' }
   });
+
+  const sourceUSDC = getSourceUSDCAddress(chainId);
+  const { data: sourceBalanceData } = useReadContract({
+    address: sourceUSDC as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address && !!sourceUSDC && chainId !== 5042002 }
+  });
+  
+  const sourceBalance = (sourceBalanceData as bigint) ?? 0n;
+  const hasEnoughBalanceToBridge = sourceBalance >= amountRaw;
 
   const allowanceVal = (currentAllowance as bigint) ?? 0n;
   const [localApproved, setLocalApproved] = useState(false);
@@ -189,7 +229,33 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   const { writeContract, data: txHash, isPending: isWritePending } = useWriteContract();
   const { isLoading: isTxConfirming, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({ hash: txHash });
 
-  const [activeStep, setActiveStep] = useState<'idle' | 'approving' | 'paying'>('idle');
+  const [activeStep, setActiveStep] = useState<'idle' | 'approving' | 'paying' | 'bridging'>('idle');
+
+  const handleBridgeUSDC = async () => {
+    if (!connector || !chainId || !address) return;
+    try {
+      setActiveStep('bridging');
+      const provider = (await connector.getProvider()) as any;
+      const adapter = await createViemAdapterFromProvider({ provider });
+      const fromChain = getCircleChain(chainId);
+      if (!fromChain) throw new Error("Unsupported network for bridging");
+      
+      await circleKit.bridge({
+        from: { adapter, chain: fromChain },
+        to: { adapter, chain: "Arc_Testnet" },
+        amount: formattedAmount,
+      });
+
+      if (switchChainAsync) {
+        await switchChainAsync({ chainId: 5042002 });
+      }
+    } catch (err) {
+      console.error("Bridge Error:", err);
+      alert("Bridge failed or was cancelled. Check console for details.");
+    } finally {
+      setActiveStep('idle');
+    }
+  };
 
   const handleApproveToken = () => {
     if (!tokenAddr || !address) return;
@@ -361,6 +427,33 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                 >
                   <Wallet className="w-5 h-5" /> Connect Wallet
                 </button>
+              ) : (isConnected && chainId !== 5042002) ? (
+                getCircleChain(chainId) ? (
+                  hasEnoughBalanceToBridge ? (
+                    <button
+                      onClick={handleBridgeUSDC}
+                      disabled={activeStep === 'bridging'}
+                      className="w-full py-5 bg-gradient-to-r from-blue-500 to-violet-600 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
+                    >
+                      {activeStep === 'bridging' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Globe className="w-5 h-5" />}
+                      Bridge {formattedAmount} USDC to Arc
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="w-full py-5 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed"
+                    >
+                      <AlertCircle className="w-5 h-5" /> Insufficient USDC ({formatUnits(sourceBalance, 6)})
+                    </button>
+                  )
+                ) : (
+                  <button
+                    onClick={() => switchChainAsync && switchChainAsync({ chainId: 5042002 })}
+                    className="w-full py-5 bg-gray-800 text-white hover:bg-gray-700 text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
+                  >
+                    <AlertCircle className="w-5 h-5" /> Switch to Arc Network
+                  </button>
+                )
               ) : (isPaid || localPaid) ? (
                 <div className="w-full py-12 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex flex-col items-center justify-center gap-4 animate-in zoom-in-95 duration-500">
                   <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-[#050508] shadow-[0_0_30px_rgba(16,185,129,0.4)]">

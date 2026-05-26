@@ -6,7 +6,7 @@ dataSources:
     name: LumiPayRegistry
     network: arc-testnet
     source:
-      address: "0xd02f0cb8d7a156550e80c3b1183c90803fc464f7"
+      address: "0x7a98c1e3fa53d042ecb4b0ad2dcf20765dff1b09"
       abi: LumiPayRegistry
       startBlock: 42320000
     mapping:

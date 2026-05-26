@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Eye, LayoutDashboard, PlusCircle, History, Wallet, UserCircle, ArrowRight } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useAppKit } from '@reown/appkit/react';
@@ -17,6 +17,7 @@ const navItems = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isConnected, address } = useAccount();
   const { open } = useAppKit();
 
@@ -75,13 +76,13 @@ export function Navbar() {
           {/* Wallet Button / Launch App Button */}
           <div className="flex items-center gap-2 shrink-0">
             {isLandingPage ? (
-              <Link
-                href="/dashboard"
+              <button
+                onClick={() => isConnected ? router.push('/dashboard') : open()}
                 className="px-5 py-2.5 text-white text-xs sm:text-sm font-black rounded-full flex items-center gap-1.5 border transition-all group bg-[#fc5000] hover:bg-[#e04500] border-[#fc5000]/30 shadow-[0_0_20px_rgba(252,80,0,0.35)] hover:shadow-[0_0_28px_rgba(252,80,0,0.50)]"
               >
                 <span>LAUNCH APP</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+              </button>
             ) : (
               <button
                 onClick={() => open()}

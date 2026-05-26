@@ -53,8 +53,8 @@ LumiPay is built on a **fully stateless architecture**. All state — merchant p
 
 ### Blockchain Interface
 - **[Wagmi v3](https://wagmi.sh/)** + **[Viem v2](https://viem.sh/)** — EVM interaction
-- **[Reown AppKit](https://reown.com/appkit)** — Wallet connection & multi-chain support
-- **[Circle Arc App Kit](https://www.circle.com/)** — Unified cross-chain USDC balance
+- **[Reown AppKit Native Socials](https://reown.com/appkit)** — Embedded Wallet & Google Auth integration
+- **[Circle CCTP (Cross-Chain Transfer Protocol)](https://www.circle.com/)** — Decentralized Auto Bridge for cross-chain USDC
 
 ### Smart Contracts
 - **[Solidity ^0.8.20](https://soliditylang.org/)** — `LumiPayRegistry` contract

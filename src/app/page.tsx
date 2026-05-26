@@ -79,13 +79,13 @@ export default function LandingPage() {
 
         {/* CTA Buttons — pill shape */}
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <Link
-            href="/dashboard"
-            className="group btn-orange px-8 py-4 text-white font-black text-sm flex items-center justify-center gap-3 hover:gap-4 transition-all"
+          <button
+            onClick={() => isConnected ? router.push('/dashboard') : open()}
+            className="group btn-orange px-8 py-4 text-white font-black text-sm flex items-center justify-center gap-3 hover:gap-4 transition-all w-full sm:w-auto"
           >
             <span>Launch Merchant App</span>
             <ArrowRight className="w-5 h-5 transition-all" />
-          </Link>
+          </button>
           <a
             href="https://docs.arc.network/"
             target="_blank"
@@ -186,8 +186,8 @@ export default function LandingPage() {
               },
               {
                 step: "3",
-                title: "Unified Assets",
-                desc: "Monitor and manage your USDC liquidity across Arc, Base, Arbitrum, and Optimism in one consolidated dashboard.",
+                title: "Cross-Chain Bridge",
+                desc: "Automatically intercept and bridge USDC from Ethereum, Base, Arbitrum, and Optimism straight to your Arc Network settlement.",
               },
               {
                 step: "4",
@@ -241,7 +241,7 @@ export default function LandingPage() {
             {/* Orange section tag */}
             <div className="inline-flex items-center gap-2 caldera-tag">
               <Sparkles className="w-3 h-3" />
-              Unified Liquidity Engine
+              Decentralized Auto Bridge
             </div>
 
             <h2
@@ -249,7 +249,7 @@ export default function LandingPage() {
               style={{ fontFamily: 'var(--font-dm-sans)' }}
             >
               Payers from any chain,<br className="hidden sm:block" />{' '}
-              <span className="gradient-text-orange">Unified settlement.</span>
+              <span className="gradient-text-orange">Decentralized settlement.</span>
             </h2>
 
             <p className="text-gray-500 text-sm sm:text-base leading-relaxed font-medium">
@@ -307,7 +307,7 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <div className="mt-2 text-xs font-bold text-gray-500 flex items-center gap-1.5">
-                    <Cpu className="w-3.5 h-3.5" /> Auto-bridging via Unified Balance
+                    <Cpu className="w-3.5 h-3.5" /> CCTP Smart Auto-Bridging
                   </div>
                 </div>
               </div>
@@ -378,13 +378,13 @@ export default function LandingPage() {
         <p className="text-gray-500 max-w-md text-sm mb-10 leading-relaxed font-medium">
           Deploy native cryptographic commercial verification mapping straight into your Web3 application. Zero platform counterparty risks.
         </p>
-        <Link
-          href="/dashboard"
+        <button
+          onClick={() => isConnected ? router.push('/dashboard') : open()}
           className="btn-orange px-10 py-4 text-white font-black text-sm flex items-center gap-3 hover:gap-4 transition-all"
         >
           Access Merchant Dashboard
           <ArrowRight className="w-5 h-5" />
-        </Link>
+        </button>
       </motion.section>
 
       {/* ── Footer ── */}
