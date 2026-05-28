@@ -87,21 +87,11 @@ export default function CreatePaymentPage() {
     const tokenObj = SUPPORTED_TOKENS.find(t => t.symbol === selectedToken);
     if (!tokenObj) return;
 
-    if (paymentType === 'subscription') {
-      const amountUnits = parseUnits(amount, tokenObj.decimals);
-      const intervalSec = BigInt(subInterval) * 86400n;
-      writeContract({
-        address: LUMIPAY_REGISTRY_ADDRESS,
-        abi: REGISTRY_ABI,
-        functionName: 'createSubscription',
-        args: [address, amountUnits, tokenObj.address, intervalSec],
-        gas: 500000n,
-      });
-      return;
-    }
-
     const amountUnits = parseUnits(amount, tokenObj.decimals);
-    const expiryTimestamp = Math.floor(Date.now() / 1000) + Number(expiryDays) * 86400;
+    
+    // Untuk subscription, kita buat linknya berumur panjang (10 tahun) agar tidak cepat expired
+    const activeExpiryDays = paymentType === 'subscription' ? 3650 : Number(expiryDays);
+    const expiryTimestamp = Math.floor(Date.now() / 1000) + activeExpiryDays * 86400;
     
     let typeName = 'Payment';
     if (selectedMenu === 'invoices') typeName = 'Invoice';
@@ -114,11 +104,12 @@ export default function CreatePaymentPage() {
       ? `${selectedMenu.charAt(0).toUpperCase() + selectedMenu.slice(1)} — ${merchantName}` 
       : `Payment — ${merchantName}`;
 
+    const intervalText = paymentType === 'subscription' ? ` (Every ${subInterval} Days)` : '';
     const finalDesc = description.trim()
-      ? `${typePrefix} ${description.trim()}`
-      : `${typePrefix} ${fallbackDesc}`;
+      ? `${typePrefix} ${description.trim()}${intervalText}`
+      : `${typePrefix} ${fallbackDesc}${intervalText}`;
 
-    const isReusable = selectedMenu === 'checkouts' || selectedMenu === 'tip';
+    const isReusable = selectedMenu === 'checkouts' || selectedMenu === 'tip' || selectedMenu === 'subscribtion';
 
     writeContract({
       address: LUMIPAY_REGISTRY_ADDRESS,
@@ -162,8 +153,8 @@ export default function CreatePaymentPage() {
             : `Payment — ${merchantName}`;
           
           const finalDesc = description.trim()
-            ? `${typePrefix} ${description.trim()}`
-            : `${typePrefix} ${fallbackDesc}`;
+            ? `${typePrefix} ${description.trim()}${paymentType === 'subscription' ? ` (Every ${subInterval} Days)` : ''}`
+            : `${typePrefix} ${fallbackDesc}${paymentType === 'subscription' ? ` (Every ${subInterval} Days)` : ''}`;
 
           const descs = JSON.parse(localStorage.getItem('lumipay_descriptions') || '{}');
           descs[extractedId] = finalDesc;
@@ -174,6 +165,7 @@ export default function CreatePaymentPage() {
             amount: parseUnits(amount, tokenObj?.decimals || 6).toString(),
             token: tokenObj?.address || '',
             description: finalDesc,
+            interval: paymentType === 'subscription' ? subInterval : null,
             paid: false,
             active: true,
             createdAt: Math.floor(Date.now() / 1000).toString(),
@@ -208,7 +200,7 @@ export default function CreatePaymentPage() {
   const paymentLink = typeof window !== 'undefined' 
     ? (paymentType === 'onetime' 
         ? `${window.location.origin}/${routePath}/${createdSessionId || 'preview_id'}?desc=${encodeURIComponent(finalDescForLink)}`
-        : `${window.location.origin}/subscribe/${address}?amount=${amount || '0'}&interval=${subInterval}&token=${selectedToken}`)
+        : `${window.location.origin}/subscribe/${address}?amount=${amount || '0'}&interval=${subInterval}&token=${selectedToken}&desc=${encodeURIComponent(finalDescForLink)}`)
     : `https://lumipay.app/${paymentType === 'onetime' ? `${routePath}/preview_id` : 'subscribe/0x...'}`;
 
   const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module"></script>

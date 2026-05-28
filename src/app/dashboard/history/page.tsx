@@ -257,8 +257,13 @@ export default function HistoryPage() {
                             </span>
                           </div>
                           <p className="text-xs text-gray-600 truncate font-bold">
-                            {title}
+                            {title.replace(/\(Every.*Days\)/i, '').trim()}
                           </p>
+                          {(cs.interval || title.includes('(Every')) && (
+                            <span className="text-[10px] text-[#fc5000] font-bold uppercase tracking-widest block bg-[#fc5000]/10 px-2 py-0.5 rounded-md w-fit">
+                              {cs.interval ? `Every ${cs.interval} Days` : title.match(/\((Every.*Days)\)/i)?.[1] || ''}
+                            </span>
+                          )}
                           <span className="text-[10px] text-gray-500 font-mono block truncate">
                             ID: {actualId ? `${actualId.slice(0, 8)}...${actualId.slice(-6)}` : 'N/A'}
                           </span>

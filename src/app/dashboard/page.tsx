@@ -213,18 +213,33 @@ export default function DashboardPage() {
 
 
   // Tombol penyalinan tautan
-  const copySessionUrl = (sessionId: string, description: string) => {
-    const rawDesc = getSavedDescription(sessionId, description);
+  const copySessionUrl = (s: any) => {
+    const actualId = s.id || s.sessionId;
+    const rawDesc = getSavedDescription(actualId, s.description);
     const parsed = parseSessionDescription(rawDesc);
-    let routePath = 'pay';
     const typeLower = parsed.type.toLowerCase();
-    if (typeLower === 'invoice') routePath = 'invoice';
-    else if (typeLower === 'checkout') routePath = 'checkout';
-    else if (typeLower === 'tip') routePath = 'tip';
+    
+    let url = '';
+    if (typeLower === 'subscription') {
+      let interval = s.interval;
+      if (!interval) {
+        const match = rawDesc.match(/\(Every\s+(\d+)\s+Days\)/i);
+        if (match && match[1]) interval = match[1];
+        else interval = '30';
+      }
+      const amt = s.amount ? formatUnits(BigInt(s.amount), 6) : '0';
+      const tokenSymbol = resolveTokenSymbol(s.token);
+      url = `${window.location.origin}/subscribe/${address}?amount=${amt}&interval=${interval}&token=${tokenSymbol}&desc=${encodeURIComponent(rawDesc)}`;
+    } else {
+      let routePath = 'pay';
+      if (typeLower === 'invoice') routePath = 'invoice';
+      else if (typeLower === 'checkout') routePath = 'checkout';
+      else if (typeLower === 'tip') routePath = 'tip';
+      url = `${window.location.origin}/${routePath}/${actualId}`;
+    }
 
-    const url = `${window.location.origin}/${routePath}/${sessionId}`;
     navigator.clipboard.writeText(url);
-    setCopiedId(sessionId);
+    setCopiedId(actualId);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -402,15 +417,26 @@ export default function DashboardPage() {
                         <div key={actualId || idx} className={`grid grid-cols-12 items-center gap-2 group py-2 border-b border-white/[0.03] last:border-0 relative ${activeDropdown === actualId ? 'z-50' : 'z-10'}`}>
                           {/* 1. PAYMENTS */}
                           <Link
-                            href={`/${(() => {
+                            href={(() => {
                                 const rawDesc = getSavedDescription(actualId, s.description);
                                 const parsed = parseSessionDescription(rawDesc);
                                 const typeLower = parsed.type.toLowerCase();
-                                if (typeLower === 'invoice') return 'invoice';
-                                if (typeLower === 'checkout') return 'checkout';
-                                if (typeLower === 'tip') return 'tip';
-                                return 'pay';
-                            })()}/${actualId}`}
+                                if (typeLower === 'subscription') {
+                                  let interval = s.interval;
+                                  if (!interval) {
+                                    const match = rawDesc.match(/\(Every\s+(\d+)\s+Days\)/i);
+                                    if (match && match[1]) interval = match[1];
+                                    else interval = '30';
+                                  }
+                                  const amt = s.amount ? formatUnits(BigInt(s.amount), 6) : '0';
+                                  const tokenSymbol = resolveTokenSymbol(s.token);
+                                  return `/subscribe/${address}?amount=${amt}&interval=${interval}&token=${tokenSymbol}`;
+                                }
+                                if (typeLower === 'invoice') return `/invoice/${actualId}`;
+                                if (typeLower === 'checkout') return `/checkout/${actualId}`;
+                                if (typeLower === 'tip') return `/tip/${actualId}`;
+                                return `/pay/${actualId}`;
+                            })()}
                             target="_blank"
                             className="col-span-5 flex items-center gap-3 min-w-0 transition-opacity hover:opacity-80"
                             title="Open Live Payment Link (Checkout Page)"
@@ -429,9 +455,16 @@ export default function DashboardPage() {
                                       <span className={`shrink-0 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-md border ${badge.bg}`}>
                                         {badge.emoji} {parsed.type}
                                       </span>
-                                      <p className="text-xs font-bold text-slate-900 truncate group-hover:text-[#fc5000] transition-colors">
-                                        {parsed.cleanDesc || resolveTokenSymbol(s.token) + ' Paylink'}
-                                      </p>
+                                      <div className="flex flex-col min-w-0">
+                                        <p className="text-xs font-bold text-slate-900 truncate group-hover:text-[#fc5000] transition-colors">
+                                          {parsed.cleanDesc.replace(/\(Every.*Days\)/i, '').trim() || resolveTokenSymbol(s.token) + ' Paylink'}
+                                        </p>
+                                        {(s.interval || parsed.cleanDesc.includes('(Every')) && (
+                                          <span className="text-[9px] text-[#fc5000] font-bold uppercase tracking-widest block bg-[#fc5000]/10 px-1.5 py-0.5 rounded w-fit mt-0.5">
+                                            {s.interval ? `Every ${s.interval} Days` : parsed.cleanDesc.match(/\((Every.*Days)\)/i)?.[1] || ''}
+                                          </span>
+                                        )}
+                                      </div>
                                     </>
                                   );
                                 })()}
@@ -520,7 +553,7 @@ export default function DashboardPage() {
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      copySessionUrl(actualId, s.description);
+                                      copySessionUrl(s);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
                                     className="w-full px-3 py-2 rounded-xl text-xs text-gray-700 hover:text-[#fc5000] hover:bg-[#fc5000]/5 flex items-center gap-2.5 font-bold transition-all text-left cursor-pointer group"
@@ -584,15 +617,26 @@ export default function DashboardPage() {
                         {/* Top Bar: Title & Actions */}
                         <div className="flex items-start justify-between gap-2">
                            <Link 
-                            href={`/${(() => {
+                            href={(() => {
                                 const rawDesc = getSavedDescription(actualId, s.description);
                                 const parsed = parseSessionDescription(rawDesc);
                                 const typeLower = parsed.type.toLowerCase();
-                                if (typeLower === 'invoice') return 'invoice';
-                                if (typeLower === 'checkout') return 'checkout';
-                                if (typeLower === 'tip') return 'tip';
-                                return 'pay';
-                            })()}/${actualId}`}
+                                if (typeLower === 'subscription') {
+                                  let interval = s.interval;
+                                  if (!interval) {
+                                    const match = rawDesc.match(/\(Every\s+(\d+)\s+Days\)/i);
+                                    if (match && match[1]) interval = match[1];
+                                    else interval = '30';
+                                  }
+                                  const amt = s.amount ? formatUnits(BigInt(s.amount), 6) : '0';
+                                  const tokenSymbol = resolveTokenSymbol(s.token);
+                                  return `/subscribe/${address}?amount=${amt}&interval=${interval}&token=${tokenSymbol}&desc=${encodeURIComponent(rawDesc)}`;
+                                }
+                                if (typeLower === 'invoice') return `/invoice/${actualId}`;
+                                if (typeLower === 'checkout') return `/checkout/${actualId}`;
+                                if (typeLower === 'tip') return `/tip/${actualId}`;
+                                return `/pay/${actualId}`;
+                            })()}
                             target="_blank"
                             className="flex items-center gap-3 min-w-0 transition-opacity hover:opacity-80 flex-1"
                           >
@@ -610,9 +654,16 @@ export default function DashboardPage() {
                                       <span className={`shrink-0 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded border ${badge.bg}`}>
                                         {badge.emoji} {parsed.type}
                                       </span>
-                                      <p className="text-xs font-bold text-slate-900 truncate">
-                                        {parsed.cleanDesc || resolveTokenSymbol(s.token) + ' Paylink'}
-                                      </p>
+                                      <div className="flex flex-col min-w-0">
+                                        <p className="text-xs font-bold text-slate-900 truncate">
+                                          {parsed.cleanDesc.replace(/\(Every.*Days\)/i, '').trim() || resolveTokenSymbol(s.token) + ' Paylink'}
+                                        </p>
+                                        {(s.interval || parsed.cleanDesc.includes('(Every')) && (
+                                          <span className="text-[9px] text-[#fc5000] font-bold uppercase tracking-widest block bg-[#fc5000]/10 px-1.5 py-0.5 rounded w-fit mt-0.5">
+                                            {s.interval ? `Every ${s.interval} Days` : parsed.cleanDesc.match(/\((Every.*Days)\)/i)?.[1] || ''}
+                                          </span>
+                                        )}
+                                      </div>
                                     </>
                                   );
                                 })()}
@@ -680,7 +731,7 @@ export default function DashboardPage() {
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      copySessionUrl(actualId, s.description);
+                                      copySessionUrl(s);
                                       setTimeout(() => setActiveDropdown(null), 10);
                                     }}
                                     className="w-full px-3 py-2 rounded-xl text-xs text-gray-700 hover:text-[#fc5000] hover:bg-[#fc5000]/5 flex items-center gap-2.5 font-bold transition-all text-left cursor-pointer group"

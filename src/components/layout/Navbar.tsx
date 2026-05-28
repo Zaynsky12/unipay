@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Eye, LayoutDashboard, PlusCircle, History, Wallet, UserCircle, ArrowRight } from 'lucide-react';
+import { Eye, LayoutDashboard, PlusCircle, History, Wallet, UserCircle, ArrowRight, Users } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useAppKit } from '@reown/appkit/react';
 import { cn } from '@/lib/utils';

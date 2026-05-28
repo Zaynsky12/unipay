@@ -32,8 +32,9 @@ import {
 import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, USDC_ADDRESS, ERC20_ABI } from '@/lib/constants';
 import { formatUnits } from 'viem';
 import Link from 'next/link';
+import { BuyerSubscriptions } from '@/components/dashboard/BuyerSubscriptions';
 
-type TabType = 'Account' | 'Merchant Setting' | 'Integrations';
+type TabType = 'Account' | 'Merchant Setting' | 'My Subscriptions' | 'Integrations';
 
 // Kita pindahkan logika utama ke komponen internal agar bisa dibungkus Suspense
 function AccountContent() {
@@ -41,6 +42,7 @@ function AccountContent() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') as TabType;
   const { address, isConnected } = useAccount();
+  const [accountMode, setAccountMode] = useState<'Merchant' | 'Customer'>('Merchant');
   const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'Account');
 
   useEffect(() => {
@@ -256,9 +258,29 @@ function AccountContent() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 animate-fade-in pb-24 font-sans">
 
       <div className="mb-8 sm:mb-10 space-y-6">
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight px-1 uppercase text-center sm:text-left" style={{ fontFamily: 'var(--font-dm-sans)' }}>Account <span className="gradient-text-orange">Center</span></h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight px-1 uppercase text-center sm:text-left" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+            {accountMode === 'Merchant' ? 'Merchant' : 'Customer'} <span className="gradient-text-orange">Portal</span>
+          </h1>
+          
+          <div className="flex items-center bg-gray-100 p-1 rounded-2xl mx-auto sm:mx-0 shadow-inner">
+            <button
+              onClick={() => { setAccountMode('Merchant'); setActiveTab('Account'); }}
+              className={`px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all ${accountMode === 'Merchant' ? 'bg-white text-slate-900 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Merchant
+            </button>
+            <button
+              onClick={() => { setAccountMode('Customer'); setActiveTab('My Subscriptions'); }}
+              className={`px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all ${accountMode === 'Customer' ? 'bg-[#fc5000] text-white shadow-sm shadow-[#fc5000]/20' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Customer
+            </button>
+          </div>
+        </div>
+
         <div className="flex items-center gap-2 sm:gap-12 border-b border-gray-200 px-2 overflow-x-auto no-scrollbar scroll-smooth">
-          {(['Account', 'Merchant Setting', 'Integrations'] as TabType[]).map((tab) => (
+          {((accountMode === 'Merchant' ? ['Account', 'Merchant Setting', 'Integrations'] : ['My Subscriptions']) as TabType[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -534,6 +556,10 @@ function AccountContent() {
                </div>
             </form>
           </div>
+        )}
+
+        {activeTab === 'My Subscriptions' && (
+          <BuyerSubscriptions />
         )}
 
         {activeTab === 'Integrations' && (

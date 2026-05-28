@@ -102,3 +102,24 @@ export const GET_SESSION = gql`
     }
   }
 `;
+
+export const GET_BUYER_SUBSCRIPTIONS = gql`
+  query GetBuyerSubscriptions($subscriber: String!) {
+    subscriptionPlans(
+      where: { subscriber_contains_nocase: $subscriber }
+      orderBy: createdAt
+      orderDirection: desc
+    ) {
+      id
+      merchant {
+        id
+        name
+      }
+      amount
+      token
+      interval
+      isActive
+      createdAt
+    }
+  }
+`;
