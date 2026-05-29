@@ -403,13 +403,30 @@ export default function DashboardPage() {
                   ) : (
                     createdSessions.map((s: any, idx: number) => {
                       const actualId = s.id || s.sessionId;
-                      const linkBuyers = filteredRecentPayments.filter((p: any) => 
-                        p.sessionId && actualId && (
-                          p.sessionId.toLowerCase() === actualId.toLowerCase() ||
-                          p.sessionId.toLowerCase().includes(actualId.toLowerCase()) ||
-                          actualId.toLowerCase().includes(p.sessionId.toLowerCase())
-                        )
-                      );
+                      const rawDescForCount = getSavedDescription(actualId, s.description);
+                      const isSub = parseSessionDescription(rawDescForCount).type.toLowerCase() === 'subscription';
+
+                      let linkBuyers = [];
+                      if (isSub) {
+                        let interval = s.interval;
+                        if (!interval) {
+                          const match = rawDescForCount.match(/\(Every\s+(\d+)\s+Days\)/i);
+                          interval = match ? match[1] : '30';
+                        }
+                        linkBuyers = (history?.subscriptions || []).filter((sub: any) => 
+                          (!s.amount || sub.amount === s.amount) &&
+                          (!s.token || sub.token?.toLowerCase() === s.token?.toLowerCase()) &&
+                          sub.interval === interval
+                        );
+                      } else {
+                        linkBuyers = filteredRecentPayments.filter((p: any) => 
+                          p.sessionId && actualId && (
+                            p.sessionId.toLowerCase() === actualId.toLowerCase() ||
+                            p.sessionId.toLowerCase().includes(actualId.toLowerCase()) ||
+                            actualId.toLowerCase().includes(p.sessionId.toLowerCase())
+                          )
+                        );
+                      }
                       const salesSum = linkBuyers.reduce((acc: number, p: any) => acc + (p.amount ? Number(formatUnits(BigInt(p.amount), 6)) : 0), 0);
                       const isNakedAmt = s.amount ? `$${formatUnits(BigInt(s.amount), 6)}` : 'N/A';
 
@@ -430,7 +447,7 @@ export default function DashboardPage() {
                                   }
                                   const amt = s.amount ? formatUnits(BigInt(s.amount), 6) : '0';
                                   const tokenSymbol = resolveTokenSymbol(s.token);
-                                  return `/subscribe/${address}?amount=${amt}&interval=${interval}&token=${tokenSymbol}`;
+                                  return `/subscribe/${address}?amount=${amt}&interval=${interval}&token=${tokenSymbol}&desc=${encodeURIComponent(rawDesc)}`;
                                 }
                                 if (typeLower === 'invoice') return `/invoice/${actualId}`;
                                 if (typeLower === 'checkout') return `/checkout/${actualId}`;
@@ -491,7 +508,7 @@ export default function DashboardPage() {
                           {/* 4. SALES */}
                           <div className="col-span-2 text-center leading-tight">
                             <span className="text-xs font-bold text-gray-600 block font-mono">{linkBuyers.length}</span>
-                            <span className="text-[8px] text-gray-500 font-bold block">orders</span>
+                            <span className="text-[8px] text-gray-500 font-bold block">{isSub ? 'subscribers' : 'orders'}</span>
                           </div>
 
                           {/* 5. MANAGE */}
@@ -602,13 +619,30 @@ export default function DashboardPage() {
                 ) : (
                   createdSessions.map((s: any, idx: number) => {
                     const actualId = s.id || s.sessionId;
-                    const linkBuyers = filteredRecentPayments.filter((p: any) => 
-                      p.sessionId && actualId && (
-                        p.sessionId.toLowerCase() === actualId.toLowerCase() ||
-                        p.sessionId.toLowerCase().includes(actualId.toLowerCase()) ||
-                        actualId.toLowerCase().includes(p.sessionId.toLowerCase())
-                      )
-                    );
+                    const rawDescForCount = getSavedDescription(actualId, s.description);
+                    const isSub = parseSessionDescription(rawDescForCount).type.toLowerCase() === 'subscription';
+
+                    let linkBuyers = [];
+                    if (isSub) {
+                      let interval = s.interval;
+                      if (!interval) {
+                        const match = rawDescForCount.match(/\(Every\s+(\d+)\s+Days\)/i);
+                        interval = match ? match[1] : '30';
+                      }
+                      linkBuyers = (history?.subscriptions || []).filter((sub: any) => 
+                        (!s.amount || sub.amount === s.amount) &&
+                        (!s.token || sub.token?.toLowerCase() === s.token?.toLowerCase()) &&
+                        sub.interval === interval
+                      );
+                    } else {
+                      linkBuyers = filteredRecentPayments.filter((p: any) => 
+                        p.sessionId && actualId && (
+                          p.sessionId.toLowerCase() === actualId.toLowerCase() ||
+                          p.sessionId.toLowerCase().includes(actualId.toLowerCase()) ||
+                          actualId.toLowerCase().includes(p.sessionId.toLowerCase())
+                        )
+                      );
+                    }
                     const salesSum = linkBuyers.reduce((acc: number, p: any) => acc + (p.amount ? Number(formatUnits(BigInt(p.amount), 6)) : 0), 0);
                     const isNakedAmt = s.amount ? `$${formatUnits(BigInt(s.amount), 6)}` : 'N/A';
 
@@ -779,7 +813,7 @@ export default function DashboardPage() {
                             <span className="text-xs font-black text-slate-900 mt-0.5 block">${salesSum.toFixed(2)}</span>
                           </div>
                           <div className="bg-white/[0.01] p-2 rounded-xl text-center border border-white/[0.02]">
-                            <span className="text-[8px] font-bold text-gray-500 block uppercase tracking-wider">Orders</span>
+                            <span className="text-[8px] font-bold text-gray-500 block uppercase tracking-wider">{isSub ? 'Subscribers' : 'Orders'}</span>
                             <span className="text-xs font-bold text-gray-600 mt-0.5 block">{linkBuyers.length}</span>
                           </div>
                         </div>

@@ -76,6 +76,7 @@ export const GET_MERCHANT_HISTORY = gql`
         id
         subscriber
         amount
+        token
         interval
         isActive
         createdAt
