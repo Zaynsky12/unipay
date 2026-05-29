@@ -74,6 +74,7 @@ export const GET_MERCHANT_HISTORY = gql`
       }
       subscriptions(orderBy: createdAt, orderDirection: desc) {
         id
+        sessionId
         subscriber
         amount
         token

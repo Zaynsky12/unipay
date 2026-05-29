@@ -423,10 +423,6 @@ function AccountContent() {
                   {address ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}` : 'Unknown Identity'}
                 </h1>
                 <div className="flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border bg-[#fc5000]/10 text-[#fc5000] border-[#fc5000]/20">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Verified Customer
-                  </div>
                 </div>
               </div>
             </div>
