@@ -197,11 +197,10 @@ export default function CreatePaymentPage() {
   else if (selectedMenu === 'checkouts') routePath = 'checkout';
   else if (selectedMenu === 'tip') routePath = 'tip';
 
+  const routePrefix = paymentType === 'onetime' ? routePath : 'subscribe';
   const paymentLink = typeof window !== 'undefined' 
-    ? (paymentType === 'onetime' 
-        ? `${window.location.origin}/${routePath}/${createdSessionId || 'preview_id'}?desc=${encodeURIComponent(finalDescForLink)}`
-        : `${window.location.origin}/subscribe/${address}?amount=${amount || '0'}&interval=${subInterval}&token=${selectedToken}&desc=${encodeURIComponent(finalDescForLink)}`)
-    : `https://lumipay.app/${paymentType === 'onetime' ? `${routePath}/preview_id` : 'subscribe/0x...'}`;
+    ? `${window.location.origin}/${routePrefix}/${createdSessionId || 'preview_id'}?desc=${encodeURIComponent(finalDescForLink)}`
+    : `https://lumipay.app/${routePrefix}/preview_id`;
 
   const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module"></script>
 <lumipay-checkout 

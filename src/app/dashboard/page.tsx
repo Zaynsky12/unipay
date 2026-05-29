@@ -221,15 +221,7 @@ export default function DashboardPage() {
     
     let url = '';
     if (typeLower === 'subscription') {
-      let interval = s.interval;
-      if (!interval) {
-        const match = rawDesc.match(/\(Every\s+(\d+)\s+Days\)/i);
-        if (match && match[1]) interval = match[1];
-        else interval = '30';
-      }
-      const amt = s.amount ? formatUnits(BigInt(s.amount), 6) : '0';
-      const tokenSymbol = resolveTokenSymbol(s.token);
-      url = `${window.location.origin}/subscribe/${address}?amount=${amt}&interval=${interval}&token=${tokenSymbol}&desc=${encodeURIComponent(rawDesc)}`;
+      url = `${window.location.origin}/subscribe/${actualId}?desc=${encodeURIComponent(rawDesc)}`;
     } else {
       let routePath = 'pay';
       if (typeLower === 'invoice') routePath = 'invoice';
@@ -439,15 +431,7 @@ export default function DashboardPage() {
                                 const parsed = parseSessionDescription(rawDesc);
                                 const typeLower = parsed.type.toLowerCase();
                                 if (typeLower === 'subscription') {
-                                  let interval = s.interval;
-                                  if (!interval) {
-                                    const match = rawDesc.match(/\(Every\s+(\d+)\s+Days\)/i);
-                                    if (match && match[1]) interval = match[1];
-                                    else interval = '30';
-                                  }
-                                  const amt = s.amount ? formatUnits(BigInt(s.amount), 6) : '0';
-                                  const tokenSymbol = resolveTokenSymbol(s.token);
-                                  return `/subscribe/${address}?amount=${amt}&interval=${interval}&token=${tokenSymbol}&desc=${encodeURIComponent(rawDesc)}`;
+                                  return `/subscribe/${actualId}?desc=${encodeURIComponent(rawDesc)}`;
                                 }
                                 if (typeLower === 'invoice') return `/invoice/${actualId}`;
                                 if (typeLower === 'checkout') return `/checkout/${actualId}`;
@@ -656,15 +640,7 @@ export default function DashboardPage() {
                                 const parsed = parseSessionDescription(rawDesc);
                                 const typeLower = parsed.type.toLowerCase();
                                 if (typeLower === 'subscription') {
-                                  let interval = s.interval;
-                                  if (!interval) {
-                                    const match = rawDesc.match(/\(Every\s+(\d+)\s+Days\)/i);
-                                    if (match && match[1]) interval = match[1];
-                                    else interval = '30';
-                                  }
-                                  const amt = s.amount ? formatUnits(BigInt(s.amount), 6) : '0';
-                                  const tokenSymbol = resolveTokenSymbol(s.token);
-                                  return `/subscribe/${address}?amount=${amt}&interval=${interval}&token=${tokenSymbol}&desc=${encodeURIComponent(rawDesc)}`;
+                                  return `/subscribe/${actualId}?desc=${encodeURIComponent(rawDesc)}`;
                                 }
                                 if (typeLower === 'invoice') return `/invoice/${actualId}`;
                                 if (typeLower === 'checkout') return `/checkout/${actualId}`;

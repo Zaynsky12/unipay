@@ -19,24 +19,58 @@ import {
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
+import { goldskyClient, GET_SESSION } from '@/lib/goldsky';
 
-export default function SubscribePage({ params }: { params: Promise<{ merchantId: string }> }) {
+export default function SubscribePage({ params }: { params: Promise<{ sessionId: string }> }) {
   const resolvedParams = use(params);
-  const merchantAddr = resolvedParams.merchantId as `0x${string}`;
-  
+  const rawSessionId = resolvedParams.sessionId;
+  const sessionIdBytes32 = (rawSessionId.startsWith('0x') ? rawSessionId : `0x${rawSessionId}`) as `0x${string}`;
+
   const { address, isConnected, chainId } = useAccount();
 
-  const searchParams = useSearchParams();
-  const urlAmount = searchParams.get('amount') || "25";
-  const urlInterval = searchParams.get('interval') || "30";
-  const urlToken = searchParams.get('token') || "USDC";
-  const urlDesc = searchParams.get('desc') || '';
+  const [urlDesc, setUrlDesc] = useState<string | null>(null);
 
-  // Konfigurasi Subscription Dinamis dari URL
-  const planAmount = urlAmount;
-  const matchedToken = SUPPORTED_TOKENS.find(t => t.symbol === urlToken) || SUPPORTED_TOKENS[0];
-  const amountRaw = parseUnits(planAmount, matchedToken.decimals);
-  const intervalSeconds = Number(urlInterval) * 24 * 60 * 60;
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const desc = params.get('desc');
+      if (desc) setUrlDesc(decodeURIComponent(desc));
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchSessionDescription = async () => {
+      try {
+        const idLower = rawSessionId.toLowerCase();
+        const data: any = await goldskyClient.request(GET_SESSION, { id: idLower });
+        if (data?.paymentSession?.description) {
+          setUrlDesc(data.paymentSession.description);
+        }
+      } catch (err) {
+        console.error("Failed to fetch session description from Goldsky:", err);
+      }
+    };
+    if (rawSessionId) {
+      fetchSessionDescription();
+    }
+  }, [rawSessionId]);
+
+  // 1. Membaca tuple state sesi onchain
+  const { data: sessionData, isLoading: isLoadingSession } = useReadContract({
+    chainId: 5042002,
+    address: LUMIPAY_REGISTRY_ADDRESS,
+    abi: REGISTRY_ABI,
+    functionName: 'sessions',
+    args: [sessionIdBytes32],
+  });
+
+  const merchantAddr = (sessionData as any)?.[0] || '0x0000000000000000000000000000000000000000';
+  const amountRaw = (sessionData as any)?.[1] || 0n;
+  const tokenAddr = (sessionData as any)?.[2] || '';
+  const isActiveOnchain = (sessionData as any)?.[5] ?? true;
+
+  const matchedToken = SUPPORTED_TOKENS.find(t => t.address.toLowerCase() === tokenAddr?.toLowerCase()) || SUPPORTED_TOKENS[0];
+  const planAmount = amountRaw ? formatUnits(amountRaw, matchedToken.decimals) : "0";
 
   const parseSessionDescription = (descString: string) => {
     const str = descString || '';
@@ -56,14 +90,22 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
     };
   };
 
-  // 1. Membaca profil bisnis merchant
+  const parsedDescForInterval = parseSessionDescription(urlDesc || '');
+  let intervalDays = 30;
+  const intervalMatch = parsedDescForInterval.cleanDesc.match(/\(Every\s+(\d+)\s+Days\)/i);
+  if (intervalMatch && intervalMatch[1]) {
+    intervalDays = parseInt(intervalMatch[1]);
+  }
+  const intervalSeconds = intervalDays * 24 * 60 * 60;
+
+  // 2. Membaca profil bisnis merchant
   const { data: merchantData, isLoading: isLoadingMerchant } = useReadContract({
     chainId: 5042002,
     address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
-    args: [merchantAddr],
-    query: { enabled: !!merchantAddr }
+    args: merchantAddr !== '0x0000000000000000000000000000000000000000' ? [merchantAddr] : undefined,
+    query: { enabled: merchantAddr !== '0x0000000000000000000000000000000000000000' }
   });
 
   const rawMerchantName = (merchantData as any)?.[0] || '';
@@ -152,9 +194,20 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
 
   const isSuccessState = activeStep === 'success';
 
-  if (isLoadingMerchant) return (
+  if (isLoadingSession || isLoadingMerchant) return (
     <div className="min-h-screen bg-[#050508] flex items-center justify-center">
       <Loader2 className="w-10 h-10 text-[#fc5000] animate-spin" />
+    </div>
+  );
+
+  if (!isActiveOnchain) return (
+    <div className="min-h-screen bg-[#050508] flex items-center justify-center p-6 text-center">
+      <div className="max-w-md w-full glass-panel p-10 space-y-6">
+        <AlertCircle className="w-16 h-16 text-red-500 mx-auto opacity-50" />
+        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Paylink Deactivated</h2>
+        <p className="text-gray-500 text-sm italic">This subscription link is no longer valid.</p>
+        <Link href="/" className="block py-4 text-xs font-black text-violet-400 uppercase tracking-widest border border-violet-500/20 rounded-2xl">Return Home</Link>
+      </div>
     </div>
   );
 
@@ -262,7 +315,7 @@ export default function SubscribePage({ params }: { params: Promise<{ merchantId
                   <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Billing Cycle</p>
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    <p className="text-xs font-bold text-gray-600">Every {urlInterval} Days</p>
+                    <p className="text-xs font-bold text-gray-600">Every {intervalDays} Days</p>
                   </div>
                 </div>
                 <div className="text-right space-y-1">
