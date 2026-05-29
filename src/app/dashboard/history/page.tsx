@@ -58,7 +58,17 @@ export default function HistoryPage() {
   const createdSessions = history?.sessions || [];
 
   // Parse logs from Goldsky history
-  const logs = history?.payments || [];
+  const regularPayments = history?.payments || [];
+  const subPayments = (history?.subscriptions || []).map((sub: any) => ({
+    id: sub.id,
+    sessionId: sub.sessionId,
+    amount: sub.amount,
+    token: sub.token,
+    payer: sub.subscriber,
+    timestamp: sub.createdAt
+  }));
+  
+  const logs = [...regularPayments, ...subPayments].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
 
   // Filter log akhir berdasarkan pencarian teks ATAU tab filter sesi spesifik
   const filteredLogs = logs.filter((l: any) => {
