@@ -199,7 +199,7 @@ export default function CreatePaymentPage() {
 
   const routePrefix = paymentType === 'onetime' ? routePath : 'subscribe';
   const paymentLink = typeof window !== 'undefined' 
-    ? `${window.location.origin}/${routePrefix}/${createdSessionId || 'preview_id'}?desc=${encodeURIComponent(finalDescForLink)}`
+    ? `${window.location.origin}/${routePrefix}/${createdSessionId || 'preview_id'}`
     : `https://lumipay.app/${routePrefix}/preview_id`;
 
   const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module"></script>

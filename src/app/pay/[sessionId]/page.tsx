@@ -284,6 +284,10 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   const isExpired = expiry > 0n && BigInt(Math.floor(Date.now() / 1000)) > expiry;
 
+  const rawSessionDesc = urlDesc || `Order Settlement — ${displayName}`;
+  const parsedDescObj = parseSessionDescription(rawSessionDesc);
+  const descBadge = getBadgeStyles(parsedDescObj.type);
+
   if (isLoadingSession) return (
     <div className="min-h-screen bg-[#050508] flex items-center justify-center">
       <Loader2 className="w-10 h-10 text-[#fc5000] animate-spin" />
@@ -364,7 +368,11 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
           <div className="p-8 sm:p-12 space-y-10">
             {/* Amount Section */}
             <div className="text-center space-y-2">
-              <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-4">Amount to Settle</p>
+              <div className="flex justify-center mb-4">
+                <span className={`px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-full border ${descBadge.bg}`}>
+                  {descBadge.emoji} {parsedDescObj.type}
+                </span>
+              </div>
               <div className="flex items-center justify-center gap-3">
                 <span className="text-5xl sm:text-7xl font-black text-slate-900 tracking-tighter">${formattedAmount}</span>
                 <div className="flex flex-col items-start">
@@ -379,21 +387,9 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
               <div className="flex justify-between items-start gap-4">
                 <div className="space-y-1 min-w-0 flex-1">
                   <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Order Note</p>
-                  {(() => {
-                    const raw = urlDesc || `Order Settlement — ${displayName}`;
-                    const parsed = parseSessionDescription(raw);
-                    const badge = getBadgeStyles(parsed.type);
-                    return (
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
-                        <span className={`shrink-0 w-fit px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-md border ${badge.bg}`}>
-                          {badge.emoji} {parsed.type}
-                        </span>
-                        <p className="text-sm font-bold text-slate-800 truncate" title={parsed.cleanDesc}>
-                          {parsed.cleanDesc}
-                        </p>
-                      </div>
-                    );
-                  })()}
+                  <p className="text-sm font-bold text-slate-800 truncate mt-1" title={parsedDescObj.cleanDesc}>
+                    {parsedDescObj.cleanDesc || "N/A"}
+                  </p>
                 </div>
                 <div className="text-right space-y-1 shrink-0">
                   <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Blockchain</p>

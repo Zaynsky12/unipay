@@ -221,7 +221,7 @@ export default function DashboardPage() {
     
     let url = '';
     if (typeLower === 'subscription') {
-      url = `${window.location.origin}/subscribe/${actualId}?desc=${encodeURIComponent(rawDesc)}`;
+      url = `${window.location.origin}/subscribe/${actualId}`;
     } else {
       let routePath = 'pay';
       if (typeLower === 'invoice') routePath = 'invoice';
@@ -431,7 +431,7 @@ export default function DashboardPage() {
                                 const parsed = parseSessionDescription(rawDesc);
                                 const typeLower = parsed.type.toLowerCase();
                                 if (typeLower === 'subscription') {
-                                  return `/subscribe/${actualId}?desc=${encodeURIComponent(rawDesc)}`;
+                                  return `/subscribe/${actualId}`;
                                 }
                                 if (typeLower === 'invoice') return `/invoice/${actualId}`;
                                 if (typeLower === 'checkout') return `/checkout/${actualId}`;
@@ -640,7 +640,7 @@ export default function DashboardPage() {
                                 const parsed = parseSessionDescription(rawDesc);
                                 const typeLower = parsed.type.toLowerCase();
                                 if (typeLower === 'subscription') {
-                                  return `/subscribe/${actualId}?desc=${encodeURIComponent(rawDesc)}`;
+                                  return `/subscribe/${actualId}`;
                                 }
                                 if (typeLower === 'invoice') return `/invoice/${actualId}`;
                                 if (typeLower === 'checkout') return `/checkout/${actualId}`;
