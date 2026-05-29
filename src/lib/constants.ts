@@ -9,13 +9,7 @@ export const EURC_ADDRESS = "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as `0x$
 // ── LumiPayRegistry ABI (100% Presisi dan Sinkron dengan Kontrak Solidity Aktual) ──
 export const REGISTRY_ABI = [
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "trustedForwarder",
-        "type": "address"
-      }
-    ],
+    "inputs": [],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
@@ -182,6 +176,12 @@ export const REGISTRY_ABI = [
         "internalType": "uint256",
         "name": "interval",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "sessionId",
+        "type": "bytes32"
       }
     ],
     "name": "SubscriptionCreated",
@@ -286,19 +286,9 @@ export const REGISTRY_ABI = [
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "targetMerchant",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
+        "internalType": "bytes32",
+        "name": "sessionId",
+        "type": "bytes32"
       },
       {
         "internalType": "uint256",
@@ -354,25 +344,6 @@ export const REGISTRY_ABI = [
     "name": "executeSubscription",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "forwarder",
-        "type": "address"
-      }
-    ],
-    "name": "isTrustedForwarder",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -551,19 +522,6 @@ export const REGISTRY_ABI = [
         "internalType": "bool",
         "name": "isActive",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "trustedForwarder",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
