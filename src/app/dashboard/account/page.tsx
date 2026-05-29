@@ -271,7 +271,7 @@ function AccountContent() {
               Merchant
             </button>
             <button
-              onClick={() => { setAccountMode('Customer'); setActiveTab('My Subscriptions'); }}
+              onClick={() => { setAccountMode('Customer'); setActiveTab('Account'); }}
               className={`px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all ${accountMode === 'Customer' ? 'bg-[#fc5000] text-white shadow-sm shadow-[#fc5000]/20' : 'text-gray-500 hover:text-gray-700'}`}
             >
               Customer
@@ -280,7 +280,7 @@ function AccountContent() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-12 border-b border-gray-200 px-2 overflow-x-auto no-scrollbar scroll-smooth">
-          {((accountMode === 'Merchant' ? ['Account', 'Merchant Setting', 'Integrations'] : ['My Subscriptions']) as TabType[]).map((tab) => (
+          {((accountMode === 'Merchant' ? ['Account', 'Merchant Setting', 'Integrations'] : ['Account', 'My Subscriptions']) as TabType[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -298,7 +298,7 @@ function AccountContent() {
       </div>
 
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-        {activeTab === 'Account' && (
+        {activeTab === 'Account' && accountMode === 'Merchant' && (
           <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
             <div className="p-10 sm:p-14 flex flex-col items-center text-center border-b border-gray-200 space-y-6">
               <div className="relative group">
@@ -379,6 +379,54 @@ function AccountContent() {
                       <path d="M0,80 Q50,70 100,85 T200,60 T300,75 T400,50 L400,100 L0,100 Z" strokeWidth="0" />
                       <path d="M0,80 Q50,70 100,85 T200,60 T300,75 T400,50" fill="transparent" />
                    </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 sm:p-10 bg-gray-50/50 space-y-6">
+              <div className="flex items-center gap-2 text-[10px] font-black text-[#fc5000] uppercase tracking-widest">
+                <Globe2 className="w-4 h-4" />
+                My Asset
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { n: 'ARC', b: formatB(rawArcBalance), i: '🟣' },
+                  { n: 'BASE', b: formatB(baseBalance), i: '🔵' },
+                  { n: 'ARB', b: formatB(arbBalance), i: '💙' },
+                  { n: 'OPT', b: formatB(optBalance), i: '🔴' },
+                ].map((c) => (
+                  <div key={c.n} className="bg-white border border-gray-200 rounded-2xl p-4 hover:border-gray-300 shadow-sm transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px]">{c.i}</div>
+                      <span className="text-[8px] font-black text-gray-500 uppercase">{c.n}</span>
+                    </div>
+                    <div className="text-sm font-black text-slate-900">${c.b}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'Account' && accountMode === 'Customer' && (
+          <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
+            <div className="p-10 sm:p-14 flex flex-col items-center text-center border-b border-gray-200 space-y-6">
+              <div className="relative group">
+                <div className="absolute -inset-4 bg-[#fc5000]/10 rounded-full blur-2xl group-hover:bg-[#fc5000]/18 transition duration-500" />
+                <div className="relative w-24 h-24 sm:w-28 sm:h-28 bg-white border-[1.5px] border-gray-200 rounded-[2.5rem] flex items-center justify-center text-gray-500 shadow-2xl overflow-hidden group-hover:border-[#fc5000]/30 transition-all duration-500">
+                  <UserCircle className="w-12 h-12 opacity-80 text-[#fc5000]" />
+                </div>
+              </div>
+              
+              <div className="space-y-3 w-full">
+                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter truncate max-w-[280px] sm:max-w-none">
+                  {address ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}` : 'Unknown Identity'}
+                </h1>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border bg-[#fc5000]/10 text-[#fc5000] border-[#fc5000]/20">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Verified Customer
+                  </div>
                 </div>
               </div>
             </div>
