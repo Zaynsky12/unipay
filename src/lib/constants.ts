@@ -1,6 +1,6 @@
 // ── LumiPay Contract Address (LumiPayRegistry) ──────────────────────────────────
 // Will be filled automatically after deploy on Arc Testnet
-export const LUMIPAY_REGISTRY_ADDRESS = "0x7a98c1e3fa53d042ecb4b0ad2dcf20765dff1b09" as `0x${string}`;
+export const LUMIPAY_REGISTRY_ADDRESS = "0x390b0f8d67b79f031ce03420ca678d4550dd71c7" as `0x${string}`;
 
 // ── Token Addresses ────────────────────────────────────────────────────────────
 export const USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as `0x${string}`;

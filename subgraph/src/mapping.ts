@@ -137,6 +137,7 @@ export function handleSubscriptionCreated(event: SubscriptionCreated): void {
   plan.subscriber = event.params.subscriber.toHexString()
   plan.amount = event.params.amount
   plan.interval = event.params.interval
+  plan.sessionId = event.params.sessionId
   plan.isActive = true
   plan.createdAt = event.block.timestamp
   plan.token = "0x3600000000000000000000000000000000000000" // Defaulting to USDC since token is not in this event

@@ -406,9 +406,11 @@ export default function DashboardPage() {
                           interval = match ? match[1] : '30';
                         }
                         linkBuyers = (history?.subscriptions || []).filter((sub: any) => 
-                          (!s.amount || sub.amount === s.amount) &&
-                          (!s.token || sub.token?.toLowerCase() === s.token?.toLowerCase()) &&
-                          sub.interval === interval
+                          sub.sessionId && actualId && (
+                            sub.sessionId.toLowerCase() === actualId.toLowerCase() ||
+                            sub.sessionId.toLowerCase().includes(actualId.toLowerCase()) ||
+                            actualId.toLowerCase().includes(sub.sessionId.toLowerCase())
+                          )
                         );
                       } else {
                         linkBuyers = filteredRecentPayments.filter((p: any) => 

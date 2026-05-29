@@ -73,7 +73,7 @@ contract LumiPayRegistry {
     event SessionCreated(bytes32 indexed sessionId, address indexed merchant, uint256 amount, address token, string description, uint256 expiry, bool isReusable);
     event SessionDeactivated(bytes32 indexed sessionId);
     event PaymentCompleted(bytes32 indexed sessionId, address indexed merchant, address indexed payer, uint256 amount);
-    event SubscriptionCreated(bytes32 indexed subId, address indexed merchant, address indexed subscriber, uint256 amount, uint256 interval);
+    event SubscriptionCreated(bytes32 indexed subId, address indexed merchant, address indexed subscriber, uint256 amount, uint256 interval, bytes32 sessionId);
     event SubscriptionExecuted(bytes32 indexed subId, address indexed merchant, address indexed subscriber, uint256 amount);
     event SubscriptionCancelled(bytes32 indexed subId);
 
@@ -197,42 +197,50 @@ contract LumiPayRegistry {
     }
 
     /**
-     * @dev Membuat langganan baru (Payer memanggil ini ke merchant tertentu).
+     * @dev Membuat langganan baru menggunakan sesi pesanan (Payer memanggil ini).
      */
-    function createSubscription(
-        address targetMerchant,
-        uint256 amount,
-        address token,
-        uint256 interval
-    ) external returns (bytes32 subId) {
-        require(amount > 0, "Amount must be greater than zero");
-        require(token != address(0), "Invalid token");
+    function createSubscription(bytes32 sessionId, uint256 interval) external returns (bytes32 subId) {
+        require(sessions[sessionId].merchant != address(0), "Target session does not exist");
+        require(sessions[sessionId].isActive, "Session deactivated");
         require(interval >= 1 days, "Interval too short");
 
-        address subscriber = msg.sender;
-
+        // ID unik untuk langganan per user & session
         subId = keccak256(
             abi.encodePacked(
-                targetMerchant,
-                subscriber,
-                token,
-                amount,
-                interval,
-                block.timestamp
+                sessionId,
+                msg.sender
             )
         );
 
+        require(!subscriptions[subId].isActive, "Already actively subscribed");
+
+        // Execute upfront payment (Charge immediately)
+        uint256 fee = (sessions[sessionId].amount * FEE_PERCENT) / 1000;
+        uint256 amountAfterFee = sessions[sessionId].amount - fee;
+
+        if (fee > 0) {
+            bool feeSuccess = IERC20(sessions[sessionId].token).transferFrom(msg.sender, devWallet, fee);
+            require(feeSuccess, "Fee transfer failed");
+        }
+
+        bool success = IERC20(sessions[sessionId].token).transferFrom(msg.sender, sessions[sessionId].merchant, amountAfterFee);
+        require(success, "Initial subscription payment failed");
+
+        merchants[sessions[sessionId].merchant].totalReceived += amountAfterFee;
+        merchants[sessions[sessionId].merchant].totalTransactions += 1;
+
         subscriptions[subId] = Subscription({
-            merchant: targetMerchant,
-            subscriber: subscriber,
-            amount: amount,
-            token: token,
+            merchant: sessions[sessionId].merchant,
+            subscriber: msg.sender,
+            amount: sessions[sessionId].amount,
+            token: sessions[sessionId].token,
             interval: interval,
-            nextPaymentDue: block.timestamp + interval, // Penarikan pertama bulan depan
+            nextPaymentDue: block.timestamp + interval, // Next payment due after interval
             isActive: true
         });
 
-        emit SubscriptionCreated(subId, targetMerchant, subscriber, amount, interval);
+        emit SubscriptionCreated(subId, sessions[sessionId].merchant, msg.sender, sessions[sessionId].amount, interval, sessionId);
+        emit SubscriptionExecuted(subId, sessions[sessionId].merchant, msg.sender, sessions[sessionId].amount);
     }
 
     /**

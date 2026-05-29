@@ -176,7 +176,7 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
       address: LUMIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: 'createSubscription',
-      args: [merchantAddr, amountRaw, matchedToken.address as `0x${string}`, BigInt(intervalSeconds)],
+      args: [sessionIdBytes32, BigInt(intervalSeconds)],
     });
   };
 
