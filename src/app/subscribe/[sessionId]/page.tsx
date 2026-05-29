@@ -254,12 +254,12 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
 
               <div className="flex flex-wrap items-center justify-center gap-4">
                 {merchantWebsite && (
-                  <a href={merchantWebsite} target="_blank" className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 hover:text-[#fc5000] transition-colors uppercase tracking-widest">
+                  <a href={merchantWebsite} target="_blank" className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 hover:text-violet-400 transition-colors uppercase tracking-widest">
                     <Globe className="w-3 h-3" /> Website
                   </a>
                 )}
                 {merchantEmail && (
-                  <a href={`mailto:${merchantEmail}`} className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 hover:text-[#fc5000] transition-colors uppercase tracking-widest">
+                  <a href={`mailto:${merchantEmail}`} className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 hover:text-violet-400 transition-colors uppercase tracking-widest">
                     <Mail className="w-3 h-3" /> {merchantEmail}
                   </a>
                 )}
@@ -283,7 +283,7 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
               <div className="flex items-center justify-center gap-3">
                 <span className="text-5xl sm:text-7xl font-black text-slate-900 tracking-tighter">${planAmount}</span>
                 <div className="flex flex-col items-start">
-                  <span className="text-xs font-black text-[#fc5000] uppercase tracking-widest">{matchedToken.symbol}</span>
+                  <span className="text-xs font-black text-violet-400 uppercase tracking-widest">{matchedToken.symbol}</span>
                   <span className="text-[9px] font-bold text-gray-600 uppercase">per billing</span>
                 </div>
               </div>
@@ -300,7 +300,7 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
                 </div>
                 <div className="text-right space-y-1 shrink-0">
                   <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Blockchain</p>
-                  <p className="text-xs font-bold text-slate-900 flex items-center justify-end gap-1.5 uppercase tracking-tighter">Arc Network <ShieldCheck className="w-3.5 h-3.5 text-[#fc5000]" /></p>
+                  <p className="text-xs font-bold text-slate-900 flex items-center justify-end gap-1.5 uppercase tracking-tighter">Arc Network <ShieldCheck className="w-3.5 h-3.5 text-violet-500" /></p>
                 </div>
               </div>
 
@@ -316,7 +316,7 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
                 </div>
                 <div className="text-right space-y-1">
                   <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Asset</p>
-                  <p className="text-xs font-black text-[#fc5000] uppercase tracking-widest">{matchedToken.symbol}</p>
+                  <p className="text-xs font-black text-violet-400 uppercase tracking-widest">{matchedToken.symbol}</p>
                 </div>
               </div>
             </div>
