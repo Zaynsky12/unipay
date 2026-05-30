@@ -55,3 +55,5 @@ transactions.json
 
 # Scratch & Temporary
 /scratch/
+
+.vercel
