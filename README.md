@@ -53,7 +53,7 @@ LumiPay is built on a **fully stateless architecture**. All state — merchant p
 
 ### Blockchain Interface
 - **[Wagmi v3](https://wagmi.sh/)** + **[Viem v2](https://viem.sh/)** — EVM interaction
-- **[Reown AppKit Native Socials](https://reown.com/appkit)** — Embedded Wallet & Google Auth integration
+- **[Privy Headless Auth](https://privy.io/)** — Custom Embedded Wallet & Email/Google Auth integration
 - **[Circle CCTP (Cross-Chain Transfer Protocol)](https://www.circle.com/)** — Decentralized Auto Bridge for cross-chain USDC
 
 ### Smart Contracts
@@ -94,7 +94,7 @@ npm install
 Copy the example file and fill in your values:
 
 ```bash
-# For Next.js frontend (Goldsky, Reown, Gemini)
+# For Next.js frontend (Goldsky, Privy, Gemini)
 cp .env.example .env.local
 
 # For Hardhat smart contract deployment (Private Key)
@@ -164,7 +164,7 @@ SubscriptionCancelled(bytes32 indexed subId)
 
 - **Reentrancy Protected**: The `pay()` function marks a session as fulfilled *before* executing the ERC20 transfer.
 - **Stateless**: No user funds are ever held by the contract. All transfers are direct `transferFrom` → merchant wallet.
-- **Social Login & Embedded Wallets**: Seamless onboarding via Reown AppKit with Google Auth and email login — no browser extension required.
+- **Social Login & Embedded Wallets**: Seamless onboarding via Privy Headless UI with Google Auth and email OTP login — no browser extension required.
 - **Expiry Enforcement**: Every payment session has an on-chain expiry enforced at the contract level.
 - **Non-custodial by design**: Merchants have 100% custody of funds at all times.
 
