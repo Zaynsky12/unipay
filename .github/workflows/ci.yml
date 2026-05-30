@@ -30,7 +30,9 @@ jobs:
     - name: Build Next.js App
       run: npm run build
       env:
-        # Provide dummy env vars so the build doesn't fail if they are strictly required
+        # Provide env vars so the build doesn't fail during prerendering
         NEXT_PUBLIC_GOLDSKY_URL: "https://dummy-url"
         GEMINI_API_KEY: "dummy-key"
-        NEXT_PUBLIC_PRIVY_APP_ID: "dummy-app-id"
+        NEXT_PUBLIC_PRIVY_APP_ID: "cmps8wpr000iy0dl169ookgrn"
+        CRON_SECRET: "dummy-cron-secret"
+        PRIVATE_KEY: "0x0000000000000000000000000000000000000000000000000000000000000001"
