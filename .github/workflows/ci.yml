@@ -34,4 +34,5 @@ jobs:
       env:
         # Provide dummy env vars so the build doesn't fail if they are strictly required
         NEXT_PUBLIC_GOLDSKY_URL: "https://dummy-url"
-        NEXT_PUBLIC_GEMINI_API_KEY: "dummy-key"
+        GEMINI_API_KEY: "dummy-key"
+        NEXT_PUBLIC_REOWN_PROJECT_ID: "dummy-project-id"

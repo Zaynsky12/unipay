@@ -59,7 +59,6 @@ LumiPay is built on a **fully stateless architecture**. All state — merchant p
 ### Smart Contracts
 - **[Solidity ^0.8.20](https://soliditylang.org/)** — `LumiPayRegistry` contract
 - **[Hardhat](https://hardhat.org/)** — Development & deployment framework
-- **[OpenZeppelin](https://openzeppelin.com/)** — ERC2771 (meta-transactions / gasless support)
 
 ### Indexing & Data
 - **[Goldsky Subgraph](https://goldsky.com/)** — Real-time on-chain event indexing
@@ -92,15 +91,17 @@ npm install
 
 ### 3. Configure environment variables
 
-Create a `.env.local` file in the root:
+Copy the example file and fill in your values:
 
-```env
-# Goldsky Subgraph URL (for on-chain indexing)
-NEXT_PUBLIC_GOLDSKY_URL=your_goldsky_subgraph_endpoint
+```bash
+# For Next.js frontend (Goldsky, Reown, Gemini)
+cp .env.example .env.local
 
-# Google Gemini API Key (for AI assistant)
-NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
+# For Hardhat smart contract deployment (Private Key)
+cp .env.example .env
 ```
+
+See [`.env.example`](./.env.example) for all required variables and instructions.
 
 ### 4. Run the development server
 
@@ -121,23 +122,23 @@ Deployed on **Arc Network**. The single source of truth for all protocol state.
 | Function | Access | Description |
 |---|---|---|
 | `registerMerchant(name, metadata)` | Public | Register/update on-chain merchant profile |
-| `createSession(amount, token, description, expiry)` | Merchant | Create a new checkout payment link |
+| `createSession(amount, token, description, expiry, isReusable)` | Merchant | Create a new checkout payment link |
 | `deactivateSession(sessionId)` | Merchant | Deactivate an active payment session |
 | `pay(sessionId)` | Payer | Execute a P2P payment to a merchant |
-| `createSubscription(merchant, amount, token, interval)` | Payer | Subscribe to a merchant's recurring billing |
+| `createSubscription(sessionId, interval)` | Payer | Subscribe to a merchant's recurring billing via a session |
 | `executeSubscription(subId)` | Anyone / Relayer | Execute a due subscription payment |
 | `cancelSubscription(subId)` | Merchant / Subscriber | Cancel an active subscription |
 
 ### On-chain Events (indexed by subgraph)
 
 ```solidity
-MerchantRegistered(address merchant, string name, string metadata)
-SessionCreated(bytes32 sessionId, address merchant, uint256 amount, address token, string description, uint256 expiry)
-SessionDeactivated(bytes32 sessionId)
-PaymentCompleted(bytes32 sessionId, address merchant, address payer, uint256 amount)
-SubscriptionCreated(bytes32 subId, address merchant, address subscriber, uint256 amount, uint256 interval)
-SubscriptionExecuted(bytes32 subId, address merchant, address subscriber, uint256 amount)
-SubscriptionCancelled(bytes32 subId)
+MerchantRegistered(address indexed merchant, string name, string metadata)
+SessionCreated(bytes32 indexed sessionId, address indexed merchant, uint256 amount, address token, string description, uint256 expiry, bool isReusable)
+SessionDeactivated(bytes32 indexed sessionId)
+PaymentCompleted(bytes32 indexed sessionId, address indexed merchant, address indexed payer, uint256 amount)
+SubscriptionCreated(bytes32 indexed subId, address indexed merchant, address indexed subscriber, uint256 amount, uint256 interval, bytes32 sessionId)
+SubscriptionExecuted(bytes32 indexed subId, address indexed merchant, address indexed subscriber, uint256 amount)
+SubscriptionCancelled(bytes32 indexed subId)
 ```
 
 ---
@@ -163,7 +164,7 @@ SubscriptionCancelled(bytes32 subId)
 
 - **Reentrancy Protected**: The `pay()` function marks a session as fulfilled *before* executing the ERC20 transfer.
 - **Stateless**: No user funds are ever held by the contract. All transfers are direct `transferFrom` → merchant wallet.
-- **ERC2771 Meta-transactions**: Supports gasless transactions via a trusted forwarder (Biconomy / Gelato compatible).
+- **Social Login & Embedded Wallets**: Seamless onboarding via Reown AppKit with Google Auth and email login — no browser extension required.
 - **Expiry Enforcement**: Every payment session has an on-chain expiry enforced at the contract level.
 - **Non-custodial by design**: Merchants have 100% custody of funds at all times.
 

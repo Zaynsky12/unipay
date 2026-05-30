@@ -31,8 +31,7 @@ const queryClient = new QueryClient({
 });
 
 // ── Reown AppKit Config ────────────────────────────────────────────────────────
-const projectId =
-  process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || '578ef42e8d44388cc7acc1ca69ed85a9';
+const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || '';
 
 const metadata = {
   name: 'LumiPay',
