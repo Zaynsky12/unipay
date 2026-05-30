@@ -16,7 +16,12 @@ export function useMerchantHistory(merchantId: string | undefined) {
       const data: any = await goldskyClient.request(GET_MERCHANT_HISTORY, {
         merchantId: merchantId.toLowerCase()
       });
-      setHistory(data.merchant);
+      if (data.merchant) {
+        data.merchant.subscriptionPayments = data.subscriptionPayments || [];
+        setHistory(data.merchant);
+      } else {
+        setHistory(null);
+      }
     } catch (err: any) {
       console.error('Goldsky fetch merchant history failed:', err);
       setError(err);

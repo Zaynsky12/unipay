@@ -83,6 +83,13 @@ export const GET_MERCHANT_HISTORY = gql`
         createdAt
       }
     }
+    subscriptionPayments(where: { merchant: $merchantId }, orderBy: timestamp, orderDirection: desc) {
+      id
+      subId
+      amount
+      subscriber
+      timestamp
+    }
   }
 `;
 
@@ -101,6 +108,9 @@ export const GET_SESSION = gql`
       payer
       description
       createdAt
+      transaction {
+        id
+      }
     }
   }
 `;

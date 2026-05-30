@@ -59,14 +59,17 @@ export default function HistoryPage() {
 
   // Parse logs from Goldsky history
   const regularPayments = history?.payments || [];
-  const subPayments = (history?.subscriptions || []).map((sub: any) => ({
-    id: sub.id,
-    sessionId: sub.sessionId,
-    amount: sub.amount,
-    token: sub.token,
-    payer: sub.subscriber,
-    timestamp: sub.createdAt
-  }));
+  const subPayments = (history?.subscriptionPayments || []).map((sp: any) => {
+    const relatedPlan = (history?.subscriptions || []).find((s: any) => s.id.toLowerCase() === sp.subId.toLowerCase());
+    return {
+      id: sp.id,
+      sessionId: relatedPlan ? relatedPlan.sessionId : sp.subId,
+      amount: sp.amount,
+      token: relatedPlan ? relatedPlan.token : "0x3600000000000000000000000000000000000000",
+      payer: sp.subscriber,
+      timestamp: sp.timestamp
+    };
+  });
   
   const logs = [...regularPayments, ...subPayments].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
 

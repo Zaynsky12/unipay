@@ -216,181 +216,192 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
   const descBadge = getBadgeStyles(parsedDescObj.type);
 
   return (
-    <div className="min-h-screen bg-[#050508] selection:bg-violet-500/30 font-sans">
+    <div className="min-h-screen bg-[#050508] selection:bg-violet-500/30 font-sans flex items-center justify-center p-4 sm:p-6 relative">
       {/* ── Background Glow ── */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-[#fc5000]/6 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[120px]" />
       </div>
 
-      <div className="relative z-10 max-w-xl mx-auto px-4 pt-8 pb-32 sm:pt-16 sm:pb-40">
+      {/* ── The "Phone Screen" Container ── */}
+      <div className="w-full max-w-[420px] mx-auto z-10 bg-[#EAECEF] rounded-[3rem] border-[3px] border-white/80 shadow-2xl relative overflow-hidden flex flex-col pt-8 pb-6 px-5 sm:px-6">
+        
+        {/* The LumiPay Gradient Border */}
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#fc5000] via-[#6836e8] to-[#fc5000] animate-shimmer" />
 
-        {/* ── BILLING CARD (Everything Integrated) ── */}
-        <div className="glass-panel rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-2xl relative animate-fade-in-up bg-gray-50 backdrop-blur-3xl">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#fc5000] via-[#6836e8] to-[#fc5000] animate-shimmer" />
-
-          {/* MERCHANT IDENTITY HEADER */}
-          <div className="p-8 sm:p-10 text-center border-b border-gray-200 bg-white/[0.01]">
-            <div className="relative mb-4 flex justify-center">
-              <div className="absolute w-20 h-20 bg-[#fc5000]/12 rounded-[1.5rem] blur-xl opacity-20" />
-              <div className="relative w-20 h-20 bg-white border border-gray-200 rounded-[1.5rem] flex items-center justify-center overflow-hidden shadow-2xl">
-                {merchantLogo ? (
-                  <img src={merchantLogo} alt={displayName} className="w-full h-full object-cover" />
-                ) : (
-                  <UserCircle className="w-10 h-10 text-[#fc5000] opacity-80" />
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight italic">
-                  {displayName}
-                </h1>
-                {isVerified && (
-                  <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500 fill-emerald-500/10" />
-                )}
-              </div>
-
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                {merchantWebsite && (
-                  <a href={merchantWebsite} target="_blank" className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 hover:text-violet-400 transition-colors uppercase tracking-widest">
-                    <Globe className="w-3 h-3" /> Website
-                  </a>
-                )}
-                {merchantEmail && (
-                  <a href={`mailto:${merchantEmail}`} className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 hover:text-violet-400 transition-colors uppercase tracking-widest">
-                    <Mail className="w-3 h-3" /> {merchantEmail}
-                  </a>
-                )}
-                {!isVerified && (
-                  <div className="text-[8px] font-black text-amber-500 uppercase tracking-widest px-2.5 py-0.5 rounded-full border border-amber-500/20 bg-amber-500/5">
-                    Unverified Merchant
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="p-8 sm:p-12 space-y-10">
-            {/* Amount Section */}
-            <div className="text-center space-y-2">
-              <div className="flex justify-center mb-4">
-                <span className={`px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-full border ${descBadge.bg}`}>
-                  {descBadge.emoji} {parsedDescObj.type}
-                </span>
-              </div>
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-5xl sm:text-7xl font-black text-slate-900 tracking-tighter">${planAmount}</span>
-                <div className="flex flex-col items-start">
-                  <span className="text-xs font-black text-violet-400 uppercase tracking-widest">{matchedToken.symbol}</span>
-                  <span className="text-[9px] font-bold text-gray-600 uppercase">per billing</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Description & Details */}
-            <div className="bg-white border border-gray-200 rounded-3xl p-6 space-y-6">
-              <div className="flex justify-between items-start gap-4">
-                <div className="space-y-1 min-w-0 flex-1">
-                  <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Order Note</p>
-                  <p className="text-sm font-bold text-slate-800 truncate mt-1" title={parsedDescObj.cleanDesc}>
-                    {parsedDescObj.cleanDesc.replace(/\(Every.*Days\)/i, '').trim() || "N/A"}
-                  </p>
-                </div>
-                <div className="text-right space-y-1 shrink-0">
-                  <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Blockchain</p>
-                  <p className="text-xs font-bold text-slate-900 flex items-center justify-end gap-1.5 uppercase tracking-tighter">Arc Network <ShieldCheck className="w-3.5 h-3.5 text-violet-500" /></p>
-                </div>
-              </div>
-
-              <div className="h-px bg-gray-50 w-full" />
-
-              <div className="flex justify-between items-center">
-                <div className="space-y-1">
-                  <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Billing Cycle</p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    <p className="text-xs font-bold text-gray-600">Every {intervalDays} Days</p>
-                  </div>
-                </div>
-                <div className="text-right space-y-1">
-                  <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Asset</p>
-                  <p className="text-xs font-black text-violet-400 uppercase tracking-widest">{matchedToken.symbol}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* CTA Section */}
-            <div className="space-y-4">
-              {writeError && (
-                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-500 font-medium text-center">
-                  {writeError.message || 'Transaction rejected.'}
-                </div>
-              )}
-
-              {!isConnected ? (
-                <button
-                  onClick={() => (document.querySelector('appkit-button') as any)?.click()}
-                  className="btn-orange w-full py-5 text-white text-[11px] font-black uppercase tracking-[0.2em] active:scale-95 flex items-center justify-center gap-3"
-                >
-                  <Wallet className="w-5 h-5" /> Connect Wallet
-                </button>
-              ) : isSuccessState ? (
-                <div className="w-full py-12 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex flex-col items-center justify-center gap-4 animate-in zoom-in-95 duration-500">
-                  <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-[#050508] shadow-[0_0_30px_rgba(16,185,129,0.4)]">
-                    <CheckCircle2 className="w-10 h-10" />
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">
-                      Subscription Active
-                    </h3>
-                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mt-1">Confirmed on Blockchain</p>
-                  </div>
-                  {txHash && (
-                    <button onClick={() => window.open(`https://testnet.arcscan.app/tx/${txHash}`, '_blank')} className="mt-2 flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
-                      View Receipt <ExternalLink className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-              ) : !hasSufficientAllowance ? (
-                <button
-                  onClick={handleApproveToken}
-                  disabled={activeStep === 'approving'}
-                  className="w-full py-5 bg-white text-black hover:bg-gray-200 text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
-                >
-                  {activeStep === 'approving' ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
-                  Approve Subscription
-                </button>
-              ) : (
-                <button
-                  onClick={handleCreateSubscription}
-                  disabled={activeStep === 'subscribing'}
-                  className="btn-orange w-full py-5 text-white text-[11px] font-black uppercase tracking-[0.2em] active:scale-95 flex items-center justify-center gap-3"
-                >
-                  {activeStep === 'subscribing' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Repeat className="w-5 h-5" />}
-                  Subscribe Now
-                </button>
-              )}
-            </div>
-            
-            <div className="text-center pt-2">
-              <p className="text-[10px] text-gray-400 font-medium">Non-custodial routing • Cancel at anytime in your Account Center.</p>
-            </div>
+        {/* ── Top Identity Section ── */}
+        <div className="text-center mb-5 relative mt-2">
+          <div className="w-16 h-16 bg-white shadow-sm rounded-[1.5rem] flex items-center justify-center mx-auto mb-3 relative z-10 border border-gray-100 overflow-hidden">
+            {merchantLogo ? (
+              <img src={merchantLogo} alt={displayName} className="w-full h-full object-cover" />
+            ) : (
+              <UserCircle className="w-8 h-8 text-purple-500" />
+            )}
           </div>
           
-          <div className="px-8 py-5 bg-white/[0.01] border-t border-gray-200 flex items-center justify-center">
-            <Link href="/" className="flex items-center gap-2.5 group transition-transform hover:scale-105 duration-300">
-              <div className="w-7 h-7 rounded-xl bg-[#fc5000] flex items-center justify-center shadow-[0_0_10px_rgba(252,80,0,0.3)] group-hover:shadow-[0_0_16px_rgba(252,80,0,0.5)] transition-all">
-                <Eye className="w-4 h-4 text-slate-900" fill="currentColor" />
-              </div>
-              <div className="flex flex-col items-start justify-center">
-                <span className="text-[7px] font-black text-gray-400 uppercase tracking-[0.2em] leading-none mb-0.5">Powered by</span>
-                <span className="text-sm font-black tracking-tight text-slate-600 leading-none group-hover:text-slate-800 transition-colors" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-                  Lumi<span className="text-[#fc5000]">Pay</span>
+          <h1 className="text-xl font-black italic text-slate-900 tracking-tight uppercase mb-2 truncate flex items-center justify-center gap-1.5">
+            {displayName}
+            {isVerified && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+          </h1>
+          
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {merchantWebsite && (
+              <a href={merchantWebsite} target="_blank" className="flex items-center gap-1 text-[9px] font-bold text-gray-500 hover:text-purple-600 uppercase tracking-widest">
+                <Globe className="w-3 h-3" /> Website
+              </a>
+            )}
+            {merchantEmail && (
+              <a href={`mailto:${merchantEmail}`} className="flex items-center gap-1 text-[9px] font-bold text-gray-500 hover:text-purple-600 uppercase tracking-widest">
+                <Mail className="w-3 h-3" /> Email
+              </a>
+            )}
+            {!isVerified && (
+              <div className="inline-block px-3 py-1 bg-amber-500/10 rounded-full border border-amber-500/20">
+                <span className="text-[8px] font-black text-amber-500 uppercase tracking-[0.15em]">
+                  Unverified
                 </span>
               </div>
-            </Link>
+            )}
+          </div>
+        </div>
+
+        {/* ── Main Ticket Card ── */}
+        <div className="bg-white rounded-[2rem] relative overflow-hidden mb-6">
+          {/* Top Half: Amount */}
+          <div className="p-6 text-center">
+            <div className="inline-block px-3 py-1 bg-cyan-500/10 rounded-full mb-3 border border-cyan-500/10">
+              <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest flex items-center gap-1.5">
+                {descBadge.emoji} {parsedDescObj.type}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-sm shrink-0 bg-transparent overflow-hidden">
+                <img src="/usdc-logo.png" alt="USDC Logo" className="w-full h-full object-contain" />
+              </div>
+              <span className="text-5xl font-black text-slate-900 tracking-tighter truncate">${planAmount}</span>
+            </div>
+            <p className="text-sm font-medium text-slate-500 uppercase tracking-widest">Per Billing</p>
+          </div>
+
+          {/* Ticket Divider */}
+          <div className="relative w-full h-px flex items-center justify-center">
+            <div className="absolute left-[-12px] w-6 h-6 bg-[#EAECEF] rounded-full" style={{ zIndex: 10 }} />
+            <div className="w-full border-t-2 border-dashed border-gray-200" />
+            <div className="absolute right-[-12px] w-6 h-6 bg-[#EAECEF] rounded-full" style={{ zIndex: 10 }} />
+          </div>
+
+          {/* Bottom Half: Details */}
+          <div className="p-6 space-y-4">
+            <h3 className="text-[14px] font-bold text-slate-900 border-b border-gray-100 pb-2">Subscription Details</h3>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between items-center gap-4">
+                <p className="text-[13px] text-slate-600 whitespace-nowrap">Order Note :</p>
+                <p className="text-[13px] font-medium text-slate-900 text-right line-clamp-2">
+                  {parsedDescObj.cleanDesc.replace(/\(Every.*Days\)/i, '').trim() || "N/A"}
+                </p>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <p className="text-[13px] text-slate-600">Blockchain :</p>
+                <p className="text-[13px] font-bold text-slate-900 flex items-center gap-1.5 uppercase">
+                  Arc Network <img src="/arc-logo.png" alt="Arc Network Logo" className="w-4 h-4 object-contain brightness-0" />
+                </p>
+              </div>
+
+              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                <p className="text-[13px] text-slate-600">Settlement Asset :</p>
+                <p className="text-[13px] font-bold text-purple-600 uppercase">{matchedToken.symbol}</p>
+              </div>
+
+              <h3 className="text-[14px] font-bold text-slate-900 pt-1">Status & Cycle</h3>
+
+              <div className="flex justify-between items-center">
+                <p className="text-[13px] text-slate-600">Billing Cycle :</p>
+                <p className="text-[13px] font-medium text-slate-900">
+                  Every {intervalDays} Days
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Call To Action ── */}
+        <div className="mb-6">
+          {writeError && (
+            <div className="p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-500 font-medium text-center">
+              {writeError.message || 'Transaction rejected.'}
+            </div>
+          )}
+
+          {!isConnected ? (
+            <button
+              onClick={() => (document.querySelector('appkit-button') as any)?.click()}
+              className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
+            >
+              <Wallet className="w-4 h-4" /> Connect Wallet
+            </button>
+          ) : isSuccessState ? (
+            <div className="w-full py-8 bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] flex flex-col items-center justify-center gap-4 animate-in zoom-in-95 duration-500 shadow-sm">
+              <div className="w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+              <div className="text-center">
+                <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">
+                  Subscription Active
+                </h3>
+                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mt-1">Confirmed on Arc Network</p>
+              </div>
+              {txHash && (
+                <button onClick={() => window.open(`https://testnet.arcscan.app/tx/${txHash}`, '_blank')} className="mt-1 flex items-center gap-1.5 text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
+                  View Transaction Details <ExternalLink className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          ) : !hasSufficientAllowance ? (
+            <button
+              onClick={handleApproveToken}
+              disabled={activeStep === 'approving'}
+              className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
+            >
+              {activeStep === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+              Approve Subscription
+            </button>
+          ) : (
+            <button
+              onClick={handleCreateSubscription}
+              disabled={activeStep === 'subscribing'}
+              className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
+            >
+              {activeStep === 'subscribing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Repeat className="w-4 h-4" />}
+              Subscribe Now
+            </button>
+          )}
+
+          {isSuccessState && txHash && (
+            <button onClick={() => window.open(`https://testnet.arcscan.app/tx/${txHash}`, '_blank')} className="mt-4 mx-auto flex items-center gap-1.5 text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
+              View Receipt <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+          )}
+          
+          {!isSuccessState && (
+            <div className="text-center pt-4">
+              <p className="text-[10px] text-gray-400 font-medium">Non-custodial routing • Cancel at anytime in your Account Center.</p>
+            </div>
+          )}
+        </div>
+
+        {/* ── Footer ── */}
+        <div className="flex items-center justify-center gap-2 mt-auto group cursor-pointer" onClick={() => window.location.href = '/'}>
+          <div className="w-8 h-8 rounded-full bg-[#fc5000] flex items-center justify-center shadow-sm">
+            <div className="w-3 h-3 bg-[#050508] rounded-full" />
+          </div>
+          <div className="flex flex-col items-start">
+            <span className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em] leading-none mb-0.5">Powered by</span>
+            <span className="text-[15px] font-black tracking-tight text-slate-900 leading-none group-hover:text-[#fc5000] transition-colors" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+              LumiPay
+            </span>
           </div>
         </div>
 
