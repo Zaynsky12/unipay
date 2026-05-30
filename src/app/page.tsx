@@ -18,14 +18,12 @@ import {
 } from 'lucide-react';
 import { useProtocolStats } from '@/lib/hooks/useProtocolStats';
 import { useAccount } from 'wagmi';
-import { useAppKit } from '@reown/appkit/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 export default function LandingPage() {
   const router = useRouter();
   const { isConnected } = useAccount();
-  const { open } = useAppKit();
   const { stats, isLoading } = useProtocolStats();
   const { totalMerchants, totalVolume, totalTransactions } = stats;
 

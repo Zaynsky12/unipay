@@ -20,12 +20,14 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
 import { goldskyClient, GET_SESSION } from '@/lib/goldsky';
+import { usePrivy } from '@privy-io/react-auth';
 
 export default function SubscribePage({ params }: { params: Promise<{ sessionId: string }> }) {
   const resolvedParams = use(params);
   const rawSessionId = resolvedParams.sessionId;
   const sessionIdBytes32 = (rawSessionId.startsWith('0x') ? rawSessionId : `0x${rawSessionId}`) as `0x${string}`;
 
+  const { login } = usePrivy();
   const { address, isConnected, chainId } = useAccount();
 
   const [urlDesc, setUrlDesc] = useState<string | null>(null);
@@ -337,7 +339,7 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
 
           {!isConnected ? (
             <button
-              onClick={() => (document.querySelector('appkit-button') as any)?.click()}
+              onClick={login}
               className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
             >
               <Wallet className="w-4 h-4" /> Connect Wallet

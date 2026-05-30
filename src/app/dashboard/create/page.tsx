@@ -12,6 +12,7 @@ import {
   AlertCircle, 
   Coins,
   Clock,
+  Eye,
   Sparkles,
   ExternalLink,
   ArrowUpRight,
@@ -25,7 +26,8 @@ import {
   Settings,
   QrCode,
   Receipt,
-  CreditCard
+  CreditCard,
+  Mail
 } from 'lucide-react';
 import Link from 'next/link';
 import { 
@@ -34,8 +36,11 @@ import {
   SUPPORTED_TOKENS, 
   type SupportedToken 
 } from '@/lib/constants';
+import { usePrivy } from '@privy-io/react-auth';
+import { InlineAuth } from '@/components/dashboard/InlineAuth';
 
 export default function CreatePaymentPage() {
+  const { login, authenticated, ready } = usePrivy();
   const { address, isConnected } = useAccount();
 
 
@@ -222,33 +227,33 @@ export default function CreatePaymentPage() {
     }
   };
 
-  if (!isConnected) return (
+  if (!ready) return null;
+  if (!authenticated && !isConnected) return (
     <div className="fixed inset-0 z-[100] bg-[#FEF7ED] flex items-center justify-center p-6 animate-fade-in overflow-hidden pixel-grid">
       <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-[#fc5000]/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/3 -right-1/4 w-[400px] h-[400px] bg-[#fc5000]/6 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-md w-full caldera-card p-10 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] animate-pop-in">
+        {/* Top Right Home Link (Close) inside the card */}
+        <Link href="/" className="absolute top-5 right-5 p-2 text-gray-400 hover:text-slate-900 transition-colors z-[110] rounded-full hover:bg-gray-100" title="Back to Home">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </Link>
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000] via-[#fc5000] to-transparent rounded-t-[2.5rem]" />
-        <div className="w-20 h-20 bg-[#fc5000]/12 rounded-[2rem] border border-[#fc5000]/25 flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(252,80,0,0.15)]">
-          <Shield className="w-10 h-10 text-[#fc5000]" />
+        <div className="w-20 h-20 bg-[#fc5000]/12 rounded-[2rem] border border-[#fc5000]/25 flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(252,80,0,0.15)] mt-4">
+          <Eye className="w-10 h-10 text-[#fc5000]" />
         </div>
 
-        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Identity Required</h2>
-        <p className="text-sm text-gray-500 leading-relaxed mb-10 font-medium">
-          To create payment links, you must connect your Web3 identity. This ensures you can receive settlements directly into your self-custody wallet.
+        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+          Welcome to LumiPay Commerce
+        </h2>
+        
+        <p className="text-[11px] text-gray-500 leading-relaxed mb-8 font-semibold uppercase tracking-wider">
+          Decentralized Payment Checkout & Streaming Protocol
         </p>
 
-        <button
-          onClick={() => (document.querySelector('appkit-button') as any)?.click()}
-          className="btn-orange w-full py-4 text-white text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 group"
-        >
-          <span>Connect Identity</span>
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-        </button>
+        {/* Inline Login UI Trigger */}
+        <InlineAuth />
 
-        <Link href="/" className="inline-block mt-8 text-[10px] font-black text-gray-600 hover:text-gray-500 uppercase tracking-widest transition-colors">
-          &larr; Back to Landing Page
-        </Link>
       </div>
     </div>
   );
@@ -339,7 +344,7 @@ export default function CreatePaymentPage() {
               </div>
               <p className="text-xs font-bold text-amber-500/80 uppercase tracking-widest">Connect Identity to Deploy Links</p>
            </div>
-           <button onClick={() => (document.querySelector('appkit-button') as any)?.click()} className="text-[10px] font-black text-amber-500 underline uppercase tracking-widest hover:text-amber-400">Connect Now</button>
+           <button onClick={login} className="text-[10px] font-black text-amber-500 underline uppercase tracking-widest hover:text-amber-400">Connect Now</button>
         </div>
       )}
 

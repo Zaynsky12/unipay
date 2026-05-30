@@ -13,16 +13,20 @@ import {
   ArrowUpRight,
   Coins,
   Link as LinkIcon,
-  Shield,
+  Eye,
   ArrowRight,
-  Loader2
+  Loader2,
+  Mail
 } from 'lucide-react';
 import Link from 'next/link';
 import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
 import { useMerchantHistory } from '@/lib/hooks/useMerchantHistory';
 import { parseSessionDescription, getBadgeStyles } from '@/app/dashboard/page';
+import { usePrivy } from '@privy-io/react-auth';
+import { InlineAuth } from '@/components/dashboard/InlineAuth';
 
 export default function HistoryPage() {
+  const { login, authenticated, ready } = usePrivy();
   const { address, isConnected } = useAccount();
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
@@ -90,33 +94,33 @@ export default function HistoryPage() {
     return matchesSearch;
   });
 
-  if (!isConnected) return (
+  if (!ready) return null;
+  if (!authenticated && !isConnected) return (
     <div className="fixed inset-0 z-[100] bg-[#FEF7ED] flex items-center justify-center p-6 animate-fade-in overflow-hidden">
       {/* Background Decor */}
       <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-[#fc5000]/10 rounded-full blur-[120px] opacity-60 pointer-events-none" />
       <div className="absolute bottom-1/3 -right-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] opacity-50 pointer-events-none" />
       
       <div className="max-w-md w-full glass-panel p-10 rounded-[3rem] border border-gray-200 text-center relative z-10 shadow-xl shadow-gray-200">
-        <div className="w-20 h-20 bg-[#fc5000]/20 rounded-[2rem] border border-gray-200 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-#fc5000/10">
-          <Shield className="w-10 h-10 text-[#fc5000]" />
+        {/* Top Right Home Link (Close) inside the card */}
+        <Link href="/" className="absolute top-5 right-5 p-2 text-gray-400 hover:text-slate-900 transition-colors z-[110] rounded-full hover:bg-gray-100" title="Back to Home">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </Link>
+        <div className="w-20 h-20 bg-[#fc5000]/20 rounded-[2rem] border border-gray-200 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-#fc5000/10 mt-4">
+          <Eye className="w-10 h-10 text-[#fc5000]" />
         </div>
         
-        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Identity Required</h2>
-        <p className="text-sm text-gray-500 leading-relaxed mb-10">
-          To audit your transaction history, you must connect your Web3 identity. This ensures only you can view your private settlement archives.
+        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+          Welcome to LumiPay Commerce
+        </h2>
+        
+        <p className="text-[11px] text-gray-500 leading-relaxed mb-8 font-semibold uppercase tracking-wider">
+          Decentralized Payment Checkout & Streaming Protocol
         </p>
         
-        <button 
-          onClick={() => (document.querySelector('appkit-button') as any)?.click()}
-          className="w-full py-4 bg-[#fc5000] hover:bg-[#fc5000] text-slate-900 text-xs font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-#fc5000/20 transition-all flex items-center justify-center gap-3 group"
-        >
-          <span>Connect Identity</span>
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-        </button>
+        {/* Inline Login UI Trigger */}
+        <InlineAuth />
 
-        <Link href="/" className="inline-block mt-8 text-[10px] font-black text-gray-600 hover:text-gray-500 uppercase tracking-widest transition-colors">
-          &larr; Back to Landing Page
-        </Link>
       </div>
     </div>
   );

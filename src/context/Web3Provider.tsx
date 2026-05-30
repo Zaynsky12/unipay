@@ -1,10 +1,10 @@
 "use client";
 
 import React, { type ReactNode } from 'react';
-import { createAppKit } from '@reown/appkit/react';
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import { PrivyProvider } from '@privy-io/react-auth';
+import { WagmiProvider, createConfig } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider } from 'wagmi';
+import { http } from 'wagmi';
 import { defineChain } from 'viem';
 import { baseSepolia, arbitrumSepolia, optimismSepolia, sepolia } from 'viem/chains';
 
@@ -24,58 +24,55 @@ export const arcTestnet = defineChain({
 });
 
 // ── QueryClient ────────────────────────────────────────────────────────────────
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { staleTime: 10_000, retry: 2 },
-  },
-});
+// The QueryClient will be instantiated inside the component to avoid SSR issues.
 
-// ── Reown AppKit Config ────────────────────────────────────────────────────────
-const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || '';
-
-const metadata = {
-  name: 'LumiPay',
-  description: 'Decentralized Payment Checkout Protocol on Arc Network',
-  url: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000',
-  icons: ['https://avatars.githubusercontent.com/u/37784886'],
-};
-
-const supportedNetworks = [arcTestnet, sepolia, baseSepolia, arbitrumSepolia, optimismSepolia] as any;
-
-const wagmiAdapter = new WagmiAdapter({
-  networks: supportedNetworks,
-  projectId,
+// ── Wagmi Config ───────────────────────────────────────────────────────────────
+export const wagmiConfig = createConfig({
   ssr: true,
-});
-
-createAppKit({
-  adapters: [wagmiAdapter],
-  networks: supportedNetworks,
-  defaultNetwork: arcTestnet,
-  projectId,
-  metadata,
-  themeMode: 'dark',
-  features: {
-    analytics: false,
-    email: true,
-    socials: ['google'],
-    emailShowWallets: true,
-  },
-  themeVariables: {
-    '--w3m-accent': '#7C3AED',
-    '--w3m-color-mix': '#000000',
-    '--w3m-color-mix-strength': 15,
-    '--w3m-border-radius-master': '12px',
+  chains: [arcTestnet, sepolia, baseSepolia, arbitrumSepolia, optimismSepolia],
+  transports: {
+    [arcTestnet.id]: http(),
+    [sepolia.id]: http(),
+    [baseSepolia.id]: http(),
+    [arbitrumSepolia.id]: http(),
+    [optimismSepolia.id]: http(),
   },
 });
 
-// ── Provider Export ────────────────────────────────────────────────────────────
+// ── Privy Config ───────────────────────────────────────────────────────────────
+const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID || '';
+
 export function Web3Provider({ children }: { children: ReactNode }) {
+  const [queryClient] = React.useState(() => new QueryClient({
+    defaultOptions: {
+      queries: { staleTime: 10_000, retry: 2 },
+    },
+  }));
+
   return (
-    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+    <PrivyProvider
+      appId={appId}
+      config={{
+        loginMethods: ['email', 'wallet'],
+        appearance: {
+          theme: 'light',
+          accentColor: '#fc5000',
+          showWalletLoginFirst: false,
+        },
+        defaultChain: arcTestnet,
+        supportedChains: [arcTestnet, sepolia, baseSepolia, arbitrumSepolia, optimismSepolia],
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: 'users-without-wallets',
+          },
+        },
+      }}
+    >
       <QueryClientProvider client={queryClient}>
-        {children}
+        <WagmiProvider config={wagmiConfig}>
+          {children}
+        </WagmiProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </PrivyProvider>
   );
 }

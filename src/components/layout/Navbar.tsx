@@ -1,11 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Eye, LayoutDashboard, PlusCircle, History, Wallet, UserCircle, ArrowRight, Users } from 'lucide-react';
-import { useAccount } from 'wagmi';
-import { useAppKit } from '@reown/appkit/react';
+import { Eye, LayoutDashboard, PlusCircle, History, Wallet, UserCircle, ArrowRight, Users, Loader2, Copy, LogOut } from 'lucide-react';
+import { useAccount, useDisconnect } from 'wagmi';
+import { usePrivy, useCreateWallet } from '@privy-io/react-auth';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -19,7 +19,14 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { isConnected, address } = useAccount();
-  const { open } = useAppKit();
+  const { disconnect } = useDisconnect();
+  const { login, logout, authenticated, ready, user } = usePrivy();
+  const { createWallet } = useCreateWallet();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const userAddress = address || user?.wallet?.address;
+  const hasEmbeddedWallet = !!user?.linkedAccounts.find(
+    (account) => account.type === 'wallet' && account.walletClientType === 'privy'
+  );
 
   const isLandingPage = pathname === '/';
   const isPaymentPage = pathname.startsWith('/pay/') || 
@@ -31,7 +38,8 @@ export function Navbar() {
   const isActive = (href: string) => pathname === href;
 
   if (isPaymentPage) return null;
-  if (!isLandingPage && !isConnected) return null;
+  if (!ready) return null;
+  if (!isLandingPage && !isConnected && !authenticated) return null;
 
   return (
     <>
@@ -50,7 +58,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Nav — Pill container, Caldera block-link style */}
-          {!isLandingPage && isConnected && (
+          {!isLandingPage && (isConnected || authenticated) && (
             <nav className="hidden md:flex items-center bg-white/80 rounded-full p-1 border border-gray-200 gap-0.5 animate-fade-in">
               {navItems.map((item) => {
                 const active = isActive(item.href);
@@ -84,27 +92,70 @@ export function Navbar() {
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             ) : (
-              <button
-                onClick={() => open()}
-                className={cn(
-                  "px-5 py-2.5 text-white text-xs sm:text-sm font-black rounded-full flex items-center gap-2 border transition-all group",
-                  "bg-[#fc5000] hover:bg-[#e04500] border-[#fc5000]/30 shadow-[0_0_20px_rgba(252,80,0,0.35)] hover:shadow-[0_0_28px_rgba(252,80,0,0.50)]"
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    if (authenticated && !hasEmbeddedWallet) {
+                      createWallet();
+                    } else if (authenticated || isConnected) {
+                      setIsDropdownOpen(!isDropdownOpen);
+                    } else {
+                      login();
+                    }
+                  }}
+                  className={cn(
+                    "px-5 py-2.5 text-white text-xs sm:text-sm font-black rounded-full flex items-center gap-2 border transition-all group overflow-hidden relative",
+                    "bg-[#fc5000] hover:bg-[#e04500] border-[#fc5000]/30 shadow-[0_0_20px_rgba(252,80,0,0.35)] hover:shadow-[0_0_28px_rgba(252,80,0,0.50)]"
+                  )}
+                >
+                  <Wallet className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <span className="flex flex-col relative w-full items-center justify-center transition-transform duration-300">
+                    {authenticated && !hasEmbeddedWallet ? (
+                      <span className="whitespace-nowrap">Create Wallet</span>
+                    ) : userAddress ? (
+                      <span className="font-bold whitespace-nowrap">
+                        {`${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`}
+                      </span>
+                    ) : authenticated && !isConnected ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    ) : (
+                      'Connect Wallet'
+                    )}
+                  </span>
+                </button>
+
+                {isDropdownOpen && (authenticated || isConnected) && (
+                  <div className="absolute top-full right-0 mt-3 w-52 bg-white border border-gray-200/60 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] py-2 z-[100] animate-pop-in">
+                    <button 
+                      onClick={() => {
+                         if (userAddress) navigator.clipboard.writeText(userAddress);
+                         setIsDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-bold text-slate-700 flex items-center gap-3 transition-colors"
+                    >
+                      <Copy className="w-4 h-4 text-slate-400" /> Copy Address
+                    </button>
+                    <div className="h-px bg-gray-100 my-1 w-full" />
+                    <button 
+                      onClick={() => {
+                         disconnect();
+                         logout();
+                         setIsDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-red-50 text-sm font-bold text-red-600 flex items-center gap-3 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4 text-red-400" /> Disconnect
+                    </button>
+                  </div>
                 )}
-              >
-                <Wallet className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                <span>
-                  {isConnected && address
-                    ? `${address.slice(0, 6)}...${address.slice(-4)}`
-                    : 'Connect Wallet'}
-                </span>
-              </button>
+              </div>
             )}
           </div>
         </div>
       </header>
 
       {/* Mobile Bottom Nav — Caldera chunky pill icons */}
-      {!isLandingPage && isConnected && (
+      {!isLandingPage && (isConnected || authenticated) && (
         <div className="md:hidden fixed bottom-0 left-0 w-full bg-white/30 backdrop-blur-xl border-t border-gray-200/50 z-50 animate-fade-in">
           <nav className="flex items-center justify-around px-2 py-2 max-w-md mx-auto">
             {navItems.map((item) => {

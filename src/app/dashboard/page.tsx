@@ -7,6 +7,7 @@ import {
   Building2, 
   Wallet, 
   Coins, 
+  Eye,
   CheckCircle2, 
   PlusCircle, 
   Loader2,
@@ -36,7 +37,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
 import { useMerchantHistory } from '@/lib/hooks/useMerchantHistory';
-import { useAppKit } from '@reown/appkit/react';
+import { usePrivy } from '@privy-io/react-auth';
+import { InlineAuth } from '@/components/dashboard/InlineAuth';
 
 // Helper: translate token address to readable symbol
 function resolveTokenSymbol(tokenAddr: string): string {
@@ -104,8 +106,9 @@ export function getBadgeStyles(type: string) {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { open } = useAppKit();
+  const { login, authenticated, ready, user } = usePrivy();
   const { address, isConnected } = useAccount();
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isDeactivating, setIsDeactivating] = useState<string | null>(null);
@@ -116,8 +119,8 @@ export default function DashboardPage() {
     address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address }
+    args: userAddress ? [userAddress] : undefined,
+    query: { enabled: !!userAddress }
   });
 
   // Contract Write for Deactivation
@@ -236,19 +239,24 @@ export default function DashboardPage() {
   };
 
       {/* ── CONNECTION ALERT BANNER (Only if not connected) ── */}
-  if (!isConnected) return (
+  if (!ready) return null;
+  if (!authenticated && !isConnected) return (
     <div className="fixed inset-0 z-[100] bg-[#FEF7ED] flex items-center justify-center p-6 animate-fade-in overflow-hidden pixel-grid">
       {/* Background glows */}
       <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-[#fc5000]/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/3 -right-1/4 w-[400px] h-[400px] bg-[#fc5000]/6 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-md w-full caldera-card p-8 md:p-10 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.1)] animate-pop-in border border-gray-200/50">
+        {/* Top Right Home Link (Close) inside the card */}
+        <Link href="/" className="absolute top-5 right-5 p-2 text-gray-400 hover:text-slate-900 transition-colors z-[110] rounded-full hover:bg-gray-100" title="Back to Home">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </Link>
         {/* Orange accent top line */}
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000] via-[#fc5000] to-transparent rounded-t-[2.5rem]" />
 
         {/* Brand Icon */}
-        <div className="w-20 h-20 bg-[#fc5000]/10 rounded-[2rem] border border-[#fc5000]/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(252,80,0,0.15)]">
-          <Coins className="w-9 h-9 text-[#fc5000]" />
+        <div className="w-20 h-20 bg-[#fc5000]/10 rounded-[2rem] border border-[#fc5000]/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(252,80,0,0.15)] mt-4">
+          <Eye className="w-9 h-9 text-[#fc5000]" />
         </div>
 
         {/* Title */}
@@ -261,21 +269,9 @@ export default function DashboardPage() {
           Decentralized Payment Checkout & Streaming Protocol
         </p>
 
-        {/* Button Options Stack */}
-        <div className="space-y-3.5 mb-8">
-          <button
-            onClick={() => open({ view: 'Connect' })}
-            className="btn-orange w-full py-4 px-6 text-white text-xs font-black uppercase tracking-[0.15em] flex items-center justify-center gap-3 transition-all hover:scale-[1.01] hover:shadow-lg cursor-pointer group"
-          >
-            <Wallet className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" />
-            <span>Connect Wallet</span>
-          </button>
-        </div>
+        {/* Inline Login UI Trigger */}
+        <InlineAuth />
 
-        {/* Back Link */}
-        <Link href="/" className="inline-block text-[10px] font-black text-gray-500 hover:text-gray-700 uppercase tracking-widest transition-colors">
-          &larr; Back to Landing Page
-        </Link>
       </div>
     </div>
   );
