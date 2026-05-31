@@ -12,7 +12,7 @@ LumiPay is a fully decentralized, non-custodial payment checkout protocol that e
 |---|---|
 | 🔐 **Stateless Payment Dispatch** | Funds go P2P — directly from buyer wallet to merchant. LumiPay never holds assets. |
 | 🧠 **On-chain Merchant Identity** | Brand name, metadata, and identity stored immutably on the `LumiPayRegistry` smart contract. |
-| 🔗 **Smart Pay Links** | Generate deterministic endpoints for checkouts, invoices, and tips with custom expiry timers. |
+| 🔗 **Smart Pay Links** | Generate deterministic endpoints for checkouts, invoices, and donations with custom expiry timers. |
 | 🔄 **Recurring Subscriptions** | Schedule recurring billing cycles with configurable on-chain execution intervals. |
 | ⚡ **1-Second Finality** | Built natively on the Arc Network for instant sub-second payment settlement and negligible gas fees. |
 | 📊 **Real-time Analytics** | Live business performance metrics pulled from an on-chain subgraph (Goldsky-indexed). |
@@ -124,7 +124,7 @@ Deployed on **Arc Network**. The single source of truth for all protocol state.
 | `registerMerchant(name, metadata)` | Public | Register/update on-chain merchant profile |
 | `createSession(amount, token, description, expiry, isReusable)` | Merchant | Create a new checkout payment link |
 | `deactivateSession(sessionId)` | Merchant | Deactivate an active payment session |
-| `pay(sessionId)` | Payer | Execute a P2P payment to a merchant |
+| `pay(sessionId)` <br> `pay(sessionId, amount)` | Payer | Execute a P2P payment to a merchant. Supports dynamic amounts for donations. |
 | `createSubscription(sessionId, interval)` | Payer | Subscribe to a merchant's recurring billing via a session |
 | `executeSubscription(subId)` | Anyone / Relayer | Execute a due subscription payment |
 | `cancelSubscription(subId)` | Merchant / Subscriber | Cancel an active subscription |
@@ -149,12 +149,13 @@ SubscriptionCancelled(bytes32 indexed subId)
 |---|---|
 | `/` | Landing page with protocol overview & live stats |
 | `/dashboard` | Main merchant control center — payment links overview |
-| `/dashboard/create` | Create new payment links (Checkout, Invoice, Subscription, Tip) |
+| `/dashboard/create` | Create new payment links (Checkout, Invoice, Subscription, Donate) |
 | `/dashboard/history` | Full on-chain transaction history |
 | `/dashboard/assets` | Cross-chain USDC asset overview |
 | `/dashboard/account` | Merchant profile settings & on-chain identity management |
 | `/dashboard/insights` | Business analytics & revenue metrics |
 | `/pay/:sessionId` | Public-facing payment page for buyers |
+| `/donate/:sessionId` | Public-facing donation page with dynamic amount input |
 | `/subscribe/:merchantAddress` | Public-facing subscription page |
 | `/explorer` | On-chain payment explorer |
 
