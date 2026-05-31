@@ -246,13 +246,13 @@ export default function DashboardPage() {
       <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-[#fc5000]/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/3 -right-1/4 w-[400px] h-[400px] bg-[#fc5000]/6 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="max-w-md w-full caldera-card p-8 md:p-10 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.1)] animate-pop-in border border-gray-200/50">
+      <div className="max-w-md w-full caldera-card p-8 md:p-10 text-center relative z-10 shadow-[0_20px_60px_rgba(0,0,0,0.1)] animate-pop-in border border-gray-200/50 overflow-hidden">
         {/* Top Right Home Link (Close) inside the card */}
         <Link href="/" className="absolute top-5 right-5 p-2 text-gray-400 hover:text-slate-900 transition-colors z-[110] rounded-full hover:bg-gray-100" title="Back to Home">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </Link>
         {/* Orange accent top line */}
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000] via-[#fc5000] to-transparent rounded-t-[2.5rem]" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#fc5000] via-[#fc5000] to-transparent" />
 
         {/* Brand Icon */}
         <div className="w-20 h-20 bg-[#fc5000]/10 rounded-[2rem] border border-[#fc5000]/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(252,80,0,0.15)] mt-4">
@@ -365,9 +365,9 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-30">
 
           {/* Payments Card — Caldera chunky */}
-          <div className="lg:col-span-12 caldera-card p-6 flex flex-col justify-between relative z-30">
+          <div className="lg:col-span-12 caldera-card p-6 flex flex-col justify-between relative z-30 overflow-hidden">
             {/* Orange top accent bar */}
-            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000]/60 via-[#fc5000]/40 to-transparent rounded-t-[2.5rem]" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#fc5000]/60 via-[#fc5000]/40 to-transparent" />
             <div>
               <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Payments</h2>
               

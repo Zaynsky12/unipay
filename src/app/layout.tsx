@@ -48,13 +48,15 @@ export default function RootLayout({
         style={{ fontFamily: 'var(--font-dm-sans), var(--font-geist-sans), sans-serif' }}
       >
         <Web3Provider>
-          {/* Mirage-style ambient background */}
-          <GlobalBackground />
-          <Navbar />
-          <AIFloatingButton />
-          <MainContainer>
-            {children}
-          </MainContainer>
+          <>
+            {/* Mirage-style ambient background */}
+            <GlobalBackground />
+            <Navbar />
+            <AIFloatingButton />
+            <MainContainer>
+              {children}
+            </MainContainer>
+          </>
         </Web3Provider>
       </body>
     </html>

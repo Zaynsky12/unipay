@@ -95,10 +95,10 @@ export function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => {
-                    if (authenticated && !hasEmbeddedWallet) {
-                      createWallet();
-                    } else if (authenticated || isConnected) {
+                    if (userAddress) {
                       setIsDropdownOpen(!isDropdownOpen);
+                    } else if (authenticated) {
+                      createWallet();
                     } else {
                       login();
                     }
@@ -110,14 +110,12 @@ export function Navbar() {
                 >
                   <Wallet className="w-4 h-4 group-hover:scale-110 transition-transform" />
                   <span className="flex flex-col relative w-full items-center justify-center transition-transform duration-300">
-                    {authenticated && !hasEmbeddedWallet ? (
-                      <span className="whitespace-nowrap">Create Wallet</span>
-                    ) : userAddress ? (
+                    {userAddress ? (
                       <span className="font-bold whitespace-nowrap">
                         {`${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`}
                       </span>
-                    ) : authenticated && !isConnected ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    ) : authenticated ? (
+                      <span className="whitespace-nowrap">Create Wallet</span>
                     ) : (
                       'Connect Wallet'
                     )}

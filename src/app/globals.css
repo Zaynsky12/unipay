@@ -186,6 +186,7 @@ body {
   letter-spacing: 0.05em;
   transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   border: none;
+  outline: none;
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(252, 80, 0, 0.25);
 }
@@ -213,6 +214,7 @@ body {
   letter-spacing: 0.05em;
   transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   border: none;
+  outline: none;
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(252, 80, 0, 0.30);
 }
@@ -238,6 +240,7 @@ body {
   font-weight: 700;
   font-family: var(--font-body);
   transition: all 0.22s;
+  outline: none;
   cursor: pointer;
 }
 .btn-ghost:hover:not(:disabled) {
@@ -259,6 +262,7 @@ body {
   border-radius: var(--radius-btn);
   font-weight: 700;
   transition: all 0.22s;
+  outline: none;
   cursor: pointer;
 }
 .btn-secondary:hover:not(:disabled) {
