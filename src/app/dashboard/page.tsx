@@ -205,11 +205,13 @@ export default function DashboardPage() {
   const handleDeleteSession = (sessionId: string) => {
     if (!userAddress) return;
     setIsDeactivating(sessionId);
+    const formattedId = (sessionId.startsWith('0x') ? sessionId : `0x${sessionId}`) as `0x${string}`;
     writeContract({
       address: LUMIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: 'deactivateSession',
-      args: [sessionId as `0x${string}`],
+      args: [formattedId],
+      gas: 100000n,
     });
   };
 

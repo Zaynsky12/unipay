@@ -63,11 +63,13 @@ export function BuyerSubscriptions() {
   const handleCancel = (subId: string) => {
     if (!userAddress) return;
     setCancelingId(subId);
+    const formattedId = (subId.startsWith('0x') ? subId : `0x${subId}`) as `0x${string}`;
     writeContract({
       address: LUMIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: 'cancelSubscription',
-      args: [subId as `0x${string}`],
+      args: [formattedId],
+      gas: 100000n,
     });
   };
 
