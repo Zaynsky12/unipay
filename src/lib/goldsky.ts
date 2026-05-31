@@ -135,3 +135,20 @@ export const GET_BUYER_SUBSCRIPTIONS = gql`
     }
   }
 `;
+
+export const GET_ACTIVE_SUBSCRIPTIONS = gql`
+  query GetActiveSubscriptions {
+    subscriptionPlans(
+      where: { isActive: true }
+    ) {
+      id
+      subscriber
+      merchant {
+        name
+      }
+      amount
+      token
+      interval
+    }
+  }
+`;
