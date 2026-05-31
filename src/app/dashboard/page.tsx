@@ -150,7 +150,7 @@ export default function DashboardPage() {
   const totalTransactionsRaw = merchantData?.[4] || 0n;
 
   // Goldsky Subgraph hook
-  const { history, isLoading: isLoadingHistory, refetch: refetchHistory } = useMerchantHistory(address);
+  const { history, isLoading: isLoadingHistory, refetch: refetchHistory } = useMerchantHistory(userAddress);
   const rawCreatedSessions = history?.sessions || [];
   const recentPayments = history?.payments || [];
 

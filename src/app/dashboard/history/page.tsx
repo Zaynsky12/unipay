@@ -27,8 +27,9 @@ import { usePrivy } from '@privy-io/react-auth';
 import { InlineAuth } from '@/components/dashboard/InlineAuth';
 
 export default function HistoryPage() {
-  const { login, authenticated, ready } = usePrivy();
+  const { login, authenticated, ready, user } = usePrivy();
   const { address, isConnected } = useAccount();
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
   const [viewMode, setViewMode] = useState<'merchant' | 'customer'>('merchant');
 
   const [selectedSessionFilter, setSelectedSessionFilter] = useState<string | null>(null);
@@ -52,12 +53,12 @@ export default function HistoryPage() {
     address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address }
+    args: userAddress ? [userAddress] : undefined,
+    query: { enabled: !!userAddress }
   });
 
-  const { history: merchantHistory, isLoading: isLoadingMerchant, error } = useMerchantHistory(address);
-  const { history: customerHistory, isLoading: isLoadingCustomer } = useCustomerHistory(address);
+  const { history: merchantHistory, isLoading: isLoadingMerchant, error } = useMerchantHistory(userAddress);
+  const { history: customerHistory, isLoading: isLoadingCustomer } = useCustomerHistory(userAddress);
 
   const activeHistory = viewMode === 'merchant' ? merchantHistory : customerHistory;
   const isLoadingLogs = viewMode === 'merchant' ? isLoadingMerchant : isLoadingCustomer;

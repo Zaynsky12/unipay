@@ -13,10 +13,13 @@ import {
 } from 'lucide-react';
 import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
 import { goldskyClient, GET_BUYER_SUBSCRIPTIONS } from '@/lib/goldsky';
+import { usePrivy } from '@privy-io/react-auth';
 import { SubscriptionRow } from './SubscriptionRow';
 
 export function BuyerSubscriptions() {
+  const { user } = usePrivy();
   const { address } = useAccount();
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
@@ -25,11 +28,11 @@ export function BuyerSubscriptions() {
   const { isLoading: isTxConfirming, isSuccess, error: confirmError } = useWaitForTransactionReceipt({ hash: txHash });
 
   const fetchSubscriptions = useCallback(async () => {
-    if (!address) return;
+    if (!userAddress) return;
     setIsLoading(true);
     try {
       const data: any = await goldskyClient.request(GET_BUYER_SUBSCRIPTIONS, {
-        subscriber: address.toLowerCase()
+        subscriber: userAddress.toLowerCase()
       });
       setSubscriptions(data.subscriptionPlans || []);
     } catch (err) {
@@ -37,7 +40,7 @@ export function BuyerSubscriptions() {
     } finally {
       setIsLoading(false);
     }
-  }, [address]);
+  }, [userAddress]);
 
   useEffect(() => {
     fetchSubscriptions();

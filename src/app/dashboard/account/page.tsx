@@ -63,8 +63,8 @@ function AccountContent() {
     address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address }
+    args: userAddress ? [userAddress] : undefined,
+    query: { enabled: !!userAddress }
   });
 
   const isRegisteredOnchain = merchantData ? (merchantData as any)[2] : false;

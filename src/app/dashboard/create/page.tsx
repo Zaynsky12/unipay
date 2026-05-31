@@ -40,8 +40,9 @@ import { usePrivy } from '@privy-io/react-auth';
 import { InlineAuth } from '@/components/dashboard/InlineAuth';
 
 export default function CreatePaymentPage() {
-  const { login, authenticated, ready } = usePrivy();
+  const { login, authenticated, ready, user } = usePrivy();
   const { address, isConnected } = useAccount();
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
 
 
   // Form State
@@ -71,8 +72,8 @@ export default function CreatePaymentPage() {
     address: LUMIPAY_REGISTRY_ADDRESS,
     abi: REGISTRY_ABI,
     functionName: 'merchants',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address }
+    args: userAddress ? [userAddress] : undefined,
+    query: { enabled: !!userAddress }
   });
 
   const isRegistered = merchantData ? (merchantData as any)[2] : false;
@@ -207,9 +208,9 @@ export default function CreatePaymentPage() {
     ? `${window.location.origin}/${routePrefix}/${createdSessionId || 'preview_id'}`
     : `https://lumipay.app/${routePrefix}/preview_id`;
 
-  const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module"></script>
+const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module"></script>
 <lumipay-checkout 
-  merchant="${address || '0x...'}" 
+  merchant="${userAddress || '0x...'}" 
   amount="${amount || '0.00'}" 
   currency="${selectedToken}" 
   session="${createdSessionId || 'preview_id'}"
