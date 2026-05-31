@@ -333,7 +333,7 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 animate-fade-in pb-24 px-4 sm:px-0">
+    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-24 px-4 sm:px-0">
       
       {/* ── Page Header (REFRESHED) ── */}
       <div className="text-center sm:text-left space-y-4">
@@ -343,21 +343,17 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to options
         </button>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-gray-200 pb-8">
-           <div className="space-y-2">
-              <div className="flex items-center justify-center sm:justify-start gap-3 mb-1">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fc5000]/10 border border-[#fc5000]/20 shadow-[0_0_12px_rgba(252,80,0,0.08)]">
-                  <Zap className="w-3.5 h-3.5 text-[#fc5000] fill-violet-400/20" />
-                  <span className="text-[10px] font-black text-[#fc5000] uppercase tracking-[0.2em]">
-                    Payment Gateway
-                  </span>
-                </div>
-                <span className="hidden sm:inline text-xs text-gray-500 font-medium">• Stateless Dispatch</span>
-              </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-gray-200 pb-4">
+           <div className="space-y-1.5">
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight px-1 italic uppercase">
                 Create <span className="text-[#fc5000]">{selectedMenu}</span>
               </h1>
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-widest sm:max-w-md">Issue professional cryptographic billing endpoints in seconds.</p>
+              <p className="text-xs text-gray-500 font-bold uppercase tracking-widest sm:max-w-lg px-1">
+                {selectedMenu === 'checkouts' && 'Generate a reusable payment link for selling products or services.'}
+                {selectedMenu === 'invoices' && 'Send a one-time, non-reusable billing endpoint to a specific client.'}
+                {selectedMenu === 'subscribtion' && 'Set up an automated, recurring blockchain billing stream.'}
+                {selectedMenu === 'donate' && 'Receive custom, dynamic amount contributions from anyone.'}
+              </p>
            </div>
         </div>
       </div>
@@ -375,9 +371,13 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
       )}
 
       {!isRegistered && userAddress && (
-        <div className="p-5 rounded-2xl bg-[#fc5000]/5 border border-[#fc5000]/10 text-[10px] text-gray-500 flex items-center gap-4 font-bold uppercase tracking-widest leading-relaxed">
-          <Sparkles className="w-5 h-5 text-[#fc5000] shrink-0" />
-          <span>Notice: Operating as Anonymous. You can verify your brand in the Account settings.</span>
+        <div className="w-full bg-amber-50/50 border border-amber-500/20 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-2 text-center sm:text-left shadow-sm">
+          <span className="text-[9px] sm:text-xs font-black text-amber-600 uppercase tracking-widest">
+            Notice:
+          </span>
+          <span className="text-[8px] sm:text-xs font-medium text-amber-800/80">
+            Operating as Anonymous. You can verify your brand in the Account settings!
+          </span>
         </div>
       )}
 
