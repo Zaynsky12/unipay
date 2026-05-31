@@ -178,7 +178,7 @@ export default function HistoryPage() {
       
       {/* ── Header Premium ── */}
       <div className="flex items-start sm:items-center justify-between gap-3 pb-4 border-b border-gray-200">
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 w-full">
           {/* Breadcrumb aktif saat ada filter */}
           {selectedSessionFilter ? (
             <>
@@ -206,10 +206,10 @@ export default function HistoryPage() {
               </p>
             </>
           ) : (
-            <div className="w-full">
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                  History Transaction
-                </h1>
+            <div className="w-full text-center sm:text-left">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                History Transaction
+              </h1>
               <p className="text-[11px] text-gray-500 font-medium mt-0.5">
                 {viewMode === 'merchant' ? 'Incoming settlements to your payment links' : 'Outgoing payments to other merchants'}
               </p>
