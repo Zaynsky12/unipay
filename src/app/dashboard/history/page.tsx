@@ -126,8 +126,8 @@ export default function HistoryPage() {
         onClick={() => setViewMode('customer')}
         className={`py-2 px-3 sm:px-4 rounded-lg text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center gap-1.5 ${viewMode === 'customer' ? 'bg-white text-slate-900 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-slate-700'} ${btnClass}`}
       >
-        <span className="text-sm">💸</span> 
-        <span>Expenses <span className="hidden sm:inline">(Customer)</span></span>
+        <span className="text-sm">🛒</span> 
+        <span>Purchases <span className="hidden sm:inline">(Customer)</span></span>
       </button>
     </div>
   );
