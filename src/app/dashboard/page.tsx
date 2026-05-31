@@ -108,7 +108,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const { login, authenticated, ready, user } = usePrivy();
   const { address, isConnected } = useAccount();
-  const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
+  const embeddedWallet = user?.linkedAccounts?.find((account: any) => account.type === 'wallet' && account.walletClientType === 'privy');
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || (embeddedWallet?.address as `0x${string}`) || undefined;
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isDeactivating, setIsDeactivating] = useState<string | null>(null);

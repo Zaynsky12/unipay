@@ -29,7 +29,8 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
 
   const { login, user } = usePrivy();
   const { address, isConnected, chainId } = useAccount();
-  const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
+  const embeddedWallet = user?.linkedAccounts?.find((account: any) => account.type === 'wallet' && account.walletClientType === 'privy');
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || (embeddedWallet?.address as `0x${string}`) || undefined;
 
   const [urlDesc, setUrlDesc] = useState<string | null>(null);
 

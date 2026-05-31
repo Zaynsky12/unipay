@@ -45,7 +45,8 @@ function AccountContent() {
   const initialTab = searchParams.get('tab') as TabType;
   const { login, authenticated, ready, user, linkEmail } = usePrivy();
   const { address, isConnected } = useAccount();
-  const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
+  const embeddedWallet = user?.linkedAccounts?.find((account: any) => account.type === 'wallet' && account.walletClientType === 'privy');
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || (embeddedWallet?.address as `0x${string}`) || undefined;
   const [accountMode, setAccountMode] = useState<'Merchant' | 'Customer'>('Merchant');
   const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'Account');
 

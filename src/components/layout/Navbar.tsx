@@ -23,7 +23,7 @@ export function Navbar() {
   const { login, logout, authenticated, ready, user } = usePrivy();
   const { createWallet } = useCreateWallet();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const userAddress = address || user?.wallet?.address;
+  const userAddress = address || user?.wallet?.address || (user?.linkedAccounts?.find((a: any) => a.type === 'wallet' && a.walletClientType === 'privy')?.address);
   const hasEmbeddedWallet = !!user?.linkedAccounts.find(
     (account) => account.type === 'wallet' && account.walletClientType === 'privy'
   );

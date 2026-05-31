@@ -102,7 +102,8 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   const { login, user } = usePrivy();
   const { address, isConnected, connector, chainId } = useAccount();
-  const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
+  const embeddedWallet = user?.linkedAccounts?.find((account: any) => account.type === 'wallet' && account.walletClientType === 'privy');
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || (embeddedWallet?.address as `0x${string}`) || undefined;
   const { switchChainAsync } = useSwitchChain();
   const [circleKit] = useState(() => new AppKit());
   const [urlDesc, setUrlDesc] = useState<string | null>(null);

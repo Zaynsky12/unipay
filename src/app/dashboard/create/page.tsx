@@ -42,7 +42,8 @@ import { InlineAuth } from '@/components/dashboard/InlineAuth';
 export default function CreatePaymentPage() {
   const { login, authenticated, ready, user } = usePrivy();
   const { address, isConnected } = useAccount();
-  const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
+  const embeddedWallet = user?.linkedAccounts?.find((account: any) => account.type === 'wallet' && account.walletClientType === 'privy');
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || (embeddedWallet?.address as `0x${string}`) || undefined;
 
   if (!ready) return (
     <div className="py-24 text-center space-y-3 bg-white border border-gray-200 rounded-[2.5rem] p-8 max-w-2xl mx-auto mt-10">
