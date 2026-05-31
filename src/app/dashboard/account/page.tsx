@@ -36,7 +36,7 @@ import { BuyerSubscriptions } from '@/components/dashboard/BuyerSubscriptions';
 import { usePrivy } from '@privy-io/react-auth';
 import { InlineAuth } from '@/components/dashboard/InlineAuth';
 
-type TabType = 'Account' | 'Merchant Setting' | 'Customer Settings' | 'My Subscriptions' | 'Integrations';
+type TabType = 'Account' | 'Profile' | 'Settings' | 'Subscriptions' | 'Integrations';
 
 // Kita pindahkan logika utama ke komponen internal agar bisa dibungkus Suspense
 function AccountContent() {
@@ -284,7 +284,7 @@ function AccountContent() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-12 border-b border-gray-200 px-2 overflow-x-auto no-scrollbar scroll-smooth">
-          {((accountMode === 'Merchant' ? ['Account', 'Merchant Setting', 'Integrations'] : ['Account', 'Customer Settings', 'My Subscriptions']) as TabType[]).map((tab) => (
+          {((accountMode === 'Merchant' ? ['Account', 'Profile', 'Integrations'] : ['Account', 'Settings', 'Subscriptions']) as TabType[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -328,7 +328,7 @@ function AccountContent() {
                     </div>
                   ) : (
                     <button
-                      onClick={() => setActiveTab('Merchant Setting')}
+                      onClick={() => setActiveTab('Profile')}
                       className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500 hover:text-black transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                       title="Click to Register"
                     >
@@ -456,7 +456,7 @@ function AccountContent() {
           </div>
         )}
 
-        {activeTab === 'Merchant Setting' && (
+        {activeTab === 'Profile' && (
           <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] p-8 sm:p-12 space-y-10">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 rounded-2xl bg-[#fc5000]/10 border border-[#fc5000]/20 flex items-center justify-center text-[#fc5000]">
@@ -606,7 +606,7 @@ function AccountContent() {
           </div>
         )}
 
-        {activeTab === 'Customer Settings' && (
+        {activeTab === 'Settings' && (
           <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] p-8 sm:p-12 space-y-10">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 rounded-2xl bg-[#fc5000]/10 border border-[#fc5000]/20 flex items-center justify-center text-[#fc5000]">
@@ -645,7 +645,7 @@ function AccountContent() {
           </div>
         )}
 
-        {activeTab === 'My Subscriptions' && (
+        {activeTab === 'Subscriptions' && (
           <BuyerSubscriptions />
         )}
 
