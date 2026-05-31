@@ -69,7 +69,7 @@ export function SubscriptionRow({ sub, onCancel, cancelingId }: SubscriptionRowP
       const renewTxHash = await writeRenew({
         address: LUMIPAY_REGISTRY_ADDRESS,
         abi: REGISTRY_ABI,
-        functionName: 'renewSubscription',
+        functionName: 'executeSubscription',
         args: [sub.id as `0x${string}`],
       });
       
@@ -118,7 +118,7 @@ export function SubscriptionRow({ sub, onCancel, cancelingId }: SubscriptionRowP
         <div className="flex items-center justify-end gap-2">
           <button
             onClick={handleRenew}
-            disabled={isRenewing || isCancelingThis}
+            disabled={isRenewing || isCancelingThis || !isDue}
             className="inline-flex items-center gap-1.5 text-xs text-white font-bold bg-[#fc5000] hover:bg-[#e04500] px-3 py-1.5 rounded-xl transition-all disabled:opacity-50 shadow-[0_0_10px_rgba(252,80,0,0.3)]"
           >
             {isRenewing ? (

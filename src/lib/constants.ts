@@ -341,7 +341,7 @@ export const REGISTRY_ABI = [
         "type": "bytes32"
       }
     ],
-    "name": "renewSubscription",
+    "name": "executeSubscription",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
