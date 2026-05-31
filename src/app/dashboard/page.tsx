@@ -203,7 +203,7 @@ export default function DashboardPage() {
 
   // Handler penghapusan link mutlak (Deactivate di Smart Contract)
   const handleDeleteSession = (sessionId: string) => {
-    if (!address) return;
+    if (!userAddress) return;
     setIsDeactivating(sessionId);
     writeContract({
       address: LUMIPAY_REGISTRY_ADDRESS,

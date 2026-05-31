@@ -61,7 +61,7 @@ export function BuyerSubscriptions() {
   }, [writeError, confirmError]);
 
   const handleCancel = (subId: string) => {
-    if (!address) return;
+    if (!userAddress) return;
     setCancelingId(subId);
     writeContract({
       address: LUMIPAY_REGISTRY_ADDRESS,
