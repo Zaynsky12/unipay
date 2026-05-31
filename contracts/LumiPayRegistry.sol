@@ -108,7 +108,7 @@ contract LumiPayRegistry {
         uint256 expiry,
         bool isReusable
     ) external returns (bytes32 sessionId) {
-        require(amount > 0, "Requested settlement amount must be greater than zero");
+        // amount can be 0 for dynamic payments (like Donations)
         require(token != address(0), "Invalid stablecoin contract address");
         require(expiry > block.timestamp, "Session lifecycle expiry must be in the future");
 
@@ -196,6 +196,46 @@ contract LumiPayRegistry {
         emit PaymentCompleted(sessionId, targetMerchant, actualPayer, targetAmount);
     }
 
+    /**
+     * @dev Melunasi pesanan dinamis (seperti Donate) di mana amount ditentukan oleh payer.
+     * @param sessionId Hash identifier sesi pesanan yang ingin dibayar.
+     * @param amount Jumlah unit token yang ingin dibayarkan secara dinamis.
+     */
+    function pay(bytes32 sessionId, uint256 amount) external {
+        CheckoutSession storage session = sessions[sessionId];
+        
+        require(session.merchant != address(0), "Target payment dispatch session does not exist");
+        require(session.isActive, "Payment session has been deactivated by the merchant");
+        require(block.timestamp <= session.expiry, "Payment dispatch session lifecycle has expired");
+        require(session.amount == 0, "Use standard pay() for fixed amount sessions");
+        require(amount > 0, "Amount must be greater than zero");
+
+        if (!session.isReusable) {
+            require(!session.isFulfilled, "Payment session endpoint has already been fulfilled");
+            session.isFulfilled = true;
+        }
+
+        address targetMerchant = session.merchant;
+        address targetToken = session.token;
+
+        uint256 fee = (amount * FEE_PERCENT) / 1000;
+        uint256 amountAfterFee = amount - fee;
+
+        merchants[targetMerchant].totalReceived += amountAfterFee;
+        merchants[targetMerchant].totalTransactions += 1;
+
+        address actualPayer = msg.sender;
+
+        if (fee > 0) {
+            bool feeSuccess = IERC20(targetToken).transferFrom(actualPayer, devWallet, fee);
+            require(feeSuccess, "Fee transfer failed");
+        }
+
+        bool success = IERC20(targetToken).transferFrom(actualPayer, targetMerchant, amountAfterFee);
+        require(success, "Cross-chain stablecoin transfer execution failed");
+
+        emit PaymentCompleted(sessionId, targetMerchant, actualPayer, amount);
+    }
     /**
      * @dev Membuat langganan baru menggunakan sesi pesanan (Payer memanggil ini).
      */

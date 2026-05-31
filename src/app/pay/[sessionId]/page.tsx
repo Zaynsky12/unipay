@@ -4,7 +4,7 @@ import React, { useState, useEffect, use } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
 import { AppKit } from '@circle-fin/app-kit';
 import { createViemAdapterFromProvider } from '@circle-fin/adapter-viem-v2';
-import { formatUnits } from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 import {
   ShieldCheck,
   CheckCircle2,
@@ -40,7 +40,7 @@ export function parseSessionDescription(descString: string) {
   if (lower.startsWith('invoice')) return { type: 'Invoice', cleanDesc: str };
   if (lower.startsWith('checkout')) return { type: 'Checkout', cleanDesc: str };
   if (lower.startsWith('subscription')) return { type: 'Subscription', cleanDesc: str };
-  if (lower.startsWith('tip')) return { type: 'Tip', cleanDesc: str };
+  if (lower.startsWith('donate')) return { type: 'Donate', cleanDesc: str };
   return { type: 'Payment', cleanDesc: str };
 }
 
@@ -82,10 +82,10 @@ export function getBadgeStyles(type: string) {
         bg: 'bg-amber-500/10 border-amber-500/25 text-amber-600',
         emoji: '⚡'
       };
-    case 'tip':
+    case 'donate':
       return {
         bg: 'bg-emerald-500/10 border-emerald-500/25 text-emerald-600',
-        emoji: '📲'
+        emoji: '🎁'
       };
     default:
       return {
@@ -130,7 +130,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
     if (type === 'Payment' && pathname) {
       if (pathname.includes('/invoice/')) type = 'Invoice';
       else if (pathname.includes('/checkout/')) type = 'Checkout';
-      else if (pathname.includes('/tip/')) type = 'Tip';
+      else if (pathname.includes('/donate/')) type = 'Donate';
     }
     return type;
   };
@@ -220,7 +220,10 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   }
 
   const matchedToken = SUPPORTED_TOKENS.find(t => t.address.toLowerCase() === tokenAddr?.toLowerCase()) || SUPPORTED_TOKENS[0];
-  const formattedAmount = formatUnits(amountRaw, matchedToken.decimals);
+  const isDynamicAmount = amountRaw === 0n;
+  const [customAmount, setCustomAmount] = useState('');
+  const amountToUse = isDynamicAmount && customAmount ? parseUnits(customAmount, matchedToken.decimals) : amountRaw;
+  const formattedAmount = isDynamicAmount ? customAmount || '0' : formatUnits(amountRaw, matchedToken.decimals);
 
   const { data: currentAllowance, refetch: refetchAllowance } = useReadContract({
     chainId: 5042002,
@@ -241,12 +244,12 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   });
   
   const sourceBalance = (sourceBalanceData as bigint) ?? 0n;
-  const hasEnoughBalanceToBridge = sourceBalance >= amountRaw;
+  const hasEnoughBalanceToBridge = sourceBalance >= amountToUse;
 
   const allowanceVal = (currentAllowance as bigint) ?? 0n;
   const [localApproved, setLocalApproved] = useState(false);
   const [localPaid, setLocalPaid] = useState(false);
-  const hasSufficientAllowance = allowanceVal >= amountRaw || localApproved;
+  const hasSufficientAllowance = allowanceVal >= amountToUse || localApproved;
 
   const { writeContract, data: txHash, isPending: isWritePending, error: writeError } = useWriteContract();
   const { isLoading: isTxConfirming, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({ hash: txHash });
@@ -280,15 +283,19 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   };
 
   const handleApproveToken = () => {
-    if (!tokenAddr || !userAddress) return;
+    if (!tokenAddr || !userAddress || amountToUse <= 0n) return;
     setActiveStep('approving');
-    writeContract({ address: tokenAddr as `0x${string}`, abi: ERC20_ABI, functionName: 'approve', args: [LUMIPAY_REGISTRY_ADDRESS, amountRaw], gas: 500000n });
+    writeContract({ address: tokenAddr as `0x${string}`, abi: ERC20_ABI, functionName: 'approve', args: [LUMIPAY_REGISTRY_ADDRESS, amountToUse], gas: 500000n });
   };
 
   const handleExecutePayment = () => {
-    if (!userAddress) return;
+    if (!userAddress || amountToUse <= 0n) return;
     setActiveStep('paying');
-    writeContract({ address: LUMIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'pay', args: [sessionIdBytes32], gas: 500000n });
+    if (isDynamicAmount) {
+       writeContract({ address: LUMIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'pay', args: [sessionIdBytes32, amountToUse], gas: 500000n });
+    } else {
+       writeContract({ address: LUMIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'pay', args: [sessionIdBytes32], gas: 500000n });
+    }
   };
 
   useEffect(() => {
@@ -400,9 +407,24 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
               <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-sm shrink-0 bg-transparent overflow-hidden">
                 <img src="/usdc-logo.png" alt="USDC Logo" className="w-full h-full object-contain" />
               </div>
-              <span className="text-5xl font-black text-slate-900 tracking-tighter truncate">${formattedAmount}</span>
+              {isDynamicAmount ? (
+                <div className="flex items-center">
+                  <span className="text-5xl font-black text-slate-900 tracking-tighter mr-1">$</span>
+                  <input 
+                    type="number" 
+                    placeholder="0.00" 
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                    className="w-32 bg-transparent text-5xl font-black text-slate-900 tracking-tighter outline-none placeholder:text-gray-300 text-left border-b-2 border-dashed border-gray-200 focus:border-[#fc5000] transition-colors pb-1"
+                    min="0.1"
+                    step="0.01"
+                  />
+                </div>
+              ) : (
+                <span className="text-5xl font-black text-slate-900 tracking-tighter truncate">${formattedAmount}</span>
+              )}
             </div>
-            <p className="text-sm font-medium text-slate-500">Total Payment Amount</p>
+            <p className="text-sm font-medium text-slate-500">{isDynamicAmount ? 'Enter Donation Amount' : 'Total Payment Amount'}</p>
           </div>
 
           {/* Ticket Divider */}
@@ -509,7 +531,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                     const type = getEffectiveType().toLowerCase();
                     if (type === 'invoice') return 'Invoice Paid';
                     if (type === 'checkout') return 'Order Confirmed';
-                    if (type === 'tip') return 'Tip Sent';
+                    if (type === 'donate') return 'Donation Sent';
                     return 'Payment Settled';
                   })()}
                 </h3>
@@ -534,7 +556,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
               {activeStep === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
               {(() => {
                 const type = getEffectiveType().toLowerCase();
-                if (type === 'tip') return 'Approve Tip';
+                if (type === 'donate') return 'Approve Donation';
                 return 'Approve';
               })()}
             </button>
@@ -547,7 +569,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
               {activeStep === 'paying' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
               {(() => {
                 const type = getEffectiveType().toLowerCase();
-                if (type === 'tip') return 'Send Tip';
+                if (type === 'donate') return 'Send Donation';
                 return 'Pay Now';
               })()}
             </button>

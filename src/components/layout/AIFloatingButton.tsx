@@ -69,7 +69,7 @@ export function AIFloatingButton() {
                         pathname.startsWith('/checkout/') || 
                         pathname.startsWith('/invoice/') || 
                         pathname.startsWith('/subscribe/') || 
-                        pathname.startsWith('/tip/');
+                        pathname.startsWith('/donate/');
 
   if (pathname === '/' || isPaymentPage) return null;
 

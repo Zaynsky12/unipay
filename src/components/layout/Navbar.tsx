@@ -32,7 +32,7 @@ export function Navbar() {
                         pathname.startsWith('/checkout/') || 
                         pathname.startsWith('/invoice/') || 
                         pathname.startsWith('/subscribe/') || 
-                        pathname.startsWith('/tip/');
+                        pathname.startsWith('/donate/');
 
   const isActive = (href: string) => pathname === href;
 

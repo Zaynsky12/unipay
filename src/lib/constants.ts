@@ -1,6 +1,6 @@
 // ── LumiPay Contract Address (LumiPayRegistry) ──────────────────────────────────
 // Will be filled automatically after deploy on Arc Testnet
-export const LUMIPAY_REGISTRY_ADDRESS = "0x390b0f8d67b79f031ce03420ca678d4550dd71c7" as `0x${string}`;
+export const LUMIPAY_REGISTRY_ADDRESS = "0xb5205464aa829dff44d2e6e1d8d12313367d7fa3" as `0x${string}`;
 
 // ── Token Addresses ────────────────────────────────────────────────────────────
 export const USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as `0x${string}`;
@@ -391,6 +391,24 @@ export const REGISTRY_ABI = [
         "internalType": "bytes32",
         "name": "sessionId",
         "type": "bytes32"
+      }
+    ],
+    "name": "pay",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "sessionId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
     "name": "pay",

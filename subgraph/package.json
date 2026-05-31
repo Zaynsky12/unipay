@@ -4,7 +4,7 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "goldsky subgraph deploy lumipay/v4"
+    "deploy": "goldsky subgraph deploy lumipay/v1"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.68.0",

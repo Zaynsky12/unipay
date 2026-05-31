@@ -9,7 +9,7 @@ export function GlobalBackground() {
                         pathname.startsWith('/checkout/') || 
                         pathname.startsWith('/invoice/') || 
                         pathname.startsWith('/subscribe/') || 
-                        pathname.startsWith('/tip/');
+                        pathname.startsWith('/donate/');
 
   useEffect(() => {
     if (isPaymentPage) {

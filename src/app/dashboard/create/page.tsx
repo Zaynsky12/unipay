@@ -62,7 +62,7 @@ export default function CreatePaymentPage() {
 
   // Form State
   const [paymentType, setPaymentType] = useState<'onetime' | 'subscription'>('onetime');
-  const [selectedMenu, setSelectedMenu] = useState<'checkouts' | 'invoices' | 'subscribtion' | 'tip' | null>(null);
+  const [selectedMenu, setSelectedMenu] = useState<'checkouts' | 'invoices' | 'subscribtion' | 'donate' | null>(null);
   const [amount, setAmount] = useState('');
   const [selectedToken, setSelectedToken] = useState<SupportedToken>('USDC');
   const [description, setDescription] = useState('');
@@ -104,12 +104,13 @@ export default function CreatePaymentPage() {
 
   const handleCreateSession = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || Number(amount) <= 0 || !userAddress) return;
+    if (selectedMenu !== 'donate' && (!amount || Number(amount) <= 0)) return;
+    if (!userAddress) return;
 
     const tokenObj = SUPPORTED_TOKENS.find(t => t.symbol === selectedToken);
     if (!tokenObj) return;
 
-    const amountUnits = parseUnits(amount, tokenObj.decimals);
+    const amountUnits = selectedMenu === 'donate' ? parseUnits('0', tokenObj.decimals) : parseUnits(amount, tokenObj.decimals);
     
     // Untuk subscription, kita buat linknya berumur panjang (10 tahun) agar tidak cepat expired
     const activeExpiryDays = paymentType === 'subscription' ? 3650 : Number(expiryDays);
@@ -119,7 +120,7 @@ export default function CreatePaymentPage() {
     if (selectedMenu === 'invoices') typeName = 'Invoice';
     else if (selectedMenu === 'checkouts') typeName = 'Checkout';
     else if (selectedMenu === 'subscribtion') typeName = 'Subscription';
-    else if (selectedMenu === 'tip') typeName = 'Tip';
+    else if (selectedMenu === 'donate') typeName = 'Donate';
 
     const typePrefix = `[${typeName}]`;
     const fallbackDesc = selectedMenu 
@@ -131,7 +132,7 @@ export default function CreatePaymentPage() {
       ? `${typePrefix} ${description.trim()}${intervalText}`
       : `${typePrefix} ${fallbackDesc}${intervalText}`;
 
-    const isReusable = selectedMenu === 'checkouts' || selectedMenu === 'tip' || selectedMenu === 'subscribtion';
+    const isReusable = selectedMenu === 'checkouts' || selectedMenu === 'donate' || selectedMenu === 'subscribtion';
 
     setCreateError(null);
     writeContract({
@@ -175,7 +176,7 @@ export default function CreatePaymentPage() {
           if (selectedMenu === 'invoices') typeName = 'Invoice';
           else if (selectedMenu === 'checkouts') typeName = 'Checkout';
           else if (selectedMenu === 'subscribtion') typeName = 'Subscription';
-          else if (selectedMenu === 'tip') typeName = 'Tip';
+          else if (selectedMenu === 'donate') typeName = 'Donate';
 
           const typePrefix = `[${typeName}]`;
           const fallbackDesc = selectedMenu 
@@ -192,7 +193,7 @@ export default function CreatePaymentPage() {
           const tokenObj = SUPPORTED_TOKENS.find(t => t.symbol === selectedToken);
           const optimisticSession = {
             id: extractedId,
-            amount: parseUnits(amount, tokenObj?.decimals || 6).toString(),
+            amount: parseUnits(selectedMenu === 'donate' ? '0' : amount, tokenObj?.decimals || 6).toString(),
             token: tokenObj?.address || '',
             description: finalDesc,
             interval: paymentType === 'subscription' ? subInterval : null,
@@ -212,7 +213,7 @@ export default function CreatePaymentPage() {
   if (selectedMenu === 'invoices') typeNameForLink = 'Invoice';
   else if (selectedMenu === 'checkouts') typeNameForLink = 'Checkout';
   else if (selectedMenu === 'subscribtion') typeNameForLink = 'Subscription';
-  else if (selectedMenu === 'tip') typeNameForLink = 'Tip';
+  else if (selectedMenu === 'donate') typeNameForLink = 'Donate';
 
   const typePrefixForLink = `[${typeNameForLink}]`;
   const fallbackDescForLink = selectedMenu 
@@ -225,7 +226,7 @@ export default function CreatePaymentPage() {
   let routePath = 'pay';
   if (selectedMenu === 'invoices') routePath = 'invoice';
   else if (selectedMenu === 'checkouts') routePath = 'checkout';
-  else if (selectedMenu === 'tip') routePath = 'tip';
+  else if (selectedMenu === 'donate') routePath = 'donate';
 
   const routePrefix = paymentType === 'onetime' ? routePath : 'subscribe';
   const paymentLink = typeof window !== 'undefined' 
@@ -294,7 +295,7 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
             Create a <span className="gradient-text-orange">Payment</span>
           </h1>
           <p className="text-sm text-gray-500 font-medium">
-            Set up a Checkout, Invoice, Subscription, or Tip in just a few clicks.
+            Set up a Checkout, Invoice, Subscription, or Donate in just a few clicks.
           </p>
         </div>
 
@@ -303,7 +304,7 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
             { menu: 'invoices', type: 'onetime', icon: Receipt, label: 'Invoices', desc: 'A hosted shareable link', accent: '#fc5000' },
             { menu: 'checkouts', type: 'onetime', icon: CreditCard, label: 'Checkouts', desc: 'Embed directly into your site or app', accent: '#fc5000' },
             { menu: 'subscribtion', type: 'subscription', icon: Zap, label: 'Subscription', desc: 'Recurring billing', accent: '#fc5000' },
-            { menu: 'tip', type: 'onetime', icon: QrCode, label: 'Tip', desc: 'Accept spontaneous contributions', accent: '#fc5000' },
+            { menu: 'donate', type: 'onetime', icon: QrCode, label: 'Donate', desc: 'Accept custom donation amounts', accent: '#fc5000' },
           ].map((item) => (
             <button
               key={item.menu}
@@ -387,46 +388,73 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
           <div className="caldera-card p-8 sm:p-10 shadow-2xl relative">
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#fc5000]/60 via-[#fc5000]/40 to-transparent rounded-t-[2.5rem]" />
             <form onSubmit={handleCreateSession} className="space-y-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Asset Amount</label>
-                  <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 font-bold">$</div>
-                    <input
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="0.00"
-                      step="0.01"
-                      className="w-full bg-white border-[1.5px] border-gray-200 rounded-2xl py-4 pl-10 pr-4 text-slate-900 text-lg font-black focus:border-[#fc5000] focus:shadow-[0_0_0_3px_rgba(104,54,232,0.15)] outline-none transition-all"
-                      required
-                    />
+              {selectedMenu !== 'donate' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Asset Amount</label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 font-bold">$</div>
+                      <input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="0.00"
+                        step="0.01"
+                        className="w-full bg-white border-[1.5px] border-gray-200 rounded-2xl py-4 pl-10 pr-4 text-slate-900 text-lg font-black focus:border-[#fc5000] focus:shadow-[0_0_0_3px_rgba(104,54,232,0.15)] outline-none transition-all"
+                        required
+                      />
+                    </div>
+                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 ml-1">
+                      * A 2% protocol fee is deducted upon settlement
+                    </p>
                   </div>
-                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 ml-1">
-                    * A 2% protocol fee is deducted upon settlement
-                  </p>
-                </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Settlement Token</label>
-                  <div className="grid grid-cols-2 gap-2 p-1 bg-white border-[1.5px] border-gray-200 rounded-2xl">
-                    {SUPPORTED_TOKENS.map((token) => (
-                      <button
-                        key={token.symbol}
-                        type="button"
-                        onClick={() => setSelectedToken(token.symbol as SupportedToken)}
-                        className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                          selectedToken === token.symbol
-                            ? 'bg-[#fc5000] text-slate-900 shadow-[0_0_16px_rgba(104,54,232,0.40)]'
-                            : 'text-gray-500 hover:text-gray-600 hover:bg-gray-50'
-                        }`}
-                      >
-                        {token.symbol}
-                      </button>
-                    ))}
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Settlement Token</label>
+                    <div className="grid grid-cols-2 gap-2 p-1 bg-white border-[1.5px] border-gray-200 rounded-2xl">
+                      {SUPPORTED_TOKENS.map((token) => (
+                        <button
+                          key={token.symbol}
+                          type="button"
+                          onClick={() => setSelectedToken(token.symbol as SupportedToken)}
+                          className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                            selectedToken === token.symbol
+                              ? 'bg-[#fc5000] text-slate-900 shadow-[0_0_16px_rgba(104,54,232,0.40)]'
+                              : 'text-gray-500 hover:text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          {token.symbol}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+              
+              {selectedMenu === 'donate' && (
+                <div className="space-y-3">
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Settlement Token</label>
+                    <div className="grid grid-cols-2 gap-2 p-1 bg-white border-[1.5px] border-gray-200 rounded-2xl w-full sm:w-1/2">
+                      {SUPPORTED_TOKENS.map((token) => (
+                        <button
+                          key={token.symbol}
+                          type="button"
+                          onClick={() => setSelectedToken(token.symbol as SupportedToken)}
+                          className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                            selectedToken === token.symbol
+                              ? 'bg-[#fc5000] text-slate-900 shadow-[0_0_16px_rgba(104,54,232,0.40)]'
+                              : 'text-gray-500 hover:text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          {token.symbol}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 ml-1">
+                      * Payers will input their own custom amount.
+                    </p>
+                </div>
+              )}
 
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">{selectedMenu} Description (Optional)</label>
@@ -495,7 +523,7 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
 
               <button
                 type="submit"
-                disabled={isPending || isTxConfirming || !amount || Number(amount) <= 0 || !userAddress}
+                disabled={isPending || isTxConfirming || (!amount && selectedMenu !== 'donate') || (selectedMenu !== 'donate' && Number(amount) <= 0) || !userAddress}
                 className="btn-orange w-full py-5 text-white text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isPending || isTxConfirming ? (
