@@ -412,13 +412,6 @@ export default function HistoryPage() {
                       <div className="absolute top-0 left-0 w-1 h-full bg-[#fc5000]" />
                       
                       <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => setSelectedSessionFilter(null)}
-                          className="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-slate-900 transition-colors border border-gray-200"
-                          title="Back to all endpoints grid"
-                        >
-                          <ArrowLeft className="w-4 h-4" />
-                        </button>
                         <div>
                           <span className="text-[10px] font-bold text-[#fc5000] uppercase tracking-widest block">Isolating Buyers For Endpoint</span>
                           <div className="flex items-center gap-2 mt-0.5">
@@ -438,12 +431,6 @@ export default function HistoryPage() {
                         <span className="text-gray-500">
                           Total Buyers: <strong className="text-slate-900 font-bold">{filteredLogs.length}</strong>
                         </span>
-                        <button
-                          onClick={() => setSelectedSessionFilter(null)}
-                          className="px-3 py-1.5 rounded-lg bg-gray-50 hover:bg-white border border-gray-200 text-[11px] text-[#fc5000] font-semibold transition-all"
-                        >
-                          Show All Grid
-                        </button>
                       </div>
                     </div>
                   );

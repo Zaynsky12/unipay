@@ -18,7 +18,11 @@ import {
   Globe,
   Mail,
   UserCircle,
-  Eye
+  Eye,
+  ShoppingCart,
+  FileText,
+  Gift,
+  CreditCard
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -566,10 +570,20 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
               disabled={activeStep === 'paying'}
               className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
             >
-              {activeStep === 'paying' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
+              {activeStep === 'paying' ? <Loader2 className="w-4 h-4 animate-spin" /> : (() => {
+                const type = getEffectiveType().toLowerCase();
+                if (type === 'donate') return <Gift className="w-4 h-4" />;
+                if (type === 'checkout') return <ShoppingCart className="w-4 h-4" />;
+                if (type === 'invoice') return <FileText className="w-4 h-4" />;
+                if (type === 'subscription') return <CreditCard className="w-4 h-4" />;
+                return <Zap className="w-4 h-4 fill-current" />;
+              })()}
               {(() => {
                 const type = getEffectiveType().toLowerCase();
                 if (type === 'donate') return 'Send Donation';
+                if (type === 'checkout') return 'Complete Order';
+                if (type === 'invoice') return 'Pay Invoice';
+                if (type === 'subscription') return 'Subscribe Now';
                 return 'Pay Now';
               })()}
             </button>
