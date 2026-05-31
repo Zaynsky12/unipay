@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Mail, ArrowRight, Loader2, KeyRound } from 'lucide-react';
 import { useLoginWithEmail, usePrivy } from '@privy-io/react-auth';
 
-export function InlineAuth() {
+export function InlineAuth({ onPhaseChange }: { onPhaseChange?: (phase: 'email' | 'otp' | 'done') => void }) {
   const { login, authenticated } = usePrivy();
   const { state, sendCode, loginWithCode } = useLoginWithEmail();
   
@@ -29,6 +29,9 @@ export function InlineAuth() {
     if (state.status === 'awaiting-code-input') {
       setOtpPhase(true);
       setErrorMsg(null);
+      onPhaseChange?.('otp');
+    } else if (state.status === 'done') {
+      onPhaseChange?.('done');
     }
   }, [state.status]);
 

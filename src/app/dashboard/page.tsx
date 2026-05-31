@@ -242,6 +242,8 @@ export default function DashboardPage() {
   };
 
       {/* ── CONNECTION ALERT BANNER (Only if not connected) ── */}
+  const [authPhase, setAuthPhase] = useState<'email' | 'otp' | 'done'>('email');
+
   if (!ready) return null;
   if (!authenticated && !isConnected) return (
     <div className="fixed inset-0 z-[100] bg-[#FEF7ED] flex items-center justify-center p-6 animate-fade-in overflow-hidden pixel-grid">
@@ -257,23 +259,29 @@ export default function DashboardPage() {
         {/* Orange accent top line */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#fc5000] via-[#fc5000] to-transparent" />
 
-        {/* Brand Icon */}
-        <div className="w-20 h-20 bg-[#fc5000]/10 rounded-[2rem] border border-[#fc5000]/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(252,80,0,0.15)] mt-4">
-          <Eye className="w-9 h-9 text-[#fc5000]" />
-        </div>
+        {/* Brand Icon - hide during OTP phase */}
+        {authPhase === 'email' && (
+          <div className="w-20 h-20 bg-[#fc5000]/10 rounded-[2rem] border border-[#fc5000]/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(252,80,0,0.15)] mt-4">
+            <Eye className="w-9 h-9 text-[#fc5000]" />
+          </div>
+        )}
 
-        {/* Title */}
-        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-          Welcome to LumiPay Commerce
-        </h2>
-        
-        {/* Subtitle */}
-        <p className="text-[11px] text-gray-500 leading-relaxed mb-8 font-semibold uppercase tracking-wider">
-          Decentralized Payment Checkout & Streaming Protocol
-        </p>
+        {/* Title - hide during OTP phase */}
+        {authPhase === 'email' && (
+          <>
+            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+              Welcome to LumiPay Commerce
+            </h2>
+            
+            {/* Subtitle */}
+            <p className="text-[11px] text-gray-500 leading-relaxed mb-8 font-semibold uppercase tracking-wider">
+              Decentralized Payment Checkout & Streaming Protocol
+            </p>
+          </>
+        )}
 
         {/* Inline Login UI Trigger */}
-        <InlineAuth />
+        <InlineAuth onPhaseChange={setAuthPhase} />
 
       </div>
     </div>
