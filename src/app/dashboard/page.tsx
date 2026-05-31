@@ -400,7 +400,7 @@ export default function DashboardPage() {
                   <span className="col-span-5">PAYMENTS</span>
                   <span className="col-span-2 text-center">PRICE</span>
                   <span className="col-span-2 text-center">VOLUME</span>
-                  <span className="col-span-2 text-center">SALES</span>
+                  <span className="col-span-2 text-center">SUBSCRIBERS</span>
                   <span className="col-span-1 text-right">MANAGE</span>
                 </div>
 
@@ -628,15 +628,12 @@ export default function DashboardPage() {
 
                     let linkBuyers = [];
                     if (isSub) {
-                      let interval = s.interval;
-                      if (!interval) {
-                        const match = rawDescForCount.match(/\(Every\s+(\d+)\s+Days\)/i);
-                        interval = match ? match[1] : '30';
-                      }
                       linkBuyers = (history?.subscriptions || []).filter((sub: any) => 
-                        (!s.amount || sub.amount === s.amount) &&
-                        (!s.token || sub.token?.toLowerCase() === s.token?.toLowerCase()) &&
-                        sub.interval === interval
+                        sub.sessionId && actualId && (
+                          sub.sessionId.toLowerCase() === actualId.toLowerCase() ||
+                          sub.sessionId.toLowerCase().includes(actualId.toLowerCase()) ||
+                          actualId.toLowerCase().includes(sub.sessionId.toLowerCase())
+                        )
                       );
                     } else {
                       linkBuyers = filteredRecentPayments.filter((p: any) => 
