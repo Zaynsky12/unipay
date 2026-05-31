@@ -113,6 +113,25 @@ export default function HistoryPage() {
     return matchesSearch;
   });
 
+  const renderToggle = (containerClass: string, btnClass: string = '') => (
+    <div className={`items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-inner ${containerClass}`}>
+      <button
+        onClick={() => setViewMode('merchant')}
+        className={`py-2 px-3 sm:px-4 rounded-lg text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center gap-1.5 ${viewMode === 'merchant' ? 'bg-white text-slate-900 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-slate-700'} ${btnClass}`}
+      >
+        <span className="text-sm">💰</span> 
+        <span>Income <span className="hidden sm:inline">(Merchant)</span></span>
+      </button>
+      <button
+        onClick={() => setViewMode('customer')}
+        className={`py-2 px-3 sm:px-4 rounded-lg text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center gap-1.5 ${viewMode === 'customer' ? 'bg-white text-slate-900 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-slate-700'} ${btnClass}`}
+      >
+        <span className="text-sm">💸</span> 
+        <span>Expenses <span className="hidden sm:inline">(Customer)</span></span>
+      </button>
+    </div>
+  );
+
   if (!ready) return null;
   if (!authenticated && !isConnected) return (
     <div className="fixed inset-0 z-[100] bg-[#FEF7ED] flex items-center justify-center p-6 animate-fade-in overflow-hidden">
@@ -148,7 +167,7 @@ export default function HistoryPage() {
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-16">
       
       {/* ── Header Premium ── */}
-      <div className="flex items-start justify-between gap-3 pb-4 border-b border-gray-200">
+      <div className="flex items-start sm:items-center justify-between gap-3 pb-4 border-b border-gray-200">
         <div className="flex flex-col gap-1.5">
           {/* Breadcrumb aktif saat ada filter */}
           {selectedSessionFilter ? (
@@ -181,30 +200,16 @@ export default function HistoryPage() {
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                 History Transaction
               </h1>
-              <p className="text-[11px] text-gray-500 font-medium">
+              <p className="text-[11px] text-gray-500 font-medium mt-0.5">
                 {viewMode === 'merchant' ? 'Incoming settlements to your payment links' : 'Outgoing payments to other merchants'}
               </p>
-              
-              <div className="flex items-center gap-2 mt-4 bg-gray-100 p-1 rounded-xl w-fit border border-gray-200 shadow-inner">
-                <button
-                  onClick={() => setViewMode('merchant')}
-                  className={`px-4 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${viewMode === 'merchant' ? 'bg-white text-slate-900 shadow border border-gray-200' : 'text-gray-500 hover:text-slate-700'}`}
-                >
-                  💰 Income (Merchant)
-                </button>
-                <button
-                  onClick={() => setViewMode('customer')}
-                  className={`px-4 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${viewMode === 'customer' ? 'bg-white text-slate-900 shadow border border-gray-200' : 'text-gray-500 hover:text-slate-700'}`}
-                >
-                  💸 Expenses (Customer)
-                </button>
-              </div>
+              {renderToggle('flex sm:hidden mt-4 w-full', 'flex-1')}
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 mt-1">
-
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 mt-1 sm:mt-0">
+          {!selectedSessionFilter && renderToggle('hidden sm:flex')}
           <button 
             onClick={() => setShowSearchInput(!showSearchInput)}
             className={`p-1.5 transition-colors ${showSearchInput || searchQuery ? 'text-[#fc5000]' : 'text-gray-500 hover:text-slate-900'}`}
