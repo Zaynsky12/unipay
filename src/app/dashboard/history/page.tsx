@@ -81,10 +81,14 @@ export default function HistoryPage() {
       };
     });
   } else {
-    regularPayments = activeHistory?.transactions || [];
+    regularPayments = (activeHistory?.transactions || []).map((t: any) => ({
+      ...t,
+      merchant: t.merchant?.id || t.merchant
+    }));
     subPayments = (activeHistory?.subscriptionPayments || []).map((sp: any) => {
       return {
         ...sp,
+        merchant: sp.merchant?.id || sp.merchant,
         sessionId: sp.subId,
         token: "0x3600000000000000000000000000000000000000",
         payer: sp.subscriber
@@ -492,7 +496,7 @@ export default function HistoryPage() {
                               <span className="bg-white px-2.5 py-1 rounded-lg border border-gray-200">
                                 {viewMode === 'merchant' 
                                   ? (item.payer ? `${item.payer.slice(0, 8)}...${item.payer.slice(-4)}` : 'Unknown')
-                                  : (item.merchant ? `${item.merchant.slice(0, 8)}...${item.merchant.slice(-4)}` : 'Unknown')
+                                  : (item.merchantName ? item.merchantName : (item.merchant ? `${item.merchant.slice(0, 8)}...${item.merchant.slice(-4)}` : 'Unknown'))
                                 }
                               </span>
                             </td>
