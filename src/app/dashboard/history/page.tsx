@@ -83,12 +83,14 @@ export default function HistoryPage() {
   } else {
     regularPayments = (activeHistory?.transactions || []).map((t: any) => ({
       ...t,
-      merchant: t.merchant?.id || t.merchant
+      merchant: t.merchant?.id || t.merchant,
+      merchantName: t.merchant?.name
     }));
     subPayments = (activeHistory?.subscriptionPayments || []).map((sp: any) => {
       return {
         ...sp,
         merchant: sp.merchant?.id || sp.merchant,
+        merchantName: sp.merchant?.name,
         sessionId: sp.subId,
         token: "0x3600000000000000000000000000000000000000",
         payer: sp.subscriber
@@ -448,12 +450,12 @@ export default function HistoryPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="text-gray-500 uppercase tracking-wider text-[10px] border-b border-gray-200">
-                        <th className="pb-3.5 font-bold px-3">Session Spec</th>
-                        <th className="pb-3.5 font-bold px-3">{viewMode === 'merchant' ? 'Payer Identity' : 'Merchant Identity'}</th>
-                        <th className="pb-3.5 font-bold px-3">Settlement Vol</th>
-                        <th className="pb-3.5 font-bold px-3">Timestamp</th>
-                        <th className="pb-3.5 font-bold text-right px-3">Verification Registry</th>
+                      <tr className="text-gray-500 uppercase tracking-wider text-[10px] border-b border-gray-200 text-center">
+                        <th className="pb-3.5 font-bold px-3">Item Details</th>
+                        <th className="pb-3.5 font-bold px-3">{viewMode === 'merchant' ? 'Customer' : 'Merchant'}</th>
+                        <th className="pb-3.5 font-bold px-3">Amount</th>
+                        <th className="pb-3.5 font-bold px-3">Date & Time</th>
+                        <th className="pb-3.5 font-bold px-3">Explorer</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 font-medium text-gray-600">
@@ -472,46 +474,44 @@ export default function HistoryPage() {
 
                         return (
                           <tr key={item.id || idx} className="hover:bg-white transition-colors group">
-                            <td className="py-4 px-3 font-mono text-[#fc5000] font-semibold">
-                              <div className="space-y-0.5">
+                            <td className="py-4 px-3 font-mono text-[#fc5000] font-semibold text-center">
+                              <div className="flex flex-col items-center space-y-0.5">
                                 {cleanTitle && (
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center justify-center gap-1">
                                     {badge && (
                                       <span className={`shrink-0 px-1 py-0.2 text-[8px] font-black uppercase tracking-wider rounded border ${badge.bg}`}>
                                         {badge.emoji} {parsedTitle?.type}
                                       </span>
                                     )}
-                                    <span className="text-[10px] font-bold text-slate-900 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 block font-sans w-fit truncate max-w-[150px]">
+                                    <span className="text-[10px] font-bold text-slate-900 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 block font-sans w-fit truncate max-w-[150px] mx-auto">
                                       {cleanTitle}
                                     </span>
                                   </div>
                                 )}
-                                <div className="flex items-center gap-1.5 opacity-80">
+                                <div className="flex items-center justify-center gap-1.5 opacity-80">
                                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                                   <span className="truncate max-w-[120px] text-xs">{item.sessionId ? `${item.sessionId.slice(0, 10)}...${item.sessionId.slice(-6)}` : 'N/A'}</span>
                                 </div>
                               </div>
                             </td>
-                            <td className="py-4 px-3 font-mono text-gray-500">
-                              <span className="bg-white px-2.5 py-1 rounded-lg border border-gray-200">
+                            <td className="py-4 px-3 font-mono text-gray-500 text-center">
+                              <span className="bg-white px-2.5 py-1 rounded-lg border border-gray-200 inline-block">
                                 {viewMode === 'merchant' 
                                   ? (item.payer ? `${item.payer.slice(0, 8)}...${item.payer.slice(-4)}` : 'Unknown')
                                   : (item.merchantName ? item.merchantName : (item.merchant ? `${item.merchant.slice(0, 8)}...${item.merchant.slice(-4)}` : 'Unknown'))
                                 }
                               </span>
                             </td>
-                            <td className="py-4 px-3">
-                              <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                            <td className="py-4 px-3 text-center">
+                              <div className="flex items-center justify-center gap-1.5 font-bold text-slate-900">
                                 <Coins className="w-4 h-4 text-[#fc5000]" /><span className="text-sm">${formattedAmount}</span><span className="text-[10px] text-gray-500 font-normal">USDC</span>
                               </div>
                             </td>
-                            <td className="py-4 px-3 text-gray-500">
-                              <div className="space-y-0.5">
-                                <div className="flex items-center gap-1.5 text-xs text-gray-600 font-medium"><Calendar className="w-3.5 h-3.5 text-gray-500" /><span>{new Date(timestampMs).toLocaleDateString()} {new Date(timestampMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
-                              </div>
+                            <td className="py-4 px-3 text-gray-500 text-center">
+                              <div className="flex items-center justify-center gap-1.5 text-xs text-gray-600 font-medium"><Calendar className="w-3.5 h-3.5 text-gray-500" /><span>{new Date(timestampMs).toLocaleDateString()} {new Date(timestampMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
                             </td>
-                            <td className="py-4 px-3 text-right">
-                              <a href={`https://testnet.arcscan.app/tx/${item.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-[#fc5000] hover:text-[#fc5000] font-bold bg-white px-3 py-1.5 rounded-xl border border-gray-200"><span>ArcScan</span><ExternalLink className="w-3.5 h-3.5" /></a>
+                            <td className="py-4 px-3 text-center">
+                              <a href={`https://testnet.arcscan.app/tx/${item.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-1.5 text-xs text-[#fc5000] hover:text-[#fc5000] font-bold bg-white px-3 py-1.5 rounded-xl border border-gray-200 mx-auto"><span>ArcScan</span><ExternalLink className="w-3.5 h-3.5" /></a>
                             </td>
                           </tr>
                         );

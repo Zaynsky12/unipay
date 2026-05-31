@@ -158,7 +158,10 @@ export const GET_CUSTOMER_HISTORY = gql`
     transactions(where: { payer_contains_nocase: $customerId }, orderBy: timestamp, orderDirection: desc) {
       id
       sessionId
-      merchant
+      merchant {
+        id
+        name
+      }
       amount
       token
       payer
@@ -167,7 +170,10 @@ export const GET_CUSTOMER_HISTORY = gql`
     subscriptionPayments(where: { subscriber_contains_nocase: $customerId }, orderBy: timestamp, orderDirection: desc) {
       id
       subId
-      merchant
+      merchant {
+        id
+        name
+      }
       amount
       subscriber
       timestamp
