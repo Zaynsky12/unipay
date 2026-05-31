@@ -215,7 +215,19 @@ export default function DashboardPage() {
     }).sort((a: any, b: any) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
   }, [optimisticSessions, goldskyActiveSessions]);
 
-  const filteredRecentPayments = history?.payments || [];
+  const filteredRecentPayments = useMemo(() => {
+    const regular = history?.payments || [];
+    const subs = (history?.subscriptionPayments || []).map((sp: any) => {
+      const relatedPlan = (history?.subscriptions || []).find((s: any) => s.id?.toLowerCase() === sp.subId?.toLowerCase());
+      return {
+        ...sp,
+        sessionId: relatedPlan ? relatedPlan.sessionId : sp.subId,
+        token: relatedPlan ? relatedPlan.token : "0x3600000000000000000000000000000000000000",
+        payer: sp.subscriber
+      };
+    });
+    return [...regular, ...subs].sort((a: any, b: any) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+  }, [history]);
 
   // Handler penghapusan link mutlak (Deactivate di Smart Contract)
   const handleDeleteSession = (sessionId: string) => {
