@@ -333,15 +333,6 @@ export default function DashboardPage() {
       {/* ── DASHBOARD HEADER ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-40">
         <div className="flex flex-col gap-1">
-          {/* Status tag — Caldera pill style */}
-          {isRegistered && (
-            <div className="flex items-center gap-2 mb-1">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border bg-[#34D399]/10 border-[#34D399]/25 text-[#34D399]">
-                <div className="w-1.5 h-1.5 rounded-full animate-pulse bg-[#34D399]" />
-                Verified Merchant
-              </div>
-            </div>
-          )}
 
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight flex items-center gap-2" style={{ fontFamily: 'var(--font-dm-sans)', letterSpacing: '-0.02em' }}>
