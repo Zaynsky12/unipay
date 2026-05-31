@@ -25,6 +25,8 @@ export async function POST(req: Request) {
       2. Checkouts: For public sales (can be purchased multiple times by many people via 1 link).
       3. Subscription: For recurring billing with automatic deductions.
       4. Donate: To receive custom donation amounts or spontaneous support from anyone.
+    - Protocol Economics: LumiPay charges an automatic 2% platform fee on all successful payments. This fee is instantly transferred to the developer wallet in the same atomic transaction.
+    - Active Smart Contract: The current LumiPayRegistry smart contract deployed on the Arc Testnet is at address: 0xb5205464aa829dff44d2e6e1d8d12313367d7fa3.
 
     Guide users to: Dashboard, Create Payment, History, or Account tabs.
     
