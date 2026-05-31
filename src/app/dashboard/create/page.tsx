@@ -43,7 +43,7 @@ export default function CreatePaymentPage() {
   const { login, authenticated, ready, user } = usePrivy();
   const { address, isConnected } = useAccount();
   const embeddedWallet = user?.linkedAccounts?.find((account: any) => account.type === 'wallet' && account.walletClientType === 'privy');
-  const userAddress = address || (user?.wallet?.address as `0x${string}`) || (embeddedWallet?.address as `0x${string}`) || undefined;
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || ((embeddedWallet as any)?.address as `0x${string}`) || undefined;
 
   if (!ready) return (
     <div className="py-24 text-center space-y-3 bg-white border border-gray-200 rounded-[2.5rem] p-8 max-w-2xl mx-auto mt-10">
@@ -473,12 +473,10 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
 
               <button
                 type="submit"
-                disabled={isPending || isTxConfirming || !amount || Number(amount) <= 0 || !address}
+                disabled={isPending || isTxConfirming || !amount || Number(amount) <= 0 || !userAddress}
                 className="btn-orange w-full py-5 text-white text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {!address ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" /> Syncing Wallet...</>
-                ) : isPending || isTxConfirming ? (
+                {isPending || isTxConfirming ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Finalizing on L1...</>
                 ) : (
                   <><Sparkles className="w-4 h-4" /> Create {selectedMenu === 'subscribtion' ? 'Subscription' : selectedMenu?.charAt(0).toUpperCase() + selectedMenu?.slice(1)}</>

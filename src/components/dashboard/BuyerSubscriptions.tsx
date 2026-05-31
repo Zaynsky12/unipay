@@ -20,7 +20,7 @@ export function BuyerSubscriptions() {
   const { user } = usePrivy();
   const { address } = useAccount();
   const embeddedWallet = user?.linkedAccounts?.find((account: any) => account.type === 'wallet' && account.walletClientType === 'privy');
-  const userAddress = address || (user?.wallet?.address as `0x${string}`) || (embeddedWallet?.address as `0x${string}`) || undefined;
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || ((embeddedWallet as any)?.address as `0x${string}`) || undefined;
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [cancelingId, setCancelingId] = useState<string | null>(null);

@@ -30,7 +30,7 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
   const { login, user } = usePrivy();
   const { address, isConnected, chainId } = useAccount();
   const embeddedWallet = user?.linkedAccounts?.find((account: any) => account.type === 'wallet' && account.walletClientType === 'privy');
-  const userAddress = address || (user?.wallet?.address as `0x${string}`) || (embeddedWallet?.address as `0x${string}`) || undefined;
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || ((embeddedWallet as any)?.address as `0x${string}`) || undefined;
 
   const [urlDesc, setUrlDesc] = useState<string | null>(null);
 
@@ -374,20 +374,20 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
           ) : !hasSufficientAllowance ? (
             <button
               onClick={handleApproveToken}
-              disabled={activeStep === 'approving' || !address}
+              disabled={activeStep === 'approving'}
               className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
             >
-              {!address ? <Loader2 className="w-4 h-4 animate-spin" /> : activeStep === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-              {!address ? 'Syncing Wallet...' : 'Approve Subscription'}
+              {activeStep === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+              Approve Subscription
             </button>
           ) : (
             <button
               onClick={handleCreateSubscription}
-              disabled={activeStep === 'subscribing' || !address}
+              disabled={activeStep === 'subscribing'}
               className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
             >
-              {!address ? <Loader2 className="w-4 h-4 animate-spin" /> : activeStep === 'subscribing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Repeat className="w-4 h-4" />}
-              {!address ? 'Syncing Wallet...' : 'Subscribe Now'}
+              {activeStep === 'subscribing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Repeat className="w-4 h-4" />}
+              Subscribe Now
             </button>
           )}
 

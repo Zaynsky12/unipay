@@ -103,7 +103,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   const { login, user } = usePrivy();
   const { address, isConnected, connector, chainId } = useAccount();
   const embeddedWallet = user?.linkedAccounts?.find((account: any) => account.type === 'wallet' && account.walletClientType === 'privy');
-  const userAddress = address || (user?.wallet?.address as `0x${string}`) || (embeddedWallet?.address as `0x${string}`) || undefined;
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || ((embeddedWallet as any)?.address as `0x${string}`) || undefined;
   const { switchChainAsync } = useSwitchChain();
   const [circleKit] = useState(() => new AppKit());
   const [urlDesc, setUrlDesc] = useState<string | null>(null);
@@ -514,11 +514,11 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
           ) : !hasSufficientAllowance ? (
             <button
               onClick={handleApproveToken}
-              disabled={activeStep === 'approving' || !address}
+              disabled={activeStep === 'approving'}
               className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
             >
-              {!address ? <Loader2 className="w-4 h-4 animate-spin" /> : activeStep === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-              {!address ? 'Syncing Wallet...' : (() => {
+              {activeStep === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+              {(() => {
                 const type = getEffectiveType().toLowerCase();
                 if (type === 'tip') return 'Approve Tip';
                 return 'Approve';
@@ -527,11 +527,11 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
           ) : (
             <button
               onClick={handleExecutePayment}
-              disabled={activeStep === 'paying' || !address}
+              disabled={activeStep === 'paying'}
               className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
             >
-              {!address ? <Loader2 className="w-4 h-4 animate-spin" /> : activeStep === 'paying' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
-              {!address ? 'Syncing Wallet...' : (() => {
+              {activeStep === 'paying' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
+              {(() => {
                 const type = getEffectiveType().toLowerCase();
                 if (type === 'tip') return 'Send Tip';
                 return 'Pay Now';
