@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
 import { goldskyClient, GET_BUYER_SUBSCRIPTIONS } from '@/lib/goldsky';
+import { SubscriptionRow } from './SubscriptionRow';
 
 export function BuyerSubscriptions() {
   const { address } = useAccount();
@@ -129,42 +130,15 @@ export function BuyerSubscriptions() {
           </thead>
           <tbody className="divide-y divide-gray-200 font-medium text-gray-600">
             {activeSubscriptions.map((sub: any) => {
-              const formattedAmount = sub.amount ? formatUnits(BigInt(sub.amount), 6) : '0.00';
-              const merchantName = sub.merchant?.name || 'Unknown Merchant';
-              
               const isCancelingThis = cancelingId === sub.id && (isPending || isTxConfirming);
               
               return (
-                <tr key={sub.id} className="hover:bg-gray-50 transition-colors group">
-                  <td className="py-4 px-3">
-                    <span className="font-bold text-slate-900 bg-gray-100 px-2.5 py-1 rounded-lg border border-gray-200 block w-fit">
-                      {merchantName}
-                    </span>
-                  </td>
-                  <td className="py-4 px-3">
-                    <div className="flex items-center gap-1.5 font-bold text-slate-900">
-                      <Coins className="w-4 h-4 text-[#fc5000]" />
-                      <span className="text-sm">${formattedAmount}</span>
-                      <span className="text-[10px] text-gray-500 font-normal">{sub.token || 'USDC'}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-3 text-gray-500">
-                    Every {sub.interval ? (Number(sub.interval) / 86400).toString() : '30'} Days
-                  </td>
-                  <td className="py-4 px-3 text-right">
-                    <button
-                      onClick={() => handleCancel(sub.id)}
-                      disabled={cancelingId !== null}
-                      className="inline-flex items-center gap-1.5 text-xs text-red-600 font-bold bg-white hover:bg-red-50 px-3 py-1.5 rounded-xl border border-red-200 transition-all disabled:opacity-50"
-                    >
-                      {isCancelingThis ? (
-                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Canceling...</>
-                      ) : (
-                        <><XCircle className="w-3.5 h-3.5" /> Cancel</>
-                      )}
-                    </button>
-                  </td>
-                </tr>
+                <SubscriptionRow 
+                  key={sub.id} 
+                  sub={sub} 
+                  onCancel={handleCancel} 
+                  cancelingId={isCancelingThis ? sub.id : null} 
+                />
               );
             })}
           </tbody>

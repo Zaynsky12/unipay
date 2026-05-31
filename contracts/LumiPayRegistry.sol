@@ -244,12 +244,12 @@ contract LumiPayRegistry {
     }
 
     /**
-     * @dev Eksekusi langganan secara otomatis (Bisa dipanggil oleh siapa saja / Cron Job / Relayer).
+     * @dev Eksekusi langganan secara manual (Hanya bisa dipanggil oleh subscriber).
      */
-    function executeSubscription(bytes32 subId) external {
+    function renewSubscription(bytes32 subId) external {
         Subscription storage sub = subscriptions[subId];
         require(sub.isActive, "Subscription is not active");
-        require(block.timestamp >= sub.nextPaymentDue, "Payment is not due yet");
+        require(msg.sender == sub.subscriber, "Only subscriber can manually renew");
 
         sub.nextPaymentDue = block.timestamp + sub.interval;
 
