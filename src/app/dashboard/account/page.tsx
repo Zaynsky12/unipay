@@ -607,39 +607,40 @@ function AccountContent() {
         )}
 
         {activeTab === 'Settings' && (
-          <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-12 space-y-8 sm:space-y-10">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
-              <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#fc5000]/10 border border-[#fc5000]/20 flex items-center justify-center text-[#fc5000]">
+          <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] p-8 sm:p-12 space-y-10">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#fc5000]/10 border border-[#fc5000]/20 flex items-center justify-center text-[#fc5000]">
                 <Mail className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight">Notification Settings</h2>
-                <p className="text-gray-500 text-[10px] sm:text-xs uppercase tracking-widest leading-relaxed mt-1 sm:mt-0">Set up your email to receive subscription reminders.</p>
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Notification Settings</h2>
+                <p className="text-gray-500 text-xs uppercase tracking-widest leading-relaxed">Set up your email to receive subscription reminders.</p>
               </div>
             </div>
 
             <div className="space-y-8">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Current Notification Email</label>
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
-                  <input 
-                    type="email" 
-                    value={user?.email?.address || ''} 
-                    readOnly
-                    placeholder="No email linked yet" 
-                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 sm:py-4 px-4 sm:px-5 text-gray-500 text-sm font-bold outline-none" 
-                  />
-                  <button 
-                    onClick={() => linkEmail()} 
-                    className="btn-orange w-full sm:w-auto whitespace-nowrap py-3.5 sm:py-4 px-6 text-white text-[10px] font-black uppercase flex items-center justify-center gap-2 rounded-2xl"
-                  >
-                    <Mail className="w-4 h-4" />
-                    {user?.email?.address ? 'Change Email' : 'Link Email'}
-                  </button>
-                </div>
-                <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-2 ml-1 leading-relaxed">
+                <input 
+                  type="email" 
+                  value={user?.email?.address || ''} 
+                  readOnly
+                  placeholder="No email linked yet" 
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-5 text-gray-500 text-sm font-bold outline-none" 
+                />
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-2 ml-1 leading-relaxed">
                   We use Privy's secure OTP verification to link your email directly to your wallet identity. No passwords required.
                 </p>
+              </div>
+
+              <div className="pt-4 flex flex-col sm:flex-row gap-4">
+                <button 
+                  onClick={() => linkEmail()} 
+                  className="btn-orange flex-1 py-4 text-white text-[10px] font-black uppercase flex items-center justify-center gap-3 rounded-2xl"
+                >
+                  <Mail className="w-4 h-4" />
+                  {user?.email?.address ? 'Change Email Address' : 'Link Email Address'}
+                </button>
               </div>
             </div>
           </div>
