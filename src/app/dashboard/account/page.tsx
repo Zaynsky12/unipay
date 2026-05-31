@@ -463,8 +463,8 @@ function AccountContent() {
                 <UserCog className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Merchant Identity</h2>
-                <p className="text-gray-500 text-xs uppercase tracking-widest leading-relaxed">Setup your business identity on-chain.</p>
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight">Merchant Identity</h2>
+                <p className="text-gray-500 text-[10px] sm:text-xs uppercase tracking-widest leading-relaxed">Setup your business identity on-chain.</p>
               </div>
             </div>
 
@@ -613,8 +613,8 @@ function AccountContent() {
                 <Mail className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Notification Settings</h2>
-                <p className="text-gray-500 text-xs uppercase tracking-widest leading-relaxed">Set up your email to receive subscription reminders.</p>
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight">Notification Settings</h2>
+                <p className="text-gray-500 text-[10px] sm:text-xs uppercase tracking-widest leading-relaxed">Set up your email to receive subscription reminders.</p>
               </div>
             </div>
 
