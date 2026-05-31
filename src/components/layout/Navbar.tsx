@@ -23,10 +23,9 @@ export function Navbar() {
   const { login, logout, authenticated, ready, user } = usePrivy();
   const { createWallet } = useCreateWallet();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const userAddress = address || user?.wallet?.address || (user?.linkedAccounts?.find((a: any) => a.type === 'wallet' && a.walletClientType === 'privy')?.address);
-  const hasEmbeddedWallet = !!user?.linkedAccounts.find(
-    (account) => account.type === 'wallet' && account.walletClientType === 'privy'
-  );
+  const privyWallet = user?.linkedAccounts?.find((account) => account.type === 'wallet' && (account as any).walletClientType === 'privy') as any;
+  const userAddress = address || user?.wallet?.address || privyWallet?.address;
+  const hasEmbeddedWallet = !!privyWallet;
 
   const isLandingPage = pathname === '/';
   const isPaymentPage = pathname.startsWith('/pay/') || 
