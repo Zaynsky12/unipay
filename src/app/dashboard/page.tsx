@@ -365,9 +365,9 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-30">
 
           {/* Payments Card — Caldera chunky */}
-          <div className="lg:col-span-12 caldera-card p-6 flex flex-col justify-between relative z-30 overflow-hidden">
+          <div className="lg:col-span-12 caldera-card p-6 flex flex-col justify-between relative z-30 overflow-visible">
             {/* Orange top accent bar */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#fc5000]/60 via-[#fc5000]/40 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#fc5000]/60 via-[#fc5000]/40 to-transparent rounded-t-3xl" />
             <div>
               <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-4" style={{ fontFamily: 'var(--font-dm-sans)' }}>Payments</h2>
               
