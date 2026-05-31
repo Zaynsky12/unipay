@@ -152,3 +152,25 @@ export const GET_ACTIVE_SUBSCRIPTIONS = gql`
     }
   }
 `;
+
+export const GET_CUSTOMER_HISTORY = gql`
+  query GetCustomerHistory($customerId: String!) {
+    transactions(where: { payer_contains_nocase: $customerId }, orderBy: timestamp, orderDirection: desc) {
+      id
+      sessionId
+      merchant
+      amount
+      token
+      payer
+      timestamp
+    }
+    subscriptionPayments(where: { subscriber_contains_nocase: $customerId }, orderBy: timestamp, orderDirection: desc) {
+      id
+      subId
+      merchant
+      amount
+      subscriber
+      timestamp
+    }
+  }
+`;

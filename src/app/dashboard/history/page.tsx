@@ -21,6 +21,7 @@ import {
 import Link from 'next/link';
 import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI } from '@/lib/constants';
 import { useMerchantHistory } from '@/lib/hooks/useMerchantHistory';
+import { useCustomerHistory } from '@/lib/hooks/useCustomerHistory';
 import { parseSessionDescription, getBadgeStyles } from '@/app/dashboard/page';
 import { usePrivy } from '@privy-io/react-auth';
 import { InlineAuth } from '@/components/dashboard/InlineAuth';
@@ -30,6 +31,7 @@ export default function HistoryPage() {
   const { address, isConnected } = useAccount();
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
+  const [viewMode, setViewMode] = useState<'merchant' | 'customer'>('merchant');
 
   const [selectedSessionFilter, setSelectedSessionFilter] = useState<string | null>(null);
   const [selectedSessionName, setSelectedSessionName] = useState<string | null>(null);
@@ -56,24 +58,41 @@ export default function HistoryPage() {
     query: { enabled: !!address }
   });
 
-  const { history, isLoading: isLoadingLogs, error } = useMerchantHistory(address);
+  const { history: merchantHistory, isLoading: isLoadingMerchant, error } = useMerchantHistory(address);
+  const { history: customerHistory, isLoading: isLoadingCustomer } = useCustomerHistory(address);
+
+  const activeHistory = viewMode === 'merchant' ? merchantHistory : customerHistory;
+  const isLoadingLogs = viewMode === 'merchant' ? isLoadingMerchant : isLoadingCustomer;
 
   // Sessions are now managed via the database (history hook)
-  const createdSessions = history?.sessions || [];
+  const createdSessions = merchantHistory?.sessions || [];
 
   // Parse logs from Goldsky history
-  const regularPayments = history?.payments || [];
-  const subPayments = (history?.subscriptionPayments || []).map((sp: any) => {
-    const relatedPlan = (history?.subscriptions || []).find((s: any) => s.id.toLowerCase() === sp.subId.toLowerCase());
-    return {
-      id: sp.id,
-      sessionId: relatedPlan ? relatedPlan.sessionId : sp.subId,
-      amount: sp.amount,
-      token: relatedPlan ? relatedPlan.token : "0x3600000000000000000000000000000000000000",
-      payer: sp.subscriber,
-      timestamp: sp.timestamp
-    };
-  });
+  let regularPayments = [];
+  let subPayments = [];
+
+  if (viewMode === 'merchant') {
+    regularPayments = activeHistory?.payments || [];
+    subPayments = (activeHistory?.subscriptionPayments || []).map((sp: any) => {
+      const relatedPlan = (activeHistory?.subscriptions || []).find((s: any) => s.id.toLowerCase() === sp.subId.toLowerCase());
+      return {
+        ...sp,
+        sessionId: relatedPlan ? relatedPlan.sessionId : sp.subId,
+        token: relatedPlan ? relatedPlan.token : "0x3600000000000000000000000000000000000000",
+        payer: sp.subscriber
+      };
+    });
+  } else {
+    regularPayments = activeHistory?.transactions || [];
+    subPayments = (activeHistory?.subscriptionPayments || []).map((sp: any) => {
+      return {
+        ...sp,
+        sessionId: sp.subId,
+        token: "0x3600000000000000000000000000000000000000",
+        payer: sp.subscriber
+      };
+    });
+  }
   
   const logs = [...regularPayments, ...subPayments].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
 
@@ -158,14 +177,29 @@ export default function HistoryPage() {
               </p>
             </>
           ) : (
-            <>
+            <div className="w-full">
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                 History Transaction
               </h1>
               <p className="text-[11px] text-gray-500 font-medium">
-                Incoming settlements to your payment links
+                {viewMode === 'merchant' ? 'Incoming settlements to your payment links' : 'Outgoing payments to other merchants'}
               </p>
-            </>
+              
+              <div className="flex items-center gap-2 mt-4 bg-gray-100 p-1 rounded-xl w-fit border border-gray-200 shadow-inner">
+                <button
+                  onClick={() => setViewMode('merchant')}
+                  className={`px-4 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${viewMode === 'merchant' ? 'bg-white text-slate-900 shadow border border-gray-200' : 'text-gray-500 hover:text-slate-700'}`}
+                >
+                  💰 Income (Merchant)
+                </button>
+                <button
+                  onClick={() => setViewMode('customer')}
+                  className={`px-4 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all ${viewMode === 'customer' ? 'bg-white text-slate-900 shadow border border-gray-200' : 'text-gray-500 hover:text-slate-700'}`}
+                >
+                  💸 Expenses (Customer)
+                </button>
+              </div>
+            </div>
           )}
         </div>
 
@@ -317,11 +351,11 @@ export default function HistoryPage() {
                       <table className="w-full text-left text-xs">
                         <thead>
                           <tr className="text-gray-500 uppercase tracking-wider text-[10px] border-b border-gray-200">
-                            <th className="pb-3.5 font-bold px-3">Session Spec</th>
-                            <th className="pb-3.5 font-bold px-3">Payer Identity</th>
-                            <th className="pb-3.5 font-bold px-3">Settlement Vol</th>
-                            <th className="pb-3.5 font-bold px-3">Timestamp</th>
-                            <th className="pb-3.5 font-bold text-right px-3">Verification Registry</th>
+                        <th className="pb-3.5 font-bold px-3">Session Spec</th>
+                        <th className="pb-3.5 font-bold px-3">{viewMode === 'merchant' ? 'Payer Identity' : 'Merchant Identity'}</th>
+                        <th className="pb-3.5 font-bold px-3">Settlement Vol</th>
+                        <th className="pb-3.5 font-bold px-3">Timestamp</th>
+                        <th className="pb-3.5 font-bold text-right px-3">Verification Registry</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 font-medium text-gray-600">
@@ -336,9 +370,14 @@ export default function HistoryPage() {
                                     <span className="truncate max-w-[150px]">{item.sessionId ? `${item.sessionId.slice(0, 10)}...${item.sessionId.slice(-6)}` : 'N/A'}</span>
                                   </div>
                                 </td>
-                                <td className="py-4 px-3 font-mono text-gray-500">
-                                  <span className="bg-white px-2.5 py-1 rounded-lg border border-gray-200">{item.payer ? `${item.payer.slice(0, 8)}...${item.payer.slice(-4)}` : 'Unknown'}</span>
-                                </td>
+                            <td className="py-4 px-3 font-mono text-gray-500">
+                              <span className="bg-white px-2.5 py-1 rounded-lg border border-gray-200">
+                                {viewMode === 'merchant' 
+                                  ? (item.payer ? `${item.payer.slice(0, 8)}...${item.payer.slice(-4)}` : 'Unknown')
+                                  : (item.merchant ? `${item.merchant.slice(0, 8)}...${item.merchant.slice(-4)}` : 'Unknown')
+                                }
+                              </span>
+                            </td>
                                 <td className="py-4 px-3">
                                   <div className="flex items-center gap-1.5 font-bold text-slate-900">
                                     <Coins className="w-4 h-4 text-[#fc5000]" /><span className="text-sm">${formattedAmount}</span><span className="text-[10px] text-gray-500 font-normal">USDC</span>
@@ -423,7 +462,7 @@ export default function HistoryPage() {
                     <thead>
                       <tr className="text-gray-500 uppercase tracking-wider text-[10px] border-b border-gray-200">
                         <th className="pb-3.5 font-bold px-3">Session Spec</th>
-                        <th className="pb-3.5 font-bold px-3">Payer Identity</th>
+                        <th className="pb-3.5 font-bold px-3">{viewMode === 'merchant' ? 'Payer Identity' : 'Merchant Identity'}</th>
                         <th className="pb-3.5 font-bold px-3">Settlement Vol</th>
                         <th className="pb-3.5 font-bold px-3">Timestamp</th>
                         <th className="pb-3.5 font-bold text-right px-3">Verification Registry</th>
@@ -466,7 +505,12 @@ export default function HistoryPage() {
                               </div>
                             </td>
                             <td className="py-4 px-3 font-mono text-gray-500">
-                              <span className="bg-white px-2.5 py-1 rounded-lg border border-gray-200">{item.payer ? `${item.payer.slice(0, 8)}...${item.payer.slice(-4)}` : 'Unknown'}</span>
+                              <span className="bg-white px-2.5 py-1 rounded-lg border border-gray-200">
+                                {viewMode === 'merchant' 
+                                  ? (item.payer ? `${item.payer.slice(0, 8)}...${item.payer.slice(-4)}` : 'Unknown')
+                                  : (item.merchant ? `${item.merchant.slice(0, 8)}...${item.merchant.slice(-4)}` : 'Unknown')
+                                }
+                              </span>
                             </td>
                             <td className="py-4 px-3">
                               <div className="flex items-center gap-1.5 font-bold text-slate-900">
