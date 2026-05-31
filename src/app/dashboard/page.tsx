@@ -37,7 +37,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, USDC_ADDRESS, EURC_ADDRESS } from '@/lib/constants';
 import { useMerchantHistory } from '@/lib/hooks/useMerchantHistory';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { useSetActiveWallet } from '@privy-io/wagmi';
 import { InlineAuth } from '@/components/dashboard/InlineAuth';
 
 // Helper: translate token address to readable symbol
@@ -110,6 +111,20 @@ export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const embeddedWallet = user?.linkedAccounts?.find((account: any) => account.type === 'wallet' && account.walletClientType === 'privy');
   const userAddress = address || (user?.wallet?.address as `0x${string}`) || ((embeddedWallet as any)?.address as `0x${string}`) || undefined;
+
+  // Ensure embedded wallet is active in Wagmi for email-login users
+  const { wallets } = useWallets();
+  const { setActiveWallet } = useSetActiveWallet();
+
+  useEffect(() => {
+    if (!address && authenticated && wallets.length > 0) {
+      const privyWallet = wallets.find(w => w.walletClientType === 'privy');
+      if (privyWallet) {
+        setActiveWallet(privyWallet);
+      }
+    }
+  }, [address, authenticated, wallets, setActiveWallet]);
+
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isDeactivating, setIsDeactivating] = useState<string | null>(null);

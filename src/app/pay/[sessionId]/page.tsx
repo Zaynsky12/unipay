@@ -24,7 +24,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LUMIPAY_REGISTRY_ADDRESS, REGISTRY_ABI, SUPPORTED_TOKENS, ERC20_ABI } from '@/lib/constants';
 import { goldskyClient, GET_SESSION } from '@/lib/goldsky';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { useSetActiveWallet } from '@privy-io/wagmi';
 
 export function parseSessionDescription(descString: string) {
   const str = descString || '';
@@ -100,11 +101,24 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   const sessionIdBytes32 = (rawSessionId.startsWith('0x') ? rawSessionId : `0x${rawSessionId}`) as `0x${string}`;
 
-  const { login, user } = usePrivy();
+  const { login, user, authenticated } = usePrivy();
   const { address, isConnected, connector, chainId } = useAccount();
   const embeddedWallet = user?.linkedAccounts?.find((account: any) => account.type === 'wallet' && account.walletClientType === 'privy');
   const userAddress = address || (user?.wallet?.address as `0x${string}`) || ((embeddedWallet as any)?.address as `0x${string}`) || undefined;
   const { switchChainAsync } = useSwitchChain();
+
+  // Ensure embedded wallet is active in Wagmi for email-login users
+  const { wallets } = useWallets();
+  const { setActiveWallet } = useSetActiveWallet();
+
+  useEffect(() => {
+    if (!address && authenticated && wallets.length > 0) {
+      const privyWallet = wallets.find(w => w.walletClientType === 'privy');
+      if (privyWallet) {
+        setActiveWallet(privyWallet);
+      }
+    }
+  }, [address, authenticated, wallets, setActiveWallet]);
   const [circleKit] = useState(() => new AppKit());
   const [urlDesc, setUrlDesc] = useState<string | null>(null);
   const [goldskyTxHash, setGoldskyTxHash] = useState<string | null>(null);

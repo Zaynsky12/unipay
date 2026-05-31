@@ -36,7 +36,8 @@ import {
   SUPPORTED_TOKENS, 
   type SupportedToken 
 } from '@/lib/constants';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { useSetActiveWallet } from '@privy-io/wagmi';
 import { InlineAuth } from '@/components/dashboard/InlineAuth';
 
 export default function CreatePaymentPage() {
@@ -45,12 +46,18 @@ export default function CreatePaymentPage() {
   const embeddedWallet = user?.linkedAccounts?.find((account: any) => account.type === 'wallet' && account.walletClientType === 'privy');
   const userAddress = address || (user?.wallet?.address as `0x${string}`) || ((embeddedWallet as any)?.address as `0x${string}`) || undefined;
 
-  if (!ready) return (
-    <div className="py-24 text-center space-y-3 bg-white border border-gray-200 rounded-[2.5rem] p-8 max-w-2xl mx-auto mt-10">
-      <Loader2 className="w-8 h-8 text-[#fc5000] animate-spin mx-auto" />
-      <p className="text-sm font-bold text-slate-900 tracking-tight">Initializing secure session...</p>
-    </div>
-  );
+  // Ensure embedded wallet is active in Wagmi for email-login users
+  const { wallets } = useWallets();
+  const { setActiveWallet } = useSetActiveWallet();
+
+  useEffect(() => {
+    if (!address && authenticated && wallets.length > 0) {
+      const privyWallet = wallets.find(w => w.walletClientType === 'privy');
+      if (privyWallet) {
+        setActiveWallet(privyWallet);
+      }
+    }
+  }, [address, authenticated, wallets, setActiveWallet]);
 
 
   // Form State
@@ -88,7 +95,8 @@ export default function CreatePaymentPage() {
   const merchantName = isRegistered ? ((merchantData as any)?.[0] || 'Merchant') : 'Anonymous';
 
   // L1 Contract Execution
-  const { writeContract, data: txHash, isPending } = useWriteContract();
+  const { writeContract, data: txHash, isPending, error: writeError } = useWriteContract();
+  const [createError, setCreateError] = useState<string | null>(null);
   
   const { isLoading: isTxConfirming, isSuccess, data: txReceipt } = useWaitForTransactionReceipt({
     hash: txHash,
@@ -125,6 +133,7 @@ export default function CreatePaymentPage() {
 
     const isReusable = selectedMenu === 'checkouts' || selectedMenu === 'tip' || selectedMenu === 'subscribtion';
 
+    setCreateError(null);
     writeContract({
       address: LUMIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
@@ -133,6 +142,13 @@ export default function CreatePaymentPage() {
       gas: 500000n,
     });
   };
+
+  // Show error if writeContract fails
+  useEffect(() => {
+    if (writeError) {
+      setCreateError(writeError.message || 'Transaction failed. Please try again.');
+    }
+  }, [writeError]);
 
   // Intercept L1 Session Identifier logs
   useEffect(() => {
@@ -468,6 +484,12 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+
+              {createError && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-500 font-medium text-center">
+                  {createError.length > 120 ? createError.slice(0, 120) + '...' : createError}
                 </div>
               )}
 
