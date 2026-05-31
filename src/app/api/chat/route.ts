@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       1. Invoices: For personal/specific billing (1 link for 1 transaction/client).
       2. Checkouts: For public sales (can be purchased multiple times by many people via 1 link).
       3. Subscription: For recurring billing with automatic deductions.
-      4. Tip: To receive donations or spontaneous support from anyone.
+      4. Donate: To receive custom donation amounts or spontaneous support from anyone.
 
     Guide users to: Dashboard, Create Payment, History, or Account tabs.
     

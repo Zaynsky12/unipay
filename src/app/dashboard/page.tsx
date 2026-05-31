@@ -71,7 +71,7 @@ export function parseSessionDescription(descString: string) {
   if (lower.startsWith('invoice')) return { type: 'Invoice', cleanDesc: str };
   if (lower.startsWith('checkout')) return { type: 'Checkout', cleanDesc: str };
   if (lower.startsWith('subscription')) return { type: 'Subscription', cleanDesc: str };
-  if (lower.startsWith('tip')) return { type: 'Tip', cleanDesc: str };
+  if (lower.startsWith('donate')) return { type: 'Donate', cleanDesc: str };
   return { type: 'Payment', cleanDesc: str };
 }
 
@@ -92,10 +92,10 @@ export function getBadgeStyles(type: string) {
         bg: 'bg-amber-500/10 border-amber-500/25 text-amber-600',
         emoji: '⚡'
       };
-    case 'tip':
+    case 'donate':
       return {
         bg: 'bg-emerald-500/10 border-emerald-500/25 text-emerald-600',
-        emoji: '📲'
+        emoji: '🎁'
       };
     default:
       return {
@@ -259,7 +259,7 @@ export default function DashboardPage() {
       let routePath = 'pay';
       if (typeLower === 'invoice') routePath = 'invoice';
       else if (typeLower === 'checkout') routePath = 'checkout';
-      else if (typeLower === 'tip') routePath = 'tip';
+      else if (typeLower === 'donate') routePath = 'donate';
       url = `${window.location.origin}/${routePath}/${actualId}`;
     }
 
@@ -458,7 +458,7 @@ export default function DashboardPage() {
                                 }
                                 if (typeLower === 'invoice') return `/invoice/${actualId}`;
                                 if (typeLower === 'checkout') return `/checkout/${actualId}`;
-                                if (typeLower === 'tip') return `/tip/${actualId}`;
+                                if (typeLower === 'donate') return `/donate/${actualId}`;
                                 return `/pay/${actualId}`;
                             })()}
                             target="_blank"
@@ -664,7 +664,7 @@ export default function DashboardPage() {
                                 }
                                 if (typeLower === 'invoice') return `/invoice/${actualId}`;
                                 if (typeLower === 'checkout') return `/checkout/${actualId}`;
-                                if (typeLower === 'tip') return `/tip/${actualId}`;
+                                if (typeLower === 'donate') return `/donate/${actualId}`;
                                 return `/pay/${actualId}`;
                             })()}
                             target="_blank"
