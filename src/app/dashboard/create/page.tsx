@@ -88,7 +88,7 @@ export default function CreatePaymentPage() {
 
   const handleCreateSession = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || Number(amount) <= 0 || !address) return;
+    if (!amount || Number(amount) <= 0 || !userAddress) return;
 
     const tokenObj = SUPPORTED_TOKENS.find(t => t.symbol === selectedToken);
     if (!tokenObj) return;
@@ -337,7 +337,7 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
         </div>
       </div>
 
-      {!isConnected && (
+      {!userAddress && (
         <div className="p-6 rounded-3xl bg-amber-500/5 border border-amber-500/10 flex items-center justify-between gap-4 animate-pulse">
            <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
@@ -349,7 +349,7 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
         </div>
       )}
 
-      {!isRegistered && isConnected && (
+      {!isRegistered && userAddress && (
         <div className="p-5 rounded-2xl bg-[#fc5000]/5 border border-[#fc5000]/10 text-[10px] text-gray-500 flex items-center gap-4 font-bold uppercase tracking-widest leading-relaxed">
           <Sparkles className="w-5 h-5 text-[#fc5000] shrink-0" />
           <span>Notice: Operating as Anonymous. You can verify your brand in the Account settings.</span>
@@ -465,7 +465,7 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
 
               <button
                 type="submit"
-                disabled={isPending || isTxConfirming || !amount || Number(amount) <= 0 || !isConnected}
+                disabled={isPending || isTxConfirming || !amount || Number(amount) <= 0 || !userAddress}
                 className="btn-orange w-full py-5 text-white text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isPending || isTxConfirming ? (
