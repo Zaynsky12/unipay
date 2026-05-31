@@ -374,20 +374,20 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
           ) : !hasSufficientAllowance ? (
             <button
               onClick={handleApproveToken}
-              disabled={activeStep === 'approving'}
+              disabled={activeStep === 'approving' || !address}
               className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
             >
-              {activeStep === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-              Approve Subscription
+              {!address ? <Loader2 className="w-4 h-4 animate-spin" /> : activeStep === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+              {!address ? 'Syncing Wallet...' : 'Approve Subscription'}
             </button>
           ) : (
             <button
               onClick={handleCreateSubscription}
-              disabled={activeStep === 'subscribing'}
+              disabled={activeStep === 'subscribing' || !address}
               className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
             >
-              {activeStep === 'subscribing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Repeat className="w-4 h-4" />}
-              Subscribe Now
+              {!address ? <Loader2 className="w-4 h-4 animate-spin" /> : activeStep === 'subscribing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Repeat className="w-4 h-4" />}
+              {!address ? 'Syncing Wallet...' : 'Subscribe Now'}
             </button>
           )}
 

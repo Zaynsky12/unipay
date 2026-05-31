@@ -473,10 +473,12 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
 
               <button
                 type="submit"
-                disabled={isPending || isTxConfirming || !amount || Number(amount) <= 0 || !userAddress}
+                disabled={isPending || isTxConfirming || !amount || Number(amount) <= 0 || !address}
                 className="btn-orange w-full py-5 text-white text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {isPending || isTxConfirming ? (
+                {!address ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" /> Syncing Wallet...</>
+                ) : isPending || isTxConfirming ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Finalizing on L1...</>
                 ) : (
                   <><Sparkles className="w-4 h-4" /> Create {selectedMenu === 'subscribtion' ? 'Subscription' : selectedMenu?.charAt(0).toUpperCase() + selectedMenu?.slice(1)}</>

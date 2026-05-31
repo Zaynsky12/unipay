@@ -514,11 +514,11 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
           ) : !hasSufficientAllowance ? (
             <button
               onClick={handleApproveToken}
-              disabled={activeStep === 'approving'}
+              disabled={activeStep === 'approving' || !address}
               className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
             >
-              {activeStep === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-              {(() => {
+              {!address ? <Loader2 className="w-4 h-4 animate-spin" /> : activeStep === 'approving' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+              {!address ? 'Syncing Wallet...' : (() => {
                 const type = getEffectiveType().toLowerCase();
                 if (type === 'tip') return 'Approve Tip';
                 return 'Approve';
@@ -527,11 +527,11 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
           ) : (
             <button
               onClick={handleExecutePayment}
-              disabled={activeStep === 'paying'}
+              disabled={activeStep === 'paying' || !address}
               className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
             >
-              {activeStep === 'paying' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
-              {(() => {
+              {!address ? <Loader2 className="w-4 h-4 animate-spin" /> : activeStep === 'paying' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
+              {!address ? 'Syncing Wallet...' : (() => {
                 const type = getEffectiveType().toLowerCase();
                 if (type === 'tip') return 'Send Tip';
                 return 'Pay Now';
