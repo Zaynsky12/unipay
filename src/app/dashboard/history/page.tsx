@@ -29,8 +29,6 @@ import { InlineAuth } from '@/components/dashboard/InlineAuth';
 export default function HistoryPage() {
   const { login, authenticated, ready } = usePrivy();
   const { address, isConnected } = useAccount();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSearchInput, setShowSearchInput] = useState(false);
   const [viewMode, setViewMode] = useState<'merchant' | 'customer'>('merchant');
 
   const [selectedSessionFilter, setSelectedSessionFilter] = useState<string | null>(null);
@@ -96,40 +94,52 @@ export default function HistoryPage() {
   
   const logs = [...regularPayments, ...subPayments].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
 
-  // Filter log akhir berdasarkan pencarian teks ATAU tab filter sesi spesifik
+  // Filter log akhir berdasarkan tab filter sesi spesifik
   const filteredLogs = logs.filter((l: any) => {
-    const matchesSearch = (l.sessionId && l.sessionId.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                          (l.payer && l.payer.toLowerCase().includes(searchQuery.toLowerCase()));
-    
     if (selectedSessionFilter) {
-      const matchesSession = l.sessionId && (
+      return l.sessionId && (
         l.sessionId.toLowerCase() === selectedSessionFilter.toLowerCase() ||
         l.sessionId.toLowerCase().includes(selectedSessionFilter.toLowerCase()) ||
         selectedSessionFilter.toLowerCase().includes(l.sessionId.toLowerCase())
       );
-      return matchesSearch && matchesSession;
     }
-
-    return matchesSearch;
+    return true;
   });
 
-  const renderToggle = (containerClass: string, btnClass: string = '') => (
-    <div className={`items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-inner ${containerClass}`}>
+  const renderToggle = (containerClass: string) => (
+    <div className={`items-center bg-gray-100 p-1 rounded-2xl border border-gray-200 shadow-inner ${containerClass}`}>
       <button
         onClick={() => setViewMode('merchant')}
-        className={`py-2 px-3 sm:px-4 rounded-lg text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center gap-1.5 ${viewMode === 'merchant' ? 'bg-white text-slate-900 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-slate-700'} ${btnClass}`}
+        className={`px-4 sm:px-6 py-2 text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] rounded-xl transition-all flex items-center justify-center gap-1.5 ${viewMode === 'merchant' ? 'bg-white text-slate-900 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
       >
-        <span className="text-sm">💰</span> 
-        <span>Income <span className="hidden sm:inline">(Merchant)</span></span>
+        <span>Merchant</span>
       </button>
       <button
         onClick={() => setViewMode('customer')}
-        className={`py-2 px-3 sm:px-4 rounded-lg text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center gap-1.5 ${viewMode === 'customer' ? 'bg-white text-slate-900 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-slate-700'} ${btnClass}`}
+        className={`px-4 sm:px-6 py-2 text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] rounded-xl transition-all flex items-center justify-center gap-1.5 ${viewMode === 'customer' ? 'bg-white text-slate-900 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
       >
-        <span className="text-sm">🛒</span> 
-        <span>Purchases <span className="hidden sm:inline">(Customer)</span></span>
+        <span>Customer</span>
       </button>
     </div>
+  );
+
+  const renderMobileSwitch = () => (
+    <button
+      onClick={() => setViewMode(viewMode === 'merchant' ? 'customer' : 'merchant')}
+      className="flex sm:hidden items-center w-[240px] bg-gray-100 p-1.5 rounded-full mt-6 mb-2 border border-gray-200 relative shadow-inner mx-auto overflow-hidden transition-all duration-300"
+    >
+      <div
+        className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-full shadow-sm border border-gray-200/50 transition-all duration-300 ${
+          viewMode === 'merchant' ? 'left-1.5' : 'left-[calc(50%+4.5px)]'
+        }`}
+      />
+      <div className={`relative z-10 w-1/2 text-center py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${viewMode === 'merchant' ? 'text-slate-900' : 'text-gray-400'}`}>
+        Merchant
+      </div>
+      <div className={`relative z-10 w-1/2 text-center py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${viewMode === 'customer' ? 'text-slate-900' : 'text-gray-400'}`}>
+        Customer
+      </div>
+    </button>
   );
 
   if (!ready) return null;
@@ -190,13 +200,6 @@ export default function HistoryPage() {
                 <span className="text-xs font-bold text-[#fc5000] bg-[#fc5000]/10 border border-gray-200 px-2.5 py-1 rounded-full">
                   Filtered
                 </span>
-                <button 
-                  onClick={() => setShowSearchInput(!showSearchInput)}
-                  className={`p-1.5 ml-1 transition-colors ${showSearchInput || searchQuery ? 'text-[#fc5000]' : 'text-gray-400 hover:text-slate-900'}`}
-                  title="Search transactions"
-                >
-                  <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
               </h1>
               <p className="text-[11px] text-gray-500 font-medium">
                 Showing all buyers for this specific payment link
@@ -204,22 +207,13 @@ export default function HistoryPage() {
             </>
           ) : (
             <div className="w-full">
-              <div className="flex items-center gap-3">
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                   History Transaction
                 </h1>
-                <button 
-                  onClick={() => setShowSearchInput(!showSearchInput)}
-                  className={`p-1 transition-colors ${showSearchInput || searchQuery ? 'text-[#fc5000]' : 'text-gray-400 hover:text-slate-900'}`}
-                  title="Search transactions"
-                >
-                  <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              </div>
               <p className="text-[11px] text-gray-500 font-medium mt-0.5">
                 {viewMode === 'merchant' ? 'Incoming settlements to your payment links' : 'Outgoing payments to other merchants'}
               </p>
-              {renderToggle('flex sm:hidden mt-4 w-full', 'flex-1')}
+              {renderMobileSwitch()}
             </div>
           )}
         </div>
@@ -229,30 +223,6 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      {/* Toggleable Inline Search Input */}
-      {(showSearchInput || searchQuery) && (
-        <div className="animate-fade-in pt-1">
-          <div className="relative max-w-md ml-auto">
-            <Search className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text" 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter by Session ID or Payer..."
-              className="w-full bg-white border border-gray-200 rounded-xl py-2 pl-9 pr-8 text-xs text-slate-900 outline-none focus:border-[#fc5000]/50 transition-all font-mono placeholder:font-sans"
-              autoFocus
-            />
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-slate-900 text-xs font-bold"
-              >
-                ×
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ── Area Tabel Arsip ── */}
       <div className="glass-panel p-6 sm:p-8 relative overflow-hidden bg-[#FEF7ED]">
