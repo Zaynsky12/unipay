@@ -12,15 +12,25 @@ export function InlineAuth() {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [otpPhase, setOtpPhase] = useState(false);
 
   // Sync internal error state with Privy state
   useEffect(() => {
     if (state.status === 'error') {
       setErrorMsg(state.error?.message || 'Verification failed. Please try again.');
-    } else {
-      setErrorMsg(null);
+      // Reset OTP fields so user can try again
+      setOtp(Array(6).fill(''));
+      setTimeout(() => inputRefs.current[0]?.focus(), 100);
     }
   }, [state]);
+
+  // Track when we enter the OTP phase
+  useEffect(() => {
+    if (state.status === 'awaiting-code-input') {
+      setOtpPhase(true);
+      setErrorMsg(null);
+    }
+  }, [state.status]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +105,7 @@ export function InlineAuth() {
   }
 
   // UI rendering based on state
-  if (state.status === 'awaiting-code-input' || state.status === 'submitting-code') {
+  if (state.status === 'awaiting-code-input' || state.status === 'submitting-code' || (state.status === 'error' && otpPhase)) {
     return (
       <div className="w-full space-y-6 mb-8 text-left mt-2 animate-fade-in">
         <div className="text-center mb-6">
