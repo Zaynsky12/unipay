@@ -821,12 +821,12 @@ export default function DashboardPage() {
             <div className="mt-6 text-left overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="text-gray-500 uppercase tracking-wider text-[9px] border-b border-gray-200">
-                    <th className="pb-3 font-bold px-2">Session Hash</th>
-                    <th className="pb-3 font-bold px-2">Payer Identity</th>
-                    <th className="pb-3 font-bold px-2">Settled Asset</th>
-                    <th className="pb-3 font-bold px-2">Timestamp</th>
-                    <th className="pb-3 font-bold text-right px-2">Verification Registry</th>
+                  <tr className="text-gray-500 uppercase tracking-wider text-[9px] border-b border-gray-200 text-center">
+                    <th className="pb-3 font-bold px-2">Item Details</th>
+                    <th className="pb-3 font-bold px-2">Customer</th>
+                    <th className="pb-3 font-bold px-2">Amount</th>
+                    <th className="pb-3 font-bold px-2">Date & Time</th>
+                    <th className="pb-3 font-bold px-2">Explorer</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 font-medium text-gray-600">
@@ -845,50 +845,52 @@ export default function DashboardPage() {
 
                     return (
                       <tr key={idx} className="hover:bg-white transition-colors group">
-                        <td className="py-3 px-2 font-mono text-[#fc5000]/90 font-semibold">
-                          <div className="space-y-0.5">
+                        <td className="py-3 px-2 font-mono text-[#fc5000]/90 font-semibold text-center">
+                          <div className="flex flex-col items-center space-y-0.5">
                             {cleanTitle && (
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center justify-center gap-1">
                                 {badge && (
                                   <span className={`shrink-0 px-1 py-0.2 text-[6px] font-black uppercase tracking-wider rounded border ${badge.bg}`}>
                                     {badge.emoji} {parsedTitle?.type}
                                   </span>
                                 )}
-                                <span className="text-[9px] font-bold text-slate-900 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 block font-sans w-fit truncate max-w-[120px]">
+                                <span className="text-[9px] font-bold text-slate-900 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200 block font-sans w-fit truncate max-w-[120px] mx-auto">
                                   {cleanTitle}
                                 </span>
                               </div>
                             )}
-                            <div className="flex items-center gap-1.5 pt-0.5">
+                            <div className="flex items-center justify-center gap-1.5 pt-0.5">
                               <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
                               <span>{p.sessionId ? `${p.sessionId.slice(0, 10)}...${p.sessionId.slice(-4)}` : 'N/A'}</span>
                             </div>
                           </div>
                         </td>
 
-                        <td className="py-3 px-2 font-mono text-gray-500">
-                          <span className="bg-white px-1.5 py-0.5 rounded border border-gray-200">
+                        <td className="py-3 px-2 font-mono text-gray-500 text-center">
+                          <span className="bg-white px-1.5 py-0.5 rounded border border-gray-200 inline-block">
                             {p.payer ? `${p.payer.slice(0, 8)}...${p.payer.slice(-4)}` : 'Unknown'}
                           </span>
                         </td>
 
-                        <td className="py-3 px-2">
-                          <span className="font-black text-slate-900">${pAmountFormatted}</span>
-                          <span className="text-[9px] text-[#fc5000] font-bold ml-1">
-                            {matchedSession ? resolveTokenSymbol(matchedSession.token) : 'USDC'}
-                          </span>
+                        <td className="py-3 px-2 text-center">
+                          <div className="flex items-center justify-center gap-1 font-bold">
+                            <span className="text-slate-900">${pAmountFormatted}</span>
+                            <span className="text-[9px] text-[#fc5000] ml-0.5">
+                              {matchedSession ? resolveTokenSymbol(matchedSession.token) : 'USDC'}
+                            </span>
+                          </div>
                         </td>
 
-                        <td className="py-3 px-2 text-gray-500 text-[10px]">
+                        <td className="py-3 px-2 text-gray-500 text-[10px] text-center">
                           <span>{new Date(Number(p.timestamp) * 1000).toLocaleDateString()} {new Date(Number(p.timestamp) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </td>
 
-                        <td className="py-3 px-2 text-right">
+                        <td className="py-3 px-2 text-center">
                           <a 
                             href={`https://testnet.arcscan.app/tx/${txHash}`} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-[#fc5000] hover:text-[#fc5000] font-bold bg-white/[0.03] hover:bg-white px-2 py-0.5 rounded border border-gray-200 transition-all"
+                            className="inline-flex items-center justify-center gap-1 text-[11px] text-[#fc5000] hover:text-[#fc5000] font-bold bg-white/[0.03] hover:bg-white px-2 py-0.5 rounded border border-gray-200 transition-all mx-auto"
                           >
                             <span>ArcScan L1</span>
                             <ExternalLink className="w-2.5 h-2.5" />
