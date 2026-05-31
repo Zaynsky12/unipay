@@ -400,7 +400,7 @@ export default function DashboardPage() {
                   <span className="col-span-5">PAYMENTS</span>
                   <span className="col-span-2 text-center">PRICE</span>
                   <span className="col-span-2 text-center">VOLUME</span>
-                  <span className="col-span-2 text-center">SUBSCRIBERS</span>
+                  <span className="col-span-2 text-center">SALES</span>
                   <span className="col-span-1 text-right">MANAGE</span>
                 </div>
 
@@ -512,7 +512,7 @@ export default function DashboardPage() {
                           {/* 4. SALES */}
                           <div className="col-span-2 text-center leading-tight">
                             <span className="text-xs font-bold text-gray-600 block font-mono">{linkBuyers.length}</span>
-                            <span className="text-[8px] text-gray-500 font-bold block">{isSub ? 'subscribers' : 'orders'}</span>
+                            <span className="text-[8px] text-gray-500 font-bold block">orders</span>
                           </div>
 
                           {/* 5. MANAGE */}
@@ -806,7 +806,7 @@ export default function DashboardPage() {
                             <span className="text-xs font-black text-slate-900 mt-0.5 block">${salesSum.toFixed(2)}</span>
                           </div>
                           <div className="bg-white/[0.01] p-2 rounded-xl text-center border border-white/[0.02]">
-                            <span className="text-[8px] font-bold text-gray-500 block uppercase tracking-wider">{isSub ? 'Subscribers' : 'Orders'}</span>
+                            <span className="text-[8px] font-bold text-gray-500 block uppercase tracking-wider">Sales</span>
                             <span className="text-xs font-bold text-gray-600 mt-0.5 block">{linkBuyers.length}</span>
                           </div>
                         </div>
