@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { formatUnits } from 'viem';
+import { formatUnits, padHex } from 'viem';
 import { 
   Building2, 
   Wallet, 
@@ -205,13 +205,13 @@ export default function DashboardPage() {
   const handleDeleteSession = (sessionId: string) => {
     if (!userAddress) return;
     setIsDeactivating(sessionId);
-    const formattedId = (sessionId.startsWith('0x') ? sessionId : `0x${sessionId}`) as `0x${string}`;
+    const formattedId = padHex((sessionId.startsWith('0x') ? sessionId : `0x${sessionId}`) as `0x${string}`, { size: 32 });
     writeContract({
       address: LUMIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: 'deactivateSession',
       args: [formattedId],
-      gas: 100000n,
+      gas: 500000n,
     });
   };
 

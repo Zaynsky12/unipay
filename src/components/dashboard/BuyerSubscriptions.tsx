@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { formatUnits } from 'viem';
+import { formatUnits, padHex } from 'viem';
 import { 
   Loader2, 
   Coins, 
@@ -63,13 +63,13 @@ export function BuyerSubscriptions() {
   const handleCancel = (subId: string) => {
     if (!userAddress) return;
     setCancelingId(subId);
-    const formattedId = (subId.startsWith('0x') ? subId : `0x${subId}`) as `0x${string}`;
+    const formattedId = padHex((subId.startsWith('0x') ? subId : `0x${subId}`) as `0x${string}`, { size: 32 });
     writeContract({
       address: LUMIPAY_REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: 'cancelSubscription',
       args: [formattedId],
-      gas: 100000n,
+      gas: 500000n,
     });
   };
 
