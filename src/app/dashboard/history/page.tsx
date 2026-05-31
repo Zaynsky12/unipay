@@ -190,6 +190,13 @@ export default function HistoryPage() {
                 <span className="text-xs font-bold text-[#fc5000] bg-[#fc5000]/10 border border-gray-200 px-2.5 py-1 rounded-full">
                   Filtered
                 </span>
+                <button 
+                  onClick={() => setShowSearchInput(!showSearchInput)}
+                  className={`p-1.5 ml-1 transition-colors ${showSearchInput || searchQuery ? 'text-[#fc5000]' : 'text-gray-400 hover:text-slate-900'}`}
+                  title="Search transactions"
+                >
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
               </h1>
               <p className="text-[11px] text-gray-500 font-medium">
                 Showing all buyers for this specific payment link
@@ -197,9 +204,18 @@ export default function HistoryPage() {
             </>
           ) : (
             <div className="w-full">
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                History Transaction
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                  History Transaction
+                </h1>
+                <button 
+                  onClick={() => setShowSearchInput(!showSearchInput)}
+                  className={`p-1 transition-colors ${showSearchInput || searchQuery ? 'text-[#fc5000]' : 'text-gray-400 hover:text-slate-900'}`}
+                  title="Search transactions"
+                >
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              </div>
               <p className="text-[11px] text-gray-500 font-medium mt-0.5">
                 {viewMode === 'merchant' ? 'Incoming settlements to your payment links' : 'Outgoing payments to other merchants'}
               </p>
@@ -210,13 +226,6 @@ export default function HistoryPage() {
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0 mt-1 sm:mt-0">
           {!selectedSessionFilter && renderToggle('hidden sm:flex')}
-          <button 
-            onClick={() => setShowSearchInput(!showSearchInput)}
-            className={`p-1.5 transition-colors ${showSearchInput || searchQuery ? 'text-[#fc5000]' : 'text-gray-500 hover:text-slate-900'}`}
-            title="Search transactions"
-          >
-            <Search className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
