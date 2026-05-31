@@ -36,14 +36,14 @@ import { BuyerSubscriptions } from '@/components/dashboard/BuyerSubscriptions';
 import { usePrivy } from '@privy-io/react-auth';
 import { InlineAuth } from '@/components/dashboard/InlineAuth';
 
-type TabType = 'Account' | 'Merchant Setting' | 'My Subscriptions' | 'Integrations';
+type TabType = 'Account' | 'Merchant Setting' | 'Customer Settings' | 'My Subscriptions' | 'Integrations';
 
 // Kita pindahkan logika utama ke komponen internal agar bisa dibungkus Suspense
 function AccountContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') as TabType;
-  const { login, authenticated, ready, user } = usePrivy();
+  const { login, authenticated, ready, user, linkEmail } = usePrivy();
   const { address, isConnected } = useAccount();
   const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
   const [accountMode, setAccountMode] = useState<'Merchant' | 'Customer'>('Merchant');
@@ -284,7 +284,7 @@ function AccountContent() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-12 border-b border-gray-200 px-2 overflow-x-auto no-scrollbar scroll-smooth">
-          {((accountMode === 'Merchant' ? ['Account', 'Merchant Setting', 'Integrations'] : ['Account', 'My Subscriptions']) as TabType[]).map((tab) => (
+          {((accountMode === 'Merchant' ? ['Account', 'Merchant Setting', 'Integrations'] : ['Account', 'Customer Settings', 'My Subscriptions']) as TabType[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -603,6 +603,45 @@ function AccountContent() {
                   </button>
                </div>
             </form>
+          </div>
+        )}
+
+        {activeTab === 'Customer Settings' && (
+          <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] p-8 sm:p-12 space-y-10">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#fc5000]/10 border border-[#fc5000]/20 flex items-center justify-center text-[#fc5000]">
+                <Mail className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Notification Settings</h2>
+                <p className="text-gray-500 text-xs uppercase tracking-widest leading-relaxed">Set up your email to receive subscription reminders.</p>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Current Notification Email</label>
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <input 
+                    type="email" 
+                    value={user?.email?.address || ''} 
+                    readOnly
+                    placeholder="No email linked yet" 
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-5 text-gray-500 text-sm font-bold outline-none" 
+                  />
+                  <button 
+                    onClick={() => linkEmail()} 
+                    className="btn-orange whitespace-nowrap py-4 px-6 text-white text-[10px] font-black uppercase flex items-center justify-center gap-2 rounded-2xl"
+                  >
+                    <Mail className="w-4 h-4" />
+                    {user?.email?.address ? 'Change Email' : 'Link Email'}
+                  </button>
+                </div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-2 ml-1">
+                  We use Privy's secure OTP verification to link your email directly to your wallet identity. No passwords required.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
