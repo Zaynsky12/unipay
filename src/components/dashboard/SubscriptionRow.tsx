@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { usePrivy } from '@privy-io/react-auth';
 import { formatUnits, parseUnits } from 'viem';
 import { 
   Loader2, 
@@ -22,6 +23,8 @@ interface SubscriptionRowProps {
 
 export function SubscriptionRow({ sub, onCancel, cancelingId }: SubscriptionRowProps) {
   const { address } = useAccount();
+  const { user } = usePrivy();
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
   const [isRenewing, setIsRenewing] = useState(false);
   const [renewStep, setRenewStep] = useState<'idle' | 'approving' | 'renewing'>('idle');
 
@@ -48,7 +51,7 @@ export function SubscriptionRow({ sub, onCancel, cancelingId }: SubscriptionRowP
   const { writeContractAsync: writeRenew } = useWriteContract();
 
   const handleRenew = async () => {
-    if (!address) return;
+    if (!userAddress) return;
     try {
       setIsRenewing(true);
       

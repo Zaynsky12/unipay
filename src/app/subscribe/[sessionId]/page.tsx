@@ -27,8 +27,9 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
   const rawSessionId = resolvedParams.sessionId;
   const sessionIdBytes32 = (rawSessionId.startsWith('0x') ? rawSessionId : `0x${rawSessionId}`) as `0x${string}`;
 
-  const { login } = usePrivy();
+  const { login, user } = usePrivy();
   const { address, isConnected, chainId } = useAccount();
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
 
   const [urlDesc, setUrlDesc] = useState<string | null>(null);
 
@@ -144,8 +145,8 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
     address: matchedToken.address as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'allowance',
-    args: address ? [address, LUMIPAY_REGISTRY_ADDRESS] : undefined,
-    query: { enabled: !!address }
+    args: userAddress ? [userAddress, LUMIPAY_REGISTRY_ADDRESS] : undefined,
+    query: { enabled: !!userAddress }
   });
 
   const requiredAllowance = amountRaw * 12n; // Approx 1 year
@@ -160,7 +161,7 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
   const [activeStep, setActiveStep] = useState<'idle' | 'approving' | 'subscribing' | 'success'>('idle');
 
   const handleApproveToken = () => {
-    if (!address) return;
+    if (!userAddress) return;
     setActiveStep('approving');
     const maxInt = 115792089237316195423570985008687907853269984665640564039457584007913129639935n; 
     writeContract({
@@ -172,7 +173,7 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
   };
 
   const handleCreateSubscription = () => {
-    if (!address) return;
+    if (!userAddress) return;
     setActiveStep('subscribing');
     writeContract({
       address: LUMIPAY_REGISTRY_ADDRESS,
@@ -337,7 +338,7 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
             </div>
           )}
 
-          {!isConnected ? (
+          {!userAddress ? (
             <button
               onClick={login}
               className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"

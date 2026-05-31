@@ -219,7 +219,7 @@ function AccountContent() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address || !merchantName) return;
+    if (!userAddress || !merchantName) return;
     const metadataObj = { logo: merchantLogo, website: merchantWebsite, email: merchantEmail, updatedAt: Date.now() };
     const metadataString = JSON.stringify(metadataObj);
     writeContract({ address: LUMIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'registerMerchant', args: [merchantName, metadataString] });

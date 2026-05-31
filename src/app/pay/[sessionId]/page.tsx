@@ -100,8 +100,9 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
   const sessionIdBytes32 = (rawSessionId.startsWith('0x') ? rawSessionId : `0x${rawSessionId}`) as `0x${string}`;
 
-  const { login } = usePrivy();
+  const { login, user } = usePrivy();
   const { address, isConnected, connector, chainId } = useAccount();
+  const userAddress = address || (user?.wallet?.address as `0x${string}`) || undefined;
   const { switchChainAsync } = useSwitchChain();
   const [circleKit] = useState(() => new AppKit());
   const [urlDesc, setUrlDesc] = useState<string | null>(null);
@@ -211,8 +212,8 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
     address: tokenAddr as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'allowance',
-    args: address ? [address, LUMIPAY_REGISTRY_ADDRESS] : undefined,
-    query: { enabled: !!address && !!tokenAddr && tokenAddr !== '0x0000000000000000000000000000000000000000' }
+    args: userAddress ? [userAddress, LUMIPAY_REGISTRY_ADDRESS] : undefined,
+    query: { enabled: !!userAddress && !!tokenAddr && tokenAddr !== '0x0000000000000000000000000000000000000000' }
   });
 
   const sourceUSDC = getSourceUSDCAddress(chainId);
@@ -220,8 +221,8 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
     address: sourceUSDC as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'balanceOf',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address && !!sourceUSDC && chainId !== 5042002 }
+    args: userAddress ? [userAddress] : undefined,
+    query: { enabled: !!userAddress && !!sourceUSDC && chainId !== 5042002 }
   });
   
   const sourceBalance = (sourceBalanceData as bigint) ?? 0n;
@@ -238,7 +239,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   const [activeStep, setActiveStep] = useState<'idle' | 'approving' | 'paying' | 'bridging'>('idle');
 
   const handleBridgeUSDC = async () => {
-    if (!connector || !chainId || !address) return;
+    if (!connector || !chainId || !userAddress) return;
     try {
       setActiveStep('bridging');
       const provider = (await connector.getProvider()) as any;
@@ -264,13 +265,13 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   };
 
   const handleApproveToken = () => {
-    if (!tokenAddr || !address) return;
+    if (!tokenAddr || !userAddress) return;
     setActiveStep('approving');
     writeContract({ address: tokenAddr as `0x${string}`, abi: ERC20_ABI, functionName: 'approve', args: [LUMIPAY_REGISTRY_ADDRESS, amountRaw], gas: 100000n });
   };
 
   const handleExecutePayment = () => {
-    if (!address) return;
+    if (!userAddress) return;
     setActiveStep('paying');
     writeContract({ address: LUMIPAY_REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: 'pay', args: [sessionIdBytes32], gas: 500000n });
   };
@@ -442,7 +443,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
 
         {/* ── Call To Action ── */}
         <div className="mb-6">
-          {!isConnected ? (
+          {!userAddress ? (
             <button
               onClick={login}
               className="w-full py-4 bg-[#FF5C00] hover:bg-[#E04500] text-white rounded-[1.5rem] text-[13px] font-bold uppercase tracking-wide active:scale-95 flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
