@@ -233,7 +233,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   const [localPaid, setLocalPaid] = useState(false);
   const hasSufficientAllowance = allowanceVal >= amountRaw || localApproved;
 
-  const { writeContract, data: txHash, isPending: isWritePending } = useWriteContract();
+  const { writeContract, data: txHash, isPending: isWritePending, error: writeError } = useWriteContract();
   const { isLoading: isTxConfirming, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({ hash: txHash });
 
   const [activeStep, setActiveStep] = useState<'idle' | 'approving' | 'paying' | 'bridging'>('idle');
@@ -267,7 +267,7 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
   const handleApproveToken = () => {
     if (!tokenAddr || !userAddress) return;
     setActiveStep('approving');
-    writeContract({ address: tokenAddr as `0x${string}`, abi: ERC20_ABI, functionName: 'approve', args: [LUMIPAY_REGISTRY_ADDRESS, amountRaw], gas: 100000n });
+    writeContract({ address: tokenAddr as `0x${string}`, abi: ERC20_ABI, functionName: 'approve', args: [LUMIPAY_REGISTRY_ADDRESS, amountRaw], gas: 500000n });
   };
 
   const handleExecutePayment = () => {
@@ -288,6 +288,12 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
       setActiveStep('idle');
     }
   }, [isTxSuccess, activeStep, refetchAllowance, refetchSession]);
+
+  useEffect(() => {
+    if (writeError) {
+      setActiveStep('idle');
+    }
+  }, [writeError]);
 
   const isExpired = expiry > 0n && BigInt(Math.floor(Date.now() / 1000)) > expiry;
   const displayTxHash = txHash || goldskyTxHash;

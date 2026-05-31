@@ -169,6 +169,7 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
       abi: ERC20_ABI,
       functionName: 'approve',
       args: [LUMIPAY_REGISTRY_ADDRESS, maxInt],
+      gas: 500000n,
     });
   };
 
@@ -180,6 +181,7 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
       abi: REGISTRY_ABI,
       functionName: 'createSubscription',
       args: [sessionIdBytes32, BigInt(intervalSeconds)],
+      gas: 500000n,
     });
   };
 
@@ -194,6 +196,12 @@ export default function SubscribePage({ params }: { params: Promise<{ sessionId:
       }
     }
   }, [isTxSuccess, activeStep, refetchAllowance]);
+
+  useEffect(() => {
+    if (writeError) {
+      setActiveStep('idle');
+    }
+  }, [writeError]);
 
   const isSuccessState = activeStep === 'success';
 
