@@ -357,7 +357,7 @@ export default function DashboardPage() {
 
             {!isLoadingRead && !isRegistered && (
               <Link
-                href="/dashboard/account?tab=Merchant Setting"
+                href="/dashboard/account?tab=Profile"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#fc5000]/10 border border-[#fc5000]/25 rounded-full text-[#fc5000] text-[10px] font-black uppercase tracking-widest hover:bg-[#fc5000] hover:text-white transition-all shrink-0"
               >
                 <ShieldAlert className="w-3 h-3" />
