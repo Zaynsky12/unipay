@@ -34,5 +34,7 @@ jobs:
         NEXT_PUBLIC_GOLDSKY_URL: "https://dummy-url"
         GEMINI_API_KEY: "dummy-key"
         NEXT_PUBLIC_PRIVY_APP_ID: "cmps8wpr000iy0dl169ookgrn"
+        PRIVY_APP_SECRET: "dummy-privy-secret"
+        RESEND_API_KEY: "dummy-resend-key"
         CRON_SECRET: "dummy-cron-secret"
         PRIVATE_KEY: "0x0000000000000000000000000000000000000000000000000000000000000001"
