@@ -27,7 +27,8 @@ import {
   QrCode,
   Receipt,
   CreditCard,
-  Mail
+  Mail,
+  Gift
 } from 'lucide-react';
 import Link from 'next/link';
 import { 
@@ -304,7 +305,7 @@ const embedSnippet = `<script src="https://lumipay.app/widget.js" type="module">
             { menu: 'invoices', type: 'onetime', icon: Receipt, label: 'Invoices', desc: 'A hosted shareable link', accent: '#fc5000' },
             { menu: 'checkouts', type: 'onetime', icon: CreditCard, label: 'Checkouts', desc: 'Embed directly into your site or app', accent: '#fc5000' },
             { menu: 'subscribtion', type: 'subscription', icon: Zap, label: 'Subscription', desc: 'Recurring billing', accent: '#fc5000' },
-            { menu: 'donate', type: 'onetime', icon: QrCode, label: 'Donate', desc: 'Accept custom donation amounts', accent: '#fc5000' },
+            { menu: 'donate', type: 'onetime', icon: Gift, label: 'Donate', desc: 'Accept custom donation amounts', accent: '#fc5000' },
           ].map((item) => (
             <button
               key={item.menu}

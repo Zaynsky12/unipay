@@ -35,8 +35,10 @@ export function parseSessionDescription(descString: string) {
   const str = descString || '';
   const match = str.match(/^\[(.*?)\]\s*(.*)$/);
   if (match) {
+    let type = match[1];
+    if (type.toLowerCase() === 'tip') type = 'Donate';
     return {
-      type: match[1],
+      type: type,
       cleanDesc: match[2]
     };
   }
@@ -44,7 +46,7 @@ export function parseSessionDescription(descString: string) {
   if (lower.startsWith('invoice')) return { type: 'Invoice', cleanDesc: str };
   if (lower.startsWith('checkout')) return { type: 'Checkout', cleanDesc: str };
   if (lower.startsWith('subscription')) return { type: 'Subscription', cleanDesc: str };
-  if (lower.startsWith('donate')) return { type: 'Donate', cleanDesc: str };
+  if (lower.startsWith('donate') || lower.startsWith('tip')) return { type: 'Donate', cleanDesc: str };
   return { type: 'Payment', cleanDesc: str };
 }
 
@@ -87,6 +89,7 @@ export function getBadgeStyles(type: string) {
         emoji: '⚡'
       };
     case 'donate':
+    case 'tip':
       return {
         bg: 'bg-emerald-500/10 border-emerald-500/25 text-emerald-600',
         emoji: '🎁'

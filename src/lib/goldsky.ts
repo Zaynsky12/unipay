@@ -2,7 +2,9 @@ import { GraphQLClient, gql } from 'graphql-request';
 
 const GOLDSKY_ENDPOINT = process.env.NEXT_PUBLIC_GOLDSKY_URL || '';
 
-export const goldskyClient = new GraphQLClient(GOLDSKY_ENDPOINT);
+export const goldskyClient = new GraphQLClient(GOLDSKY_ENDPOINT, {
+  fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' })
+});
 
 export const GET_PROTOCOL_STATS = gql`
   query GetProtocolStats {
