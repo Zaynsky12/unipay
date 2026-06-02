@@ -442,10 +442,10 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
           </div>
 
           {/* Bottom Half: Details */}
-          <div className="p-6 space-y-4">
-            <h3 className="text-[14px] font-bold text-slate-900 border-b border-gray-100 pb-2">Payment Details</h3>
+          <div className="p-5 space-y-3">
+            <h3 className="text-xs font-bold text-slate-900 border-b border-gray-100 pb-1.5">Payment Details</h3>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex justify-between items-center gap-4">
                 <p className="text-[13px] text-slate-600 whitespace-nowrap">Order Note :</p>
                 <p className="text-[13px] font-medium text-slate-900 text-right line-clamp-2">
@@ -460,12 +460,12 @@ export default function PaymentPage({ params }: { params: Promise<{ sessionId: s
                 </p>
               </div>
 
-              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
                 <p className="text-[13px] text-slate-600">Settlement Asset :</p>
                 <p className="text-[13px] font-bold text-purple-600 uppercase">{matchedToken.symbol}</p>
               </div>
 
-              <h3 className="text-[14px] font-bold text-slate-900 pt-1">Status & Time</h3>
+              <h3 className="text-xs font-bold text-slate-900 pt-1">Status & Time</h3>
 
               <div className="flex justify-between items-center">
                 <p className="text-[13px] text-slate-600">Valid Until :</p>
