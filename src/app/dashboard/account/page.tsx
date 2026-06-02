@@ -51,6 +51,21 @@ function AccountContent() {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'Account');
 
   useEffect(() => {
+    const updateMode = () => {
+      const savedPortal = localStorage.getItem('lumipay_portal_mode');
+      if (savedPortal === 'customer') {
+        setAccountMode('Customer');
+      } else if (savedPortal === 'merchant') {
+        setAccountMode('Merchant');
+      }
+    };
+    
+    updateMode();
+    window.addEventListener('lumipay_portal_mode_changed', updateMode);
+    return () => window.removeEventListener('lumipay_portal_mode_changed', updateMode);
+  }, []);
+
+  useEffect(() => {
     if (initialTab) setActiveTab(initialTab);
   }, [initialTab]);
   
@@ -263,34 +278,19 @@ function AccountContent() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 animate-fade-in pb-24 font-sans">
 
       <div className="mb-8 sm:mb-10 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight px-1 uppercase text-center sm:text-left" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+        <div className="flex flex-col items-center justify-center gap-4 text-center">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight px-1 uppercase" style={{ fontFamily: 'var(--font-dm-sans)' }}>
             {accountMode === 'Merchant' ? 'Merchant' : 'Customer'} <span className="gradient-text-orange">Portal</span>
           </h1>
-          
-          <div className="flex items-center bg-gray-100 p-1 rounded-2xl mx-auto sm:mx-0 shadow-inner">
-            <button
-              onClick={() => { setAccountMode('Merchant'); setActiveTab('Account'); }}
-              className={`px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all ${accountMode === 'Merchant' ? 'bg-white text-slate-900 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              Merchant
-            </button>
-            <button
-              onClick={() => { setAccountMode('Customer'); setActiveTab('Account'); }}
-              className={`px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all ${accountMode === 'Customer' ? 'bg-[#fc5000] text-white shadow-sm shadow-[#fc5000]/20' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              Customer
-            </button>
-          </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-12 border-b border-gray-200 px-2 overflow-x-auto no-scrollbar scroll-smooth">
+        <div className="flex items-center justify-center gap-4 sm:gap-12 border-b border-gray-200 px-2 overflow-x-auto no-scrollbar scroll-smooth mt-6">
           {((accountMode === 'Merchant' ? ['Account', 'Profile', 'Integrations'] : ['Account', 'Settings', 'Subscriptions']) as TabType[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-4 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all relative flex-1 sm:flex-none text-center sm:text-left whitespace-nowrap ${
-                activeTab === tab ? 'text-[#fc5000]' : 'text-gray-500 hover:text-gray-600'
+              className={`pb-3 text-xs sm:text-sm font-bold transition-all relative flex-1 sm:flex-none text-center whitespace-nowrap ${
+                activeTab === tab ? 'text-[#fc5000]' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               {tab}
@@ -305,10 +305,10 @@ function AccountContent() {
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
         {activeTab === 'Account' && accountMode === 'Merchant' && (
           <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
-            <div className="p-10 sm:p-14 flex flex-col items-center text-center border-b border-gray-200 space-y-6">
+            <div className="p-6 sm:p-8 flex flex-col items-center text-center border-b border-gray-200 space-y-4">
               <div className="relative group">
                 <div className="absolute -inset-4 bg-[#fc5000]/10 rounded-full blur-2xl group-hover:bg-[#fc5000]/18 transition duration-500" />
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28 bg-white border-[1.5px] border-gray-200 rounded-[2.5rem] flex items-center justify-center text-gray-500 shadow-2xl overflow-hidden group-hover:border-[#fc5000]/30 transition-all duration-500">
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-white border-[1.5px] border-gray-200 rounded-[2rem] flex items-center justify-center text-gray-500 shadow-2xl overflow-hidden group-hover:border-[#fc5000]/30 transition-all duration-500">
                   {merchantLogo ? (
                     <img src={merchantLogo} alt="logo" className="w-full h-full object-cover" />
                   ) : (
@@ -318,19 +318,19 @@ function AccountContent() {
               </div>
               
               <div className="space-y-3 w-full">
-                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter truncate max-w-[280px] sm:max-w-none">
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight truncate max-w-[280px] sm:max-w-none">
                   {isRegistered ? currentName : 'Anonymous'}
                 </h1>
                 <div className="flex flex-col items-center gap-2">
                   {isRegistered ? (
-                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       Verified Merchant
                     </div>
                   ) : (
                     <button
                       onClick={() => setActiveTab('Profile')}
-                      className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500 hover:text-black transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                      className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold border bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500 hover:text-black transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                       title="Click to Register"
                     >
                       <Clock className="w-3.5 h-3.5 animate-pulse" />
@@ -340,13 +340,13 @@ function AccountContent() {
                   {isRegistered && (
                     <div className="flex flex-wrap justify-center gap-4 mt-2">
                       {merchantWebsite && (
-                        <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-500 uppercase tracking-widest">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
                           <Globe className="w-3 h-3 text-[#fc5000]" />
                           {merchantWebsite.replace('https://','').replace('http://','')}
                         </div>
                       )}
                       {merchantEmail && (
-                        <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-500 uppercase tracking-widest">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
                           <Mail className="w-3 h-3 text-[#fc5000]" />
                           {merchantEmail}
                         </div>
@@ -357,25 +357,25 @@ function AccountContent() {
               </div>
             </div>
 
-            <div className="p-8 sm:p-10 border-b border-gray-200 space-y-8">
+            <div className="p-5 sm:p-6 border-b border-gray-200 space-y-6">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[10px] font-black text-[#fc5000] uppercase tracking-widest">
+                <div className="flex items-center gap-2 text-sm font-bold text-[#fc5000]">
                   <TrendingUp className="w-4 h-4" />
                   Live Performance
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-end">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                 <div className="space-y-4 text-center md:text-left">
                   <div className="flex flex-col md:flex-row md:items-baseline gap-2">
-                    <span className="text-5xl sm:text-6xl font-black text-slate-900 tracking-tighter">
+                    <span className="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight">
                       ${formatUnits(totalReceived, 6)}
                     </span>
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Total Revenue</span>
+                    <span className="text-sm font-semibold text-gray-500">Total Revenue</span>
                   </div>
                   <div className="flex items-center justify-center md:justify-start gap-4">
                     <div className="flex items-center gap-1.5 text-emerald-500">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-black uppercase tracking-tighter">{totalTx.toString()} Settlements</span>
+                      <span className="text-xs font-semibold">{totalTx.toString()} Settlements</span>
                     </div>
                   </div>
                 </div>
@@ -388,8 +388,8 @@ function AccountContent() {
               </div>
             </div>
 
-            <div className="p-8 sm:p-10 bg-gray-50/50 space-y-6">
-              <div className="flex items-center gap-2 text-[10px] font-black text-[#fc5000] uppercase tracking-widest">
+            <div className="p-5 sm:p-6 bg-gray-50/50 space-y-5">
+              <div className="flex items-center gap-2 text-sm font-bold text-[#fc5000]">
                 <Globe2 className="w-4 h-4" />
                 My Asset
               </div>
@@ -403,9 +403,9 @@ function AccountContent() {
                   <div key={c.n} className="bg-white border border-gray-200 rounded-2xl p-4 hover:border-gray-300 shadow-sm transition-colors">
                     <div className="flex items-center justify-between mb-2">
                       <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px]">{c.i}</div>
-                      <span className="text-[8px] font-black text-gray-500 uppercase">{c.n}</span>
+                      <span className="text-[10px] font-bold text-gray-500">{c.n}</span>
                     </div>
-                    <div className="text-sm font-black text-slate-900">${c.b}</div>
+                    <div className="text-sm font-bold text-slate-900">${c.b}</div>
                   </div>
                 ))}
               </div>
@@ -415,16 +415,16 @@ function AccountContent() {
 
         {activeTab === 'Account' && accountMode === 'Customer' && (
           <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
-            <div className="p-10 sm:p-14 flex flex-col items-center text-center border-b border-gray-200 space-y-6">
+            <div className="p-6 sm:p-8 flex flex-col items-center text-center border-b border-gray-200 space-y-4">
               <div className="relative group">
                 <div className="absolute -inset-4 bg-[#fc5000]/10 rounded-full blur-2xl group-hover:bg-[#fc5000]/18 transition duration-500" />
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28 bg-white border-[1.5px] border-gray-200 rounded-[2.5rem] flex items-center justify-center text-gray-500 shadow-2xl overflow-hidden group-hover:border-[#fc5000]/30 transition-all duration-500">
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-white border-[1.5px] border-gray-200 rounded-[2rem] flex items-center justify-center text-gray-500 shadow-2xl overflow-hidden group-hover:border-[#fc5000]/30 transition-all duration-500">
                   <UserCircle className="w-12 h-12 opacity-80 text-[#fc5000]" />
                 </div>
               </div>
               
               <div className="space-y-3 w-full">
-                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter truncate max-w-[280px] sm:max-w-none">
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight truncate max-w-[280px] sm:max-w-none">
                   {address ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}` : 'Unknown Identity'}
                 </h1>
                 <div className="flex flex-col items-center gap-2">
@@ -432,8 +432,8 @@ function AccountContent() {
               </div>
             </div>
 
-            <div className="p-8 sm:p-10 bg-gray-50/50 space-y-6">
-              <div className="flex items-center gap-2 text-[10px] font-black text-[#fc5000] uppercase tracking-widest">
+            <div className="p-5 sm:p-6 bg-gray-50/50 space-y-5">
+              <div className="flex items-center gap-2 text-sm font-bold text-[#fc5000]">
                 <Globe2 className="w-4 h-4" />
                 My Asset
               </div>
@@ -447,9 +447,9 @@ function AccountContent() {
                   <div key={c.n} className="bg-white border border-gray-200 rounded-2xl p-4 hover:border-gray-300 shadow-sm transition-colors">
                     <div className="flex items-center justify-between mb-2">
                       <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px]">{c.i}</div>
-                      <span className="text-[8px] font-black text-gray-500 uppercase">{c.n}</span>
+                      <span className="text-[10px] font-bold text-gray-500">{c.n}</span>
                     </div>
-                    <div className="text-sm font-black text-slate-900">${c.b}</div>
+                    <div className="text-sm font-bold text-slate-900">${c.b}</div>
                   </div>
                 ))}
               </div>
@@ -458,24 +458,24 @@ function AccountContent() {
         )}
 
         {activeTab === 'Profile' && (
-          <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] p-8 sm:p-12 space-y-10">
+          <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-8 space-y-6">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 rounded-2xl bg-[#fc5000]/10 border border-[#fc5000]/20 flex items-center justify-center text-[#fc5000]">
                 <UserCog className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight">Merchant Identity</h2>
-                <p className="text-gray-500 text-[10px] sm:text-xs uppercase tracking-widest leading-relaxed">Setup your business identity on-chain.</p>
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Merchant Identity</h2>
+                <p className="text-gray-500 text-xs font-semibold leading-relaxed">Setup your business identity on-chain.</p>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
                {/* Premium Avatar/Logo Upload Zone di Bagian Atas */}
                <div 
                  onDragOver={handleDragOver}
                  onDragLeave={handleDragLeave}
                  onDrop={handleDrop}
-                 className={`relative w-full rounded-[2rem] border-2 border-dashed p-8 transition-all duration-300 flex flex-col items-center justify-center gap-4 text-center cursor-pointer overflow-hidden ${
+                 className={`relative w-full rounded-2xl sm:rounded-[2rem] border-2 border-dashed p-5 sm:p-6 transition-all duration-300 flex flex-col items-center justify-center gap-4 text-center cursor-pointer overflow-hidden ${
                    isDragging 
                      ? 'border-[#fc5000] bg-[#fc5000]/8 scale-[1.01] shadow-[0_0_25px_rgba(252,80,0,0.15)]' 
                      : merchantLogo
@@ -527,7 +527,7 @@ function AccountContent() {
                      </div>
                    </div>
                  ) : (
-                   <label htmlFor="logo-upload" className="flex flex-col items-center justify-center gap-3 w-full h-full py-4 cursor-pointer">
+                   <label htmlFor="logo-upload" className="flex flex-col items-center justify-center gap-2 w-full h-full py-2 cursor-pointer">
                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                        isDragging 
                          ? 'bg-[#fc5000] text-white scale-110 shadow-lg' 
@@ -562,17 +562,17 @@ function AccountContent() {
                </div>
 
                {/* Grid Input Fields di Bawah Logo */}
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Brand Name</label>
+                    <label className="text-xs font-semibold text-gray-600 ml-1">Brand Name</label>
                     <input type="text" value={merchantName} onChange={(e) => setMerchantName(e.target.value)} placeholder="Acme Corp" className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-5 text-slate-900 text-sm font-bold focus:border-violet-500 outline-none transition-colors" required />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Business Email</label>
+                    <label className="text-xs font-semibold text-gray-600 ml-1">Business Email</label>
                     <input type="email" value={merchantEmail} onChange={(e) => setMerchantEmail(e.target.value)} placeholder="contact@brand.com" className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-5 text-slate-900 text-sm font-bold focus:border-violet-500 outline-none transition-colors" />
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Official Website</label>
+                    <label className="text-xs font-semibold text-gray-600 ml-1">Official Website</label>
                     <input type="url" value={merchantWebsite} onChange={(e) => setMerchantWebsite(e.target.value)} placeholder="https://brand.com" className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-5 text-slate-900 text-sm font-bold focus:border-violet-500 outline-none transition-colors" />
                   </div>
                </div>
@@ -599,7 +599,7 @@ function AccountContent() {
                )}
 
                <div className="pt-4 flex flex-col sm:flex-row gap-4">
-                  <button type="submit" disabled={isPending || isTxConfirming || !merchantName} className="btn-orange flex-1 py-4 text-white text-[10px] font-black uppercase flex items-center justify-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed">
+                  <button type="submit" disabled={isPending || isTxConfirming || !merchantName} className="btn-orange flex-1 py-3 text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl sm:rounded-2xl">
                     {isPending || isTxConfirming ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-4 h-4" />Save Profile</>}
                   </button>
                </div>
@@ -608,20 +608,20 @@ function AccountContent() {
         )}
 
         {activeTab === 'Settings' && (
-          <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] p-8 sm:p-12 space-y-10">
+          <div className="bg-white border border-gray-200 rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-8 space-y-6">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 rounded-2xl bg-[#fc5000]/10 border border-[#fc5000]/20 flex items-center justify-center text-[#fc5000]">
                 <Mail className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight">Notification Settings</h2>
-                <p className="text-gray-500 text-[10px] sm:text-xs uppercase tracking-widest leading-relaxed">Set up your email to receive subscription reminders.</p>
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Notification Settings</h2>
+                <p className="text-gray-500 text-xs font-semibold leading-relaxed">Set up your email to receive subscription reminders.</p>
               </div>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Current Notification Email</label>
+                <label className="text-xs font-semibold text-gray-600 ml-1">Current Notification Email</label>
                 <input 
                   type="email" 
                   value={user?.email?.address || ''} 
@@ -629,7 +629,7 @@ function AccountContent() {
                   placeholder="No email linked yet" 
                   className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-5 text-gray-500 text-sm font-bold outline-none" 
                 />
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-2 ml-1 leading-relaxed">
+                <p className="text-xs font-medium text-gray-500 mt-2 ml-1 leading-relaxed">
                   We use Privy's secure OTP verification to link your email directly to your wallet identity. No passwords required.
                 </p>
               </div>
@@ -637,7 +637,7 @@ function AccountContent() {
               <div className="pt-4 flex flex-col sm:flex-row gap-4">
                 <button 
                   onClick={() => linkEmail()} 
-                  className="btn-orange flex-1 py-4 text-white text-[10px] font-black uppercase flex items-center justify-center gap-3 rounded-2xl"
+                  className="btn-orange flex-1 py-3 text-white text-sm font-bold flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl"
                 >
                   <Mail className="w-4 h-4" />
                   {user?.email?.address ? 'Change Email Address' : 'Link Email Address'}

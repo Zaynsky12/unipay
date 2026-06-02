@@ -1,19 +1,12 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Eye, LayoutDashboard, PlusCircle, History, Wallet, UserCircle, ArrowRight, Users, Loader2, Copy, LogOut } from 'lucide-react';
+import { Eye, LayoutDashboard, PlusCircle, History, Wallet, UserCircle, ArrowRight, Users, Loader2, Copy, LogOut, Globe, RefreshCcw } from 'lucide-react';
 import { useAccount, useDisconnect } from 'wagmi';
 import { usePrivy, useCreateWallet } from '@privy-io/react-auth';
 import { cn } from '@/lib/utils';
-
-const navItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Create Payment', href: '/dashboard/create', icon: PlusCircle },
-  { name: 'History', href: '/dashboard/history', icon: History },
-  { name: 'Account', href: '/dashboard/account', icon: UserCircle },
-];
 
 export function Navbar() {
   const pathname = usePathname();
@@ -23,6 +16,41 @@ export function Navbar() {
   const { login, logout, authenticated, ready, user } = usePrivy();
   const { createWallet } = useCreateWallet();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  const [portalMode, setPortalMode] = useState<'merchant' | 'customer'>('merchant');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('lumipay_portal_mode');
+      if (saved === 'customer' || saved === 'merchant') {
+        setPortalMode(saved);
+      }
+    }
+  }, []);
+
+  const togglePortalMode = () => {
+    const nextMode = portalMode === 'merchant' ? 'customer' : 'merchant';
+    setPortalMode(nextMode);
+    localStorage.setItem('lumipay_portal_mode', nextMode);
+    window.dispatchEvent(new Event('lumipay_portal_mode_changed'));
+    
+    // Optional automatic navigation when switching
+    if (nextMode === 'customer' && (pathname === '/dashboard' || pathname === '/explorer')) {
+      router.push('/dashboard/history?view=customer');
+    } else if (nextMode === 'merchant' && pathname === '/explorer') {
+      router.push('/dashboard');
+    }
+  };
+
+  const navItems = portalMode === 'merchant' ? [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Create Payment', href: '/dashboard/create', icon: PlusCircle },
+    { name: 'History', href: '/dashboard/history', icon: History },
+    { name: 'Account', href: '/dashboard/account', icon: UserCircle },
+  ] : [
+    { name: 'History', href: '/dashboard/history?view=customer', icon: History },
+    { name: 'Account', href: '/dashboard/account', icon: UserCircle },
+  ];
   const privyWallet = user?.linkedAccounts?.find((account) => account.type === 'wallet' && (account as any).walletClientType === 'privy') as any;
   const userAddress = address || user?.wallet?.address || privyWallet?.address;
   const hasEmbeddedWallet = !!privyWallet;
@@ -34,7 +62,7 @@ export function Navbar() {
                         pathname.startsWith('/subscribe/') || 
                         pathname.startsWith('/donate/');
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = (href: string) => pathname === href.split('?')[0];
 
   if (isPaymentPage) return null;
   if (!ready) return null;
@@ -132,6 +160,22 @@ export function Navbar() {
                     >
                       <Copy className="w-4 h-4 text-slate-400" /> Copy Address
                     </button>
+                    
+                    <div className="h-px bg-gray-100 my-1 w-full" />
+                    
+                    <button 
+                      onClick={() => {
+                         togglePortalMode();
+                         setIsDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-[#fc5000]/10 text-sm font-bold text-slate-700 flex items-center justify-between transition-colors group"
+                    >
+                      <div className="flex items-center gap-3 group-hover:text-[#fc5000]">
+                        <RefreshCcw className="w-4 h-4 text-slate-400 group-hover:text-[#fc5000]" /> 
+                        {portalMode === 'merchant' ? 'Switch to Customer' : 'Switch to Merchant'}
+                      </div>
+                    </button>
+
                     <div className="h-px bg-gray-100 my-1 w-full" />
                     <button 
                       onClick={() => {

@@ -46,6 +46,25 @@ export default function HistoryPage() {
         setSelectedSessionFilter(filterSession);
         setSelectedSessionName(filterName ? decodeURIComponent(filterName) : null);
       }
+      
+      const updateViewMode = () => {
+        const viewParam = new URLSearchParams(window.location.search).get('view');
+        if (viewParam === 'customer') {
+          setViewMode('customer');
+        } else if (viewParam === 'merchant') {
+          setViewMode('merchant');
+        } else {
+          const savedPortal = localStorage.getItem('lumipay_portal_mode');
+          if (savedPortal === 'customer' || savedPortal === 'merchant') {
+            setViewMode(savedPortal);
+          }
+        }
+      };
+
+      updateViewMode();
+      
+      window.addEventListener('lumipay_portal_mode_changed', updateViewMode);
+      return () => window.removeEventListener('lumipay_portal_mode_changed', updateViewMode);
     }
   }, []);
 
@@ -114,41 +133,8 @@ export default function HistoryPage() {
     return true;
   });
 
-  const renderToggle = (containerClass: string) => (
-    <div className={`items-center bg-gray-100 p-1 rounded-2xl border border-gray-200 shadow-inner ${containerClass}`}>
-      <button
-        onClick={() => setViewMode('merchant')}
-        className={`px-4 sm:px-6 py-2 text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] rounded-xl transition-all flex items-center justify-center gap-1.5 ${viewMode === 'merchant' ? 'bg-white text-slate-900 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
-      >
-        <span>Merchant</span>
-      </button>
-      <button
-        onClick={() => setViewMode('customer')}
-        className={`px-4 sm:px-6 py-2 text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] rounded-xl transition-all flex items-center justify-center gap-1.5 ${viewMode === 'customer' ? 'bg-white text-slate-900 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
-      >
-        <span>Customer</span>
-      </button>
-    </div>
-  );
-
-  const renderMobileSwitch = () => (
-    <button
-      onClick={() => setViewMode(viewMode === 'merchant' ? 'customer' : 'merchant')}
-      className="flex sm:hidden items-center w-[240px] bg-gray-100 p-1.5 rounded-full mt-6 mb-2 border border-gray-200 relative shadow-inner mx-auto overflow-hidden transition-all duration-300"
-    >
-      <div
-        className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-full shadow-sm border border-gray-200/50 transition-all duration-300 ${
-          viewMode === 'merchant' ? 'left-1.5' : 'left-[calc(50%+4.5px)]'
-        }`}
-      />
-      <div className={`relative z-10 w-1/2 text-center py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${viewMode === 'merchant' ? 'text-slate-900' : 'text-gray-400'}`}>
-        Merchant
-      </div>
-      <div className={`relative z-10 w-1/2 text-center py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${viewMode === 'customer' ? 'text-slate-900' : 'text-gray-400'}`}>
-        Customer
-      </div>
-    </button>
-  );
+  const renderToggle = (containerClass: string) => null;
+  const renderMobileSwitch = () => null;
 
   if (!ready) return null;
   if (!authenticated && !isConnected) return (
@@ -185,8 +171,8 @@ export default function HistoryPage() {
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-16">
       
       {/* ── Header Premium ── */}
-      <div className="flex items-start sm:items-center justify-between gap-3 pb-4 border-b border-gray-200">
-        <div className="flex flex-col gap-1.5 w-full">
+      <div className="flex flex-col items-center justify-center gap-3 pb-4 border-b border-gray-200 text-center">
+        <div className="flex flex-col gap-1.5 w-full items-center">
           {/* Breadcrumb aktif saat ada filter */}
           {selectedSessionFilter ? (
             <>
@@ -214,7 +200,7 @@ export default function HistoryPage() {
               </p>
             </>
           ) : (
-            <div className="w-full text-center sm:text-left">
+            <div className="w-full text-center">
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                 History Transaction
               </h1>
@@ -224,10 +210,6 @@ export default function HistoryPage() {
               {renderMobileSwitch()}
             </div>
           )}
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 mt-1 sm:mt-0">
-          {!selectedSessionFilter && renderToggle('hidden sm:flex')}
         </div>
       </div>
 
